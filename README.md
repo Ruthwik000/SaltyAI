@@ -1,65 +1,36 @@
-SALTY AI
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-SALTY AI is an Agentic AI-powered Marine Intelligence and Safety Platform designed to help people make better decisions using marine, weather, satellite, and geospatial data.
+## Getting Started
 
-Who is it for?
-Fishermen
+First, run the development server:
 
-Helps fishermen decide where and when to go fishing safely.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-Potential Fishing Zones (PFZ)
-SST and chlorophyll information
-Weather and sea conditions
-Wind, waves, swell and currents
-Marine risk prediction
-Safest departure time
-Safe route planning
-Geofencing alerts
-Disaster alerts
-GPS tracking
-Lost-fisherman location prediction
-Voice/AI assistant
-Researchers
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Provides tools to explore and analyze historical and current marine data.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Satellite data analysis
-Ocean and marine data exploration
-SST and chlorophyll analysis
-Wind, waves and currents
-Historical data exploration
-Maps and visualizations
-Time-series analysis
-Data comparison and export
-AI-powered research assistant
-Coastal Operations
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Helps authorities and operators monitor vessels and respond to emergencies.
+## Learn More
 
-Live fisherman/vessel monitoring
-Disaster and risk monitoring
-Geofencing
-Missing-fisherman detection
-Lost-fisherman location prediction
-Search-zone generation
-Rescue route planning
-Incident monitoring
-AI operations assistant
-Key Features
-Agentic AI for natural-language marine queries
-Interactive marine and satellite maps
-Ocean and weather intelligence
-Fishing-zone analysis
-Marine risk prediction
-Disaster alerts and prediction
-GPS and geofencing
-Safe route planning
-Lost-fisherman prediction
-Voice/Call AI agent
-Research and historical data analysis
-Multilingual conversational interface
-Evidence-backed recommendations
-Marine, satellite and meteorological data integration
-Core Idea
+To learn more about Next.js, take a look at the following resources:
 
-SALTY combines marine data + satellite data + weather data + geospatial data + AI agents to turn complex data into actionable information for fishermen, researchers, and coastal operations.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
