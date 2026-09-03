@@ -19,11 +19,8 @@ export function LandingHeader({ apiState }: LandingHeaderProps) {
             S*
           </span>
           <span className="text-sm font-semibold tracking-tight">
-            salty<span className="text-zinc-400">.marine</span>
+            salty<span className="text-zinc-400">.ai</span>
           </span>
-          <Badge variant="minimal" className="hidden h-4 px-1.5 py-0 text-[10px] sm:inline-flex">
-            v1.0
-          </Badge>
         </Link>
 
         <nav className="hidden items-center gap-6 text-xs font-medium text-zinc-600 md:flex">
@@ -42,22 +39,6 @@ export function LandingHeader({ apiState }: LandingHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-1.5 font-sans text-[10px] text-zinc-500 sm:flex">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                apiState === "ready"
-                  ? "bg-emerald-500"
-                  : apiState === "checking"
-                  ? "animate-pulse bg-amber-500"
-                  : "bg-zinc-400"
-              }`}
-            />
-            {apiState === "ready"
-              ? "API READY"
-              : apiState === "checking"
-              ? "CONNECTING"
-              : "DEMO MODE"}
-          </span>
           <Link href="/login">
             <Button size="sm" className="h-8 gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800">
               Open console <ArrowRight className="h-3.5 w-3.5" />

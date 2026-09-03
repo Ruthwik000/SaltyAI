@@ -8,12 +8,6 @@ export function LandingHero() {
     <section className="relative overflow-hidden border-b border-zinc-200/80 pt-16 pb-14 sm:pt-24 sm:pb-20">
       <div className="absolute inset-0 -z-10 bg-grid-subtle opacity-60 [mask-image:radial-gradient(ellipse_65%_70%_at_50%_0%,#000_55%,transparent_100%)]" />
       <div className="mx-auto max-w-5xl px-4 text-center sm:px-6">
-        <Badge variant="pill" className="gap-2 border-zinc-200/90 px-3.5 py-1 text-xs font-normal">
-          <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-          <span className="font-sans text-[11px] text-zinc-500">VISAKHAPATNAM / 17.69°N 83.22°E</span>
-          <span className="text-zinc-300">|</span>
-          <span>Coastal intelligence layer</span>
-        </Badge>
 
         <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
           The ocean is the signal.
