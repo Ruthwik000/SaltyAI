@@ -6,6 +6,12 @@ import { useMarine } from "@/lib/marine-context";
 import { generateMessageId } from "@/lib/id";
 import { askMarineAgent } from "@/lib/api";
 import {
+  clearAgentContext,
+  describeAgentContext,
+  useAgentContext,
+} from "@/lib/research-context";
+import { AgentContextChip } from "@/components/research/agent-context-chip";
+import {
   Sparkles,
   ArrowUp,
   Database,
@@ -48,6 +54,7 @@ interface SuggestionItem {
 
 export default function AiAgentPage() {
   const { location } = useMarine();
+  const dataContext = useAgentContext();
   const [mode, setMode] = React.useState<AgentMode>("normal");
   const [inputQuery, setInputQuery] = React.useState("");
   const [messages, setMessages] = React.useState<AgentMessage[]>([]);
@@ -55,6 +62,15 @@ export default function AiAgentPage() {
   const [researchStage, setResearchStage] = React.useState<string>("");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = React.useState<Record<string, boolean>>({});
+
+  // Arriving with a dataset attached means the researcher came here to analyse
+  // it. Adjusted during render rather than in an effect, which would queue a
+  // second pass before the first paint.
+  const [seenContext, setSeenContext] = React.useState<string | null>(null);
+  if (dataContext && dataContext.attachedAt !== seenContext) {
+    setSeenContext(dataContext.attachedAt);
+    setMode("research");
+  }
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -191,7 +207,11 @@ export default function AiAgentPage() {
       setResearchStage("Grounding your question with approved marine datasets...");
     }
 
-    void askMarineAgent(query, { mode })
+    const grounded = dataContext
+      ? `${describeAgentContext(dataContext)}\n\nQuestion: ${query}`
+      : query;
+
+    void askMarineAgent(grounded, { mode })
       .then((result) => {
         setMessages((prev) => [
           ...prev,
@@ -222,269 +242,6 @@ export default function AiAgentPage() {
         setResearchStage("");
       });
 
-    return;
-
-    const isResearchMode = mode === "research";
-
-    if (isResearchMode) {
-      setResearchStage("Connecting to INCOIS OON moored buoy network...");
-      setTimeout(() => {
-        setResearchStage("Synthesizing INSAT-3DR radiometer & ERDDAP datasets...");
-      }, 500);
-      setTimeout(() => {
-        setResearchStage("Computing horizontal isotherm divergence (dT/dx)...");
-      }, 950);
-    }
-
-    const delay = isResearchMode ? 1400 : 600;
-
-    setTimeout(() => {
-      let reply: AgentMessage;
-      const q = query.toLowerCase();
-
-      if (isResearchMode) {
-        // RESEARCH MODE RESPONSES
-        if (q.includes("sst") || q.includes("temperature") || q.includes("front")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "research",
-            text: `### Oceanographic Thermal Front Analysis: ${location.name} Sector\n\nSatellite infrared radiometry (INSAT-3DR 0.04° resolved composite) and in-situ moored buoy telemetry record a baseline Sea Surface Temperature of **${location.sst}°C** across the coastal boundary layer.\n\n- **Thermal Gradient Front:** A pronounced horizontal thermal discontinuity (ΔT = 0.82°C over 2.1 NM) is delineated approximately 18.2 NM bearing 068° ENE.\n- **Climatological Anomaly:** SST stands **+0.42°C (z = +1.18σ)** above the 30-year climatological baseline, indicative of suppressed coastal upwelling.\n- **Isotherm Convergence:** Mixed Layer Depth (MLD) is estimated at **34m**, creating an elevated pelagic aggregation zone along the shelf-break margin.`,
-            sources: [
-              "INSAT-3DR Multichannel Radiometer (0.04° L3)",
-              "INCOIS Moored Buoy BD08 Telemetry",
-              "NOAA High-Resolution OI-SST V2.1",
-              "CMEMS Global Ocean Physical Analysis",
-            ],
-            researchSteps: [
-              "Queried INCOIS Moored Buoy BD08 real-time thermistor chain (0–50m)",
-              "Calibrated INSAT-3DR 10.8µm thermal infrared atmospheric correction",
-              "Computed horizontal thermal gradient field: ∇T = 0.39 °C/km",
-              "Correlated with 30-year climatological mean (1991–2020 baseline)",
-            ],
-            metrics: [
-              { label: "Coastal SST", value: `${location.sst}°C` },
-              { label: "Thermal Front", value: "0.82°C / 2.1 NM" },
-              { label: "Climatology Anomaly", value: "+0.42°C (1.18σ)" },
-              { label: "Mixed Layer Depth", value: "34 meters" },
-            ],
-            actionLink: {
-              label: "Inspect Thermal Layers in Marine Map",
-              href: "/app/map",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("chlorophyll") || q.includes("bloom") || q.includes("color")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "research",
-            text: `### Bio-Optical & Chlorophyll-a Biomass Synthesis\n\nCross-validation of Sentinel-3 OLCI (Ocean and Land Colour Instrument) and MODIS-Aqua composites reveals distinct trophic regimes:\n\n- **Coastal Plume:** Inner shelf chlorophyll-a reaches **1.38 mg/m³** driven by nutrient-rich estuarine runoff and terrestrial nitrogen transport.\n- **Offshore Baseline:** Open-water chlorophyll drops to **0.42 mg/m³**, forming a sharp bio-optical front at the 50m bathymetric contour.\n- **Photosynthetic Active Radiation (PAR):** High surface irradiance (48.2 Einstein/m²/day) with light attenuation coefficient **k₄₉₀ = 0.082 m⁻¹**.\n- **Pelagic Suitability:** Optimal bio-thermal alignment indicates high concentrations of Yellowfin Tuna and Decapterus along the thermal-optical shear zone.`,
-            sources: [
-              "Sentinel-3 OLCI Level-3 Ocean Color Composite",
-              "MODIS-Aqua 8-Day Chlorophyll-a (4km)",
-              "INCOIS Coastal Ocean Color Modeling Array",
-              "ERDDAP in-situ fluorometer telemetry",
-            ],
-            researchSteps: [
-              "Acquired Sentinel-3 OLCI top-of-atmosphere radiance (443–865 nm)",
-              "Inverted OC4v6 bio-optical algorithm for chlorophyll-a retrieval",
-              "Validated atmospheric Rayleigh & aerosol scattering corrections",
-              "Generated spatial overlap index with satellite SST fronts",
-            ],
-            metrics: [
-              { label: "Nearshore Chl-a", value: "1.38 mg/m³" },
-              { label: "Offshore Chl-a", value: "0.42 mg/m³" },
-              { label: "Light Atten. (k490)", value: "0.082 m⁻¹" },
-              { label: "Suitability Index", value: "94% (Very High)" },
-            ],
-            actionLink: {
-              label: "Explore Bio-Optical Data in Research Module",
-              href: "/app/research",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("drift") || q.includes("lost") || q.includes("sar") || q.includes("kinematic")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "research",
-            text: `### Kinematic Monte-Carlo Leeway SAR Drift Computation\n\nSimulating 3.5-hour kinematic leeway displacement from initial Last Known Position (${location.lat.toFixed(2)}°N, ${location.lon.toFixed(2)}°E) off ${location.name}:\n\n- **Hydrodynamic Current Vector:** Surface Eulerian currents measure **0.72 kts bearing 048° NE** (INCOIS ADCP coastal array).\n- **Atmospheric Leeway Component:** Wind leeway coefficient **L_w = 0.038 × W₁₀ = 0.53 kts** with a 12° right-of-wind divergence angle.\n- **Cumulative Net Displacement:** **6.42 NM** along resultant bearing **058° ENE**.\n- **Search Datum Coordinates:** Centered at **${(location.lat + 0.05).toFixed(3)}°N, ${(location.lon + 0.09).toFixed(3)}°E** with an expanding **3.8 NM** radius (95% probabilistic containment contour).`,
-            sources: [
-              "IAMSAR Vol II Kinematic Leeway Model",
-              "INCOIS High-Frequency Coastal Radar (Surface Currents)",
-              "IMD WRF 3km Atmospheric Boundary Vector",
-              "Bathymetric Wave shoaling dissipation grid",
-            ],
-            researchSteps: [
-              "Initialized IAMSAR unballasted fiberglass skiff leeway polar coordinates",
-              "Integrated surface current velocity vectors from HF Radar & ADCP",
-              "Executed 5,000-particle Monte-Carlo drift simulation with turbulence diffusion",
-              "Calculated 95% bivariate Gaussian probability search datum polygon",
-            ],
-            metrics: [
-              { label: "Calculated Datum", value: `${(location.lat + 0.05).toFixed(3)}°N, ${(location.lon + 0.09).toFixed(3)}°E` },
-              { label: "Net Displacement", value: "6.42 NM (058°)" },
-              { label: "Search Radius", value: "3.8 NM (95% CI)" },
-              { label: "Recommended Pattern", value: "Sector Search (VS)" },
-            ],
-            actionLink: {
-              label: "Launch SAR Operations Center",
-              href: "/app/lost-fisherman",
-            },
-            time: "Just now",
-          };
-        } else {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "research",
-            text: `### Oceanographic State Synthesis: ${location.name} (${location.sea})\n\nComprehensive multi-sensor telemetry synthesized for geographic domain ${location.lat.toFixed(2)}°N, ${location.lon.toFixed(2)}°E:\n\n- **Wave Hydrodynamics:** Significant Wave Height (SWH) **${location.waveHeight}m** with dominant spectral peak period **${location.wavePeriod}s**; wave steepness ratio H/L = 0.022 (non-breaking, stable regime).\n- **Boundary Layer Wind:** **${location.windSpeed} kts ${location.windDirection}** (${location.windDegrees}°), barometric pressure **1012.4 hPa**.\n- **Thermal Radiometry:** Baseline SST **${location.sst}°C**; localized surface current velocity **${location.currentSpeed} m/s ${location.currentDirection}**.\n- **Composite Hazard Index:** ${location.riskLevel} classification (${location.riskScore}/100) derived from non-linear wave-wind interaction modeling.`,
-            sources: [
-              "INCOIS WaveWatch III Numerical Simulation",
-              "IMD High-Resolution Coastal WRF Ensemble",
-              "Sentinel-3 / Jason-3 Altimetry Cross-Calibration",
-              "Salty Marine Hydrodynamic Modeling Invariant",
-            ],
-            researchSteps: [
-              "Parsed directional wave spectra from WaveWatch III numerical model",
-              "Cross-validated altimetric SWH with in-situ wave-rider buoy",
-              "Computed turbulent kinetic energy dissipation rate in boundary layer",
-              "Synthesized multi-parameter composite hazard index",
-            ],
-            metrics: [
-              { label: "Wave SWH", value: `${location.waveHeight} meters` },
-              { label: "Peak Period", value: `${location.wavePeriod} seconds` },
-              { label: "Wind Vector", value: `${location.windSpeed} kts ${location.windDirection}` },
-              { label: "Ocean Temp", value: `${location.sst}°C` },
-            ],
-            actionLink: {
-              label: "Explore Research Telemetry Feeds",
-              href: "/app/research",
-            },
-            time: "Just now",
-          };
-        }
-      } else {
-        // NORMAL OPERATIONAL MODE RESPONSES
-        if (q.includes("safe") || (q.includes("fishing") && q.includes("tomorrow")) || q.includes("sail")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `**Yes, tomorrow morning is rated SAFE for voyage operations off ${location.name}.**\n\n- **Safe Departure Window:** **04:30 AM – 01:30 PM IST**.\n- **Sea State:** Significant wave height will remain comfortable under **${location.waveHeight}m** with steady **${location.windSpeed} kts** winds from ${location.windDirection}.\n- **Precaution:** Wind speed is projected to freshen to 18–20 kts after 03:00 PM as local sea breezes intensify. Mechanized craft and motorized skiffs are advised to return before mid-afternoon.`,
-            sources: ["INCOIS WaveWatch III Model", "IMD Marine Coastal Bulletin", "Salty Trip Risk Engine"],
-            metrics: [
-              { label: "Safe Departure Window", value: "04:30 – 13:30 IST" },
-              { label: "Wave SWH", value: `${location.waveHeight} m` },
-              { label: "Wind Speed", value: `${location.windSpeed} kts ${location.windDirection}` },
-              { label: "Risk Index", value: `${location.riskScore}/100 (${location.riskLevel})` },
-            ],
-            actionLink: {
-              label: "Calculate Custom Risk for Your Vessel",
-              href: "/app/risk",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("nearest") || q.includes("pfz") || q.includes("zone") || q.includes("hotspot")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `**Nearest High-Suitability Potential Fishing Zone (PFZ):**\n\n- **Zone Name:** Bheemunipatnam Offshore Front (Sector-A)\n- **Coordinates / Bearing:** **18.2 NM** bearing **068° ENE** from ${location.name} port entrance.\n- **Conditions:** High chlorophyll concentration (**1.15 mg/m³**) matching a sharp **0.8°C** thermal gradient front.\n- **Target Species:** Yellowfin Tuna, Indian Mackerel, and Ribbonfish. Commercial catches report optimal school concentration at 45–60m depth contours.`,
-            sources: ["INCOIS Potential Fishing Zone Advisory", "MODIS Ocean Color", "Commercial Catch Reports"],
-            metrics: [
-              { label: "Distance & Bearing", value: "18.2 NM (068° ENE)" },
-              { label: "Suitability", value: "94% (Very High)" },
-              { label: "Depth", value: "55 meters" },
-              { label: "Target Species", value: "Tuna & Mackerel" },
-            ],
-            actionLink: {
-              label: "Open Fishing Zone Navigation Guide",
-              href: "/app/fishing-zones",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("weather") || q.includes("3 days") || q.includes("forecast")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `**3-Day Marine Forecast for ${location.name} waters:**\n\n• **Today:** Fair to partly cloudy, waves **${location.waveHeight}m**, winds **${location.windSpeed} kts ${location.windDirection}**. Risk level: **${location.riskLevel} (${location.riskScore}/100)**.\n• **Tomorrow:** Optimal sea state. Wave height drops slightly to 1.4m, wind steady at 12 kts NE. Prime conditions for coastal and offshore fishing.\n• **Day 3:** Swell height increasing to 1.9m, wind picking up to 18 kts. Moderate chop developing due to central ${location.sea} depression.`,
-            sources: ["IMD Regional Meteorological Centre", "INCOIS Coastal Wave Model"],
-            metrics: [
-              { label: "Day 1 Risk", value: "Low (28/100)" },
-              { label: "Day 2 Risk", value: "Optimal (22/100)" },
-              { label: "Day 3 Risk", value: "Moderate (42/100)" },
-            ],
-            actionLink: {
-              label: "View 7-Day Weather & Tides",
-              href: "/app/weather",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("avoid") || q.includes("restricted") || q.includes("boundary") || q.includes("imbl")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `**Important Maritime Boundaries and Warning Zones:**\n\n1. **International Maritime Boundary Line (IMBL):** Maintain at least 5.0 NM standoff buffer in sensitive border areas to prevent naval interdiction.\n2. **Marine Sanctuaries & MPAs:** Active seasonal trawling bans protect Olive Ridley turtle nesting and nursery habitats within 20 km of designated coastlines.\n3. **Naval Firing Ranges:** Check active NOTAM / Navigational Warnings prior to passage across eastern exercise sectors.\n4. **Squall Caution:** IMD strong wind advisories active for offshore pockets with gust potentials exceeding 40 kmph.`,
-            sources: ["Indian Coast Guard Directives", "Wildlife Protection Marine Sanctuaries", "IMD Hazard Advisory"],
-            metrics: [
-              { label: "IMBL Safety Buffer", value: "5.0 Nautical Miles" },
-              { label: "Restricted MPAs", value: "2 Active" },
-              { label: "Advisory Level", value: "Navigational Warning" },
-            ],
-            actionLink: {
-              label: "Inspect Geofences on Marine Map",
-              href: "/app/map",
-            },
-            time: "Just now",
-          };
-        } else if (q.includes("sst") || q.includes("temperature")) {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `Sea Surface Temperature near ${location.name} is currently **${location.sst}°C**.\n\nA clear thermal gradient front is situated 18 Nautical Miles offshore where water temperatures drop by approximately 0.8°C, generating prime feeding grounds for pelagic fish. Ocean state is calm with wave height around ${location.waveHeight}m.`,
-            sources: ["INSAT-3DR Satellite Radiometer", "INCOIS Moored Buoys"],
-            metrics: [
-              { label: "Water Temperature", value: `${location.sst}°C` },
-              { label: "Wave SWH", value: `${location.waveHeight} m` },
-              { label: "Wind", value: `${location.windSpeed} kts ${location.windDirection}` },
-            ],
-            actionLink: {
-              label: "View SST Layer on Map",
-              href: "/app/map",
-            },
-            time: "Just now",
-          };
-        } else {
-          reply = {
-            id: generateMessageId("a"),
-            sender: "agent",
-            mode: "normal",
-            text: `Here is the current sea state summary for **${location.name} (${location.sea})**:\n\n- **Wave SWH:** **${location.waveHeight}m** (Period ${location.wavePeriod}s)\n- **Wind:** **${location.windSpeed} knots** from **${location.windDirection}**\n- **Surface Temperature:** **${location.sst}°C**\n- **Overall Risk:** **${location.riskLevel} (${location.riskScore}/100)**\n\nHow can I assist your voyage planning, fishing zone selection, or weather safety today?`,
-            sources: ["INCOIS Coastal Buoys", "IMD Marine Bulletin"],
-            metrics: [
-              { label: "Wave SWH", value: `${location.waveHeight} m` },
-              { label: "Wind Speed", value: `${location.windSpeed} kts` },
-              { label: "SST", value: `${location.sst}°C` },
-              { label: "Risk Score", value: `${location.riskScore}/100` },
-            ],
-            actionLink: {
-              label: "Explore Interactive Marine Map",
-              href: "/app/map",
-            },
-            time: "Just now",
-          };
-        }
-      }
-
-      setMessages((prev) => [...prev, reply]);
-      setIsTyping(false);
-      setResearchStage("");
-    }, delay);
   };
 
   const hasStarted = messages.length > 0;
@@ -556,6 +313,13 @@ export default function AiAgentPage() {
               <span className="font-medium text-zinc-800">{location.name}, {location.state}</span>.
             </p>
           </div>
+
+          {/* Attached dataset from Research & Data */}
+          {dataContext && (
+            <div className="w-full">
+              <AgentContextChip context={dataContext} onDetach={clearAgentContext} />
+            </div>
+          )}
 
           {/* Centered Chat Input Box */}
           <div className="w-full rounded-3xl border border-zinc-200/90 bg-white shadow-sm hover:shadow-md focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-950/5 transition-all p-3 sm:p-4">
@@ -904,6 +668,9 @@ export default function AiAgentPage() {
       {/* Docked Chat Input Box (After Prompting) */}
       {hasStarted && (
         <div className="shrink-0 pt-2 pb-1 bg-gradient-to-t from-white via-white to-transparent max-w-3xl mx-auto w-full">
+          {dataContext && (
+            <AgentContextChip context={dataContext} onDetach={clearAgentContext} />
+          )}
           <div className="rounded-2xl sm:rounded-3xl border border-zinc-200/90 bg-white shadow-sm hover:shadow-md focus-within:border-zinc-400 focus-within:ring-4 focus-within:ring-zinc-950/5 transition-all p-2.5 sm:p-3">
             <textarea
               ref={textareaRef}

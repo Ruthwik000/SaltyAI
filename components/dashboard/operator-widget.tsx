@@ -19,7 +19,7 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
     <Card className="border-zinc-200">
       <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-base font-semibold text-zinc-950">
+          <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
             Active Vessels in {location.name} Sector
           </CardTitle>
         </div>

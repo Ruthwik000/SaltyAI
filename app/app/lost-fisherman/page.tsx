@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMarine } from "@/lib/marine-context";
+import { DataBadge } from "@/components/fisherman/data-badge";
+import { predictSearchZone, type DataSource } from "@/lib/operations-api";
+import { focusSearchCase, saveSearchCase } from "@/lib/sar-store";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +33,7 @@ type TargetType = "piw" | "craft" | "trawler" | "raft";
 
 export default function LostFishermanPage() {
   const { location, setIsAiDrawerOpen } = useMarine();
+  const router = useRouter();
 
   // SAR Operator inputs
   const [incidentId, setIncidentId] = React.useState("SAR-2026-0903-AP");
@@ -38,6 +43,9 @@ export default function LostFishermanPage() {
   const [lkpLon, setLkpLon] = React.useState(83.38);
   const [elapsedHours, setElapsedHours] = React.useState(3.5);
   const [isCalculating, setIsCalculating] = React.useState(false);
+  const [predictionSource, setPredictionSource] = React.useState<DataSource>("demo");
+  const [predictionReason, setPredictionReason] = React.useState<string | undefined>();
+  const [caseId, setCaseId] = React.useState<string | null>(null);
 
   // Model-computed datum calculation
   const [datumResult, setDatumResult] = React.useState({
@@ -53,32 +61,54 @@ export default function LostFishermanPage() {
     recommendedPattern: "Sector Search (VS - 90° Turn)",
   });
 
-  const handleComputeDrift = (e: React.FormEvent) => {
+  const handleComputeDrift = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCalculating(true);
-    setTimeout(() => {
-      setIsCalculating(false);
-      const factor = targetType === "piw" ? 0.6 : targetType === "raft" ? 1.4 : 1.0;
-      const driftNM = Number((elapsedHours * 1.6 * factor).toFixed(1));
-      const latOffset = Number((driftNM * 0.012).toFixed(3));
-      const lonOffset = Number((driftNM * 0.014).toFixed(3));
 
-      setDatumResult({
-        datumLat: Number((lkpLat + latOffset).toFixed(3)),
-        datumLon: Number((lkpLon + lonOffset).toFixed(3)),
-        netDriftDistanceNM: driftNM,
-        netDriftBearing: "062° ENE",
-        searchRadiusNM: Number((driftNM * 0.6).toFixed(1)),
-        primarySearchAreaSqNM: Number((Math.PI * Math.pow(driftNM * 0.6, 2)).toFixed(1)),
-        windLeewaySpeed: targetType === "raft" ? "1.6 kts" : "0.9 kts",
-        currentSpeed: "0.65 kts",
-        tideInfluence: "0.25 kts",
-        recommendedPattern:
-          driftNM > 8
-            ? "Parallel Track Search (PS - 2 Nautical Mile Spacing)"
-            : "Expanding Square Search (SS)",
-      });
-    }, 700);
+    const response = await predictSearchZone({
+      incidentId,
+      targetName,
+      targetType,
+      lastKnownLat: lkpLat,
+      lastKnownLon: lkpLon,
+      elapsedHours,
+    });
+    const prediction = response.data;
+
+    setDatumResult({
+      datumLat: prediction.datumLat,
+      datumLon: prediction.datumLon,
+      netDriftDistanceNM: prediction.driftDistanceNM,
+      netDriftBearing: `${prediction.driftBearingDeg}° ${prediction.driftBearingText}`,
+      searchRadiusNM: prediction.searchRadiusNM,
+      primarySearchAreaSqNM: prediction.searchAreaSqNM,
+      windLeewaySpeed: `${prediction.windLeewayKnots} kts`,
+      currentSpeed: `${prediction.currentKnots} kts`,
+      tideInfluence: `${prediction.tideKnots} kts`,
+      recommendedPattern: prediction.recommendedPattern,
+    });
+    setPredictionSource(response.source);
+    setPredictionReason(response.reason);
+
+    // Keep the case so the marine map can draw the same drift track and
+    // search circle rather than recomputing its own.
+    const saved = saveSearchCase({
+      incidentId,
+      targetName,
+      targetType,
+      lastKnownLat: lkpLat,
+      lastKnownLon: lkpLon,
+      elapsedHours,
+      prediction,
+      source: response.source,
+    });
+    setCaseId(saved.id);
+    setIsCalculating(false);
+  };
+
+  const handleShowOnMap = () => {
+    if (caseId) focusSearchCase(caseId);
+    router.push("/app/map");
   };
 
   return (
@@ -86,7 +116,7 @@ export default function LostFishermanPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 flex items-center gap-2.5">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950 flex items-center gap-2.5">
             <LifeBuoy className="h-7 w-7 text-rose-600" />
             <span>Lost Fisherman & Vessel Search Area</span>
           </h1>
@@ -258,9 +288,14 @@ export default function LostFishermanPage() {
                 </CardTitle>
               </div>
 
-              <Badge className="border-sky-200 bg-sky-50 text-sky-700 font-sans text-xs">
-                Datum Solved
-              </Badge>
+              <DataBadge
+                source={predictionSource}
+                reason={
+                  predictionSource === "demo"
+                    ? predictionReason || "On-device estimate, not the drift model"
+                    : undefined
+                }
+              />
             </CardHeader>
 
             <CardContent className="pt-4 space-y-6 text-xs font-sans">
@@ -373,12 +408,15 @@ export default function LostFishermanPage() {
                   <span>Export IAMSAR Tactical Packet</span>
                 </Button>
 
-                <Link href="/app/map">
-                  <Button variant="outline" size="sm" className="text-xs h-8 border-zinc-200 gap-1.5">
-                    <Compass className="h-3.5 w-3.5 text-zinc-600" />
-                    <span>Plot Search Polygon on Marine Map</span>
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShowOnMap}
+                  className="text-xs h-8 border-zinc-200 gap-1.5"
+                >
+                  <Compass className="h-3.5 w-3.5 text-zinc-600" />
+                  <span>Show drift &amp; search area on map</span>
+                </Button>
               </div>
             </CardContent>
           </Card>

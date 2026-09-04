@@ -13,6 +13,8 @@ import {
   WeatherMarineCard,
   AiConsultCard,
 } from "@/components/dashboard";
+import { ReportFindingCard } from "@/components/research/report-finding-card";
+import { ResearchAlertsCard } from "@/components/operator/research-alerts-card";
 
 export default function DashboardPage() {
   const { role, location, setIsAiDrawerOpen } = useMarine();
@@ -43,10 +45,18 @@ export default function DashboardPage() {
             </>
           )}
 
-          {role === "researcher" && <ResearcherWidget location={location} />}
+          {role === "researcher" && (
+            <>
+              <ResearcherWidget location={location} />
+              <ReportFindingCard />
+            </>
+          )}
 
           {role === "operator" && (
-            <OperatorWidget location={location} vessels={activeVessels} />
+            <>
+              <OperatorWidget location={location} vessels={activeVessels} />
+              <ResearchAlertsCard limit={3} />
+            </>
           )}
         </div>
 

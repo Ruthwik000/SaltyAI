@@ -73,31 +73,31 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
         {isFisherman ? (
           <>
             {/* Card 1: Popular Fish currently in the market (Replaces SST on Fisherman Dashboard) */}
-            <Card className="p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
-              <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wider">Popular Market Fish</span>
-                <Fish className="h-4 w-4 text-emerald-600" />
+            <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
+                <span className="uppercase font-medium tracking-wide leading-tight">Popular Market Fish</span>
+                <Fish className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-emerald-600" />
               </div>
               <div className="my-2">
                 <div
-                  className="text-xl sm:text-2xl font-bold font-sans tracking-tight text-zinc-950 truncate"
+                  className="text-base sm:text-2xl font-bold font-sans tracking-tight text-zinc-950 leading-tight line-clamp-2"
                   title={marketData.topSpecies}
                 >
                   {marketData.topSpecies}
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 mt-1">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] sm:text-[11px] text-zinc-500 mt-1 leading-snug">
                   <span className="text-emerald-700 font-semibold">{marketData.demandLevel}</span>
                   <span>•</span>
                   <span className="text-zinc-600 truncate">{marketData.landingVolumeText}</span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
-                <span className="truncate max-w-[110px]" title={marketData.harbourName}>
-                  {marketData.harbourName.split(" ")[0]} Harbour
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
+                <span className="min-w-0 flex-1 truncate" title={marketData.harbourName}>
+                  {marketData.harbourName.split(" ")[0]}
                 </span>
                 <button
                   type="button"
@@ -110,13 +110,13 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             </Card>
 
             {/* Card 2: Market Updates & Price Modifications (Replaces Surface Wind on Fisherman Dashboard) */}
-            <Card className="p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
-              <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wider">Market & Price Updates</span>
-                <IndianRupee className="h-4 w-4 text-sky-600" />
+            <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
+                <span className="uppercase font-medium tracking-wide leading-tight">Market & Price Updates</span>
+                <IndianRupee className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-sky-600" />
               </div>
               <div className="my-2">
-                <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1">
+                <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1">
                   ₹{marketData.benchmarkPrice}
                   <span className="text-xs font-sans font-normal text-zinc-500">/kg avg</span>
                 </div>
@@ -136,8 +136,8 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                   <span className="text-zinc-500">vs yesterday</span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
-                <span className="truncate max-w-[120px]" title={marketData.priceUpdateNote}>
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
+                <span className="min-w-0 flex-1 truncate" title={marketData.priceUpdateNote}>
                   {marketData.priceUpdateNote}
                 </span>
                 <button
@@ -151,13 +151,13 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             </Card>
 
             {/* Card 3: Nearby Fishzone Updates & Rapid School Growth (Replaces Wave SWH on Fisherman Dashboard) */}
-            <Card className="p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
-              <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wider">Nearby Fishzone Update</span>
+            <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
+                <span className="uppercase font-medium tracking-wide leading-tight">Nearby Fishzone Update</span>
                 <Radar className="h-4 w-4 text-indigo-500" />
               </div>
               <div className="my-2">
-                <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1.5">
+                <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1.5">
                   {schoolData.biomassSurge}
                   <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Rapid Growth
@@ -167,15 +167,15 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                   className="flex items-center gap-1.5 text-[11px] text-zinc-600 mt-1 font-sans truncate"
                   title={schoolData.schoolType}
                 >
-                  <span className="font-semibold text-zinc-900 truncate max-w-[110px]">
+                  <span className="font-semibold text-zinc-900 min-w-0 truncate">
                     {schoolData.zoneSector}
                   </span>
                   <span>•</span>
                   <span className="text-zinc-500 truncate">{schoolData.schoolType.split(" ")[0]} school</span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
-                <span className="truncate max-w-[110px]">{schoolData.distanceBearing.split("•")[0].trim()}</span>
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
+                <span className="min-w-0 flex-1 truncate">{schoolData.distanceBearing.split("•")[0].trim()}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
@@ -199,9 +199,9 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
           <>
             {/* Card 1: Disaster Prediction for Coastal Operators OR Sea Surface Temperature for Researchers */}
             {role === "operator" ? (
-              <Card className="p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
+              <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
                 <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-                  <span className="uppercase font-medium tracking-wider">Disaster Prediction</span>
+                  <span className="uppercase font-medium tracking-wide leading-tight">Disaster Prediction</span>
                   <AlertTriangle
                     className={`h-4 w-4 ${
                       operatorDisaster.severity === "Severe" || operatorDisaster.severity === "Critical"
@@ -212,7 +212,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                 </div>
                 <div className="my-2">
                   <div
-                    className="text-xl sm:text-2xl font-bold font-sans tracking-tight text-zinc-950 truncate"
+                    className="text-base sm:text-2xl font-bold font-sans tracking-tight text-zinc-950 leading-tight line-clamp-2"
                     title={operatorDisaster.title}
                   >
                     {operatorDisaster.type}
@@ -231,8 +231,8 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     <span className="text-zinc-600 truncate">{operatorDisaster.expiresAt}</span>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
-                  <span className="truncate max-w-[110px]" title={operatorDisaster.source}>
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
+                  <span className="min-w-0 flex-1 truncate" title={operatorDisaster.source}>
                     {operatorDisaster.source.replace("Official ", "")}
                   </span>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -254,21 +254,21 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                 </div>
               </Card>
             ) : (
-              <Card className="p-4 flex flex-col justify-between">
+              <Card className="p-3 sm:p-4 flex flex-col justify-between">
                 <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
                   <span className="uppercase">Sea Surface Temp (SST)</span>
                   <Thermometer className="h-4 w-4 text-rose-500" />
                 </div>
                 <div className="my-2">
-                  <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
+                  <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
                     {location.sst}°C
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 mt-1">
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] sm:text-[11px] text-zinc-500 mt-1 leading-snug">
                     <span className="text-emerald-600 font-medium">+0.4°C</span>
                     <span>vs 10-yr climatology</span>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
                   <span>Sensor: INSAT-3DR</span>
                   <span className="text-emerald-600">Optimal front</span>
                 </div>
@@ -276,13 +276,13 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             )}
 
             {/* Card 2: Wind Speed & Direction - Standard View for Researchers & Operators */}
-            <Card className="p-4 flex flex-col justify-between">
+            <Card className="p-3 sm:p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
                 <span className="uppercase">Surface Wind</span>
-                <Wind className="h-4 w-4 text-sky-500" />
+                <Wind className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-sky-500" />
               </div>
               <div className="my-2">
-                <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
+                <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
                   {location.windSpeed} <span className="text-sm font-sans font-normal text-zinc-500">kts</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 mt-1 font-sans">
@@ -291,29 +291,29 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                   </span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
                 <span>Beaufort: Force 4</span>
                 <span className="text-zinc-700">Moderate Breeze</span>
               </div>
             </Card>
 
             {/* Card 3: Wave Height & Period - Standard View for Researchers & Operators */}
-            <Card className="p-4 flex flex-col justify-between">
+            <Card className="p-3 sm:p-4 flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
                 <span className="uppercase">Wave State (SWH)</span>
-                <Waves className="h-4 w-4 text-blue-500" />
+                <Waves className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-blue-500" />
               </div>
               <div className="my-2">
-                <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
+                <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
                   {location.waveHeight} <span className="text-sm font-sans font-normal text-zinc-500">m</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 mt-1">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] sm:text-[11px] text-zinc-500 mt-1 leading-snug">
                   <span>Period: {location.wavePeriod}s</span>
                   <span>•</span>
                   <span>Swell: {location.swellHeight}m</span>
                 </div>
               </div>
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
+              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
                 <span>Buoy: {location.id.toUpperCase()}-AD02</span>
                 <span className={location.waveHeight > 2.0 ? "text-amber-600" : "text-emerald-600"}>
                   {location.waveHeight > 2.0 ? "Rough Sea" : "Moderate"}
@@ -324,9 +324,9 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
         )}
 
         {/* Card 4: Marine Risk Index - Always Retained */}
-        <Card className="p-4 flex flex-col justify-between">
+        <Card className="p-3 sm:p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-            <span className="uppercase font-medium tracking-wider">Marine Risk Rating</span>
+            <span className="uppercase font-medium tracking-wide leading-tight">Marine Risk Rating</span>
             <ShieldAlert
               className={`h-4 w-4 ${
                 location.riskLevel === "Low"
@@ -338,7 +338,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             />
           </div>
           <div className="my-2">
-            <div className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
+            <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950">
               {location.riskScore}
               <span className="text-sm font-sans font-normal text-zinc-400">/100</span>
             </div>
@@ -352,14 +352,19 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     : "text-rose-600"
                 }
               >
-                {location.riskLevel} Hazard State
+                {location.riskLevel} risk today
               </span>
             </div>
           </div>
-          <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-sans text-zinc-400">
-            <span>Model: Salty Invariant</span>
-            <Link href="/app/risk" className="text-zinc-900 underline">
-              View Factors →
+          <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
+            <span>Waves, wind &amp; swell</span>
+            {/* Researchers have no Risk & Safety section; send them to the
+                sea-state detail they do have. */}
+            <Link
+              href={role === "researcher" ? "/app/weather" : "/app/risk"}
+              className="text-zinc-900 underline"
+            >
+              {role === "researcher" ? "Sea state →" : "Check my trip →"}
             </Link>
           </div>
         </Card>
@@ -476,7 +481,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for Nearby Fishzone Rapid School Growth Telemetry */}
+      {/* Dialog for the nearby shoal detail */}
       <Dialog open={schoolModalOpen} onOpenChange={setSchoolModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -487,7 +492,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
               </DialogTitle>
             </div>
             <DialogDescription className="text-xs">
-              Satellite thermal and chlorophyll confluence detection • Rapid school growth advisory
+              Where fish are gathering right now, and how strong the shoal is
             </DialogDescription>
           </DialogHeader>
 

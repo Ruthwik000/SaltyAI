@@ -64,7 +64,7 @@ export default function WeatherMarinePage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
             Weather & Marine Conditions
           </h1>
         </div>

@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMarine, UserRole } from "@/lib/marine-context";
 import { marineLocations } from "@/lib/marine-data";
 import { Button } from "@/components/ui/button";
 import { AiDrawer } from "@/components/ai-drawer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import {
   LayoutDashboard,
   Map,
@@ -30,6 +31,8 @@ import {
 interface NavItem {
   href: string;
   label: string;
+  /** Compact label used by the mobile bottom tab bar. */
+  shortLabel?: string;
   icon: React.ElementType;
   badge?: string;
   badgeColor?: string;
@@ -45,56 +48,65 @@ const navItems: NavItem[] = [
   {
     href: "/app",
     label: "Dashboard",
+    shortLabel: "Home",
     icon: LayoutDashboard,
     roles: ["fisherman", "researcher", "operator"],
-    priority: { fisherman: 1, researcher: 3, operator: 1 },
+    priority: { fisherman: 1, researcher: 1, operator: 1 },
   },
   {
     href: "/app/map",
     label: "Marine Map",
+    shortLabel: "Map",
     icon: Map,
     //badge: "Live Layers",
     badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-    roles: ["fisherman", "researcher", "operator"],
-    priority: { fisherman: 6, researcher: 1, operator: 5 },
+    // Fishermen get the zone map inside Fishing Zones instead of the raw
+    // INCOIS forecast view, so this stays a researcher / operator surface.
+    roles: ["researcher", "operator"],
+    priority: { fisherman: 6, researcher: 3, operator: 4 },
   },
   {
     href: "/app/fishing-zones",
     label: "Fishing Zones",
+    shortLabel: "Zones",
     icon: Fish,
     //badge: "PFZ 94%",
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    roles: ["fisherman", "researcher"],
+    roles: ["fisherman"],
     priority: { fisherman: 2, researcher: 5, operator: 8 },
   },
   {
     href: "/app/weather",
     label: "Weather & Marine",
+    shortLabel: "Weather",
     icon: CloudSun,
     roles: ["researcher", "operator"],
-    priority: { fisherman: 3, researcher: 4, operator: 6 },
+    priority: { fisherman: 3, researcher: 4, operator: 5 },
   },
   {
     href: "/app/risk",
     label: "Risk & Safety",
+    shortLabel: "Safety",
     icon: ShieldAlert,
     //badge: "Low 28",
     badgeColor: "bg-zinc-100 text-zinc-800 border-zinc-200",
-    roles: ["fisherman", "operator", "researcher"],
-    priority: { fisherman: 4, researcher: 6, operator: 4 },
+    roles: ["fisherman"],
+    priority: { fisherman: 3, researcher: 6, operator: 4 },
   },
   {
     href: "/app/alerts",
     label: "Alerts & Disasters",
+    shortLabel: "Alerts",
     icon: AlertTriangle,
     //badge: "4 Active",
     badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-    roles: ["operator", "researcher"],
+    roles: ["operator"],
     priority: { fisherman: 5, researcher: 7, operator: 3 },
   },
   {
     href: "/app/research",
     label: "Research & Data",
+    shortLabel: "Data",
     icon: Database,
     //badge: "ERDDAP",
     badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
@@ -104,34 +116,38 @@ const navItems: NavItem[] = [
   {
     href: "/app/vessel",
     label: "Vessel / GPS",
+    shortLabel: "Trip",
     icon: Navigation,
     //badge: "Live AIS",
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    roles: ["fisherman", "operator"],
+    roles: ["fisherman"],
     priority: { fisherman: 4, researcher: 9, operator: 2 },
   },
   {
     href: "/app/lost-fisherman",
     label: "Lost Fisherman",
+    shortLabel: "SAR",
     icon: LifeBuoy,
     //badge: "SAR",
     badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
-    roles: ["operator", "fisherman"],
-    priority: { fisherman: 8, researcher: 10, operator: 3 },
+    roles: ["operator"],
+    priority: { fisherman: 8, researcher: 10, operator: 2 },
   },
   {
     href: "/app/ai-agent",
     label: "AI Marine Agent",
+    shortLabel: "Assistant",
     icon: Sparkles,
     //badge: "Grounded",
     badgeColor: "bg-zinc-100 text-zinc-900 border-zinc-300",
     roles: ["fisherman", "researcher", "operator"],
-    priority: { fisherman: 5, researcher: 3, operator: 5 },
+    priority: { fisherman: 5, researcher: 5, operator: 6 },
   },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const {
     role,
     setRole,
@@ -153,6 +169,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       .sort((a, b) => a.priority[role] - b.priority[role]);
   }, [role]);
 
+  const isFisherman = role === "fisherman";
+  // Each console is a small, fixed set of sections, so every role gets the
+  // bottom tab bar on a phone rather than a hamburger drawer.
+  const usesBottomNav = true;
+  const isAgentPage = pathname === "/app/ai-agent";
+
+  // Keep a role out of surfaces its navigation no longer offers. Without this a
+  // fisherman could still reach /app/map or /app/lost-fisherman by URL or by
+  // switching roles while sitting on one of those pages.
+  React.useEffect(() => {
+    if (pathname === "/app") return;
+    const current = navItems.find(
+      (item) => item.href !== "/app" && pathname.startsWith(item.href)
+    );
+    if (current && !current.roles.includes(role)) {
+      router.replace("/app");
+    }
+  }, [pathname, role, router]);
+
   const hasCriticalAlert = operatorNotifications.some((n) => n.severity === "critical");
 
   return (
@@ -162,12 +197,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 items-center justify-between px-4 sm:px-6">
           {/* Left: Brand + Back to Landing */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 text-zinc-600 hover:text-zinc-950"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            {!usesBottomNav && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-1.5 text-zinc-600 hover:text-zinc-950"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            )}
 
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-900 bg-zinc-950 text-white shadow-xs">
@@ -375,20 +412,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Button
               size="sm"
               onClick={() => setIsAiDrawerOpen(true)}
-              className="h-8 px-2.5 sm:px-3 text-xs bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
+              // Redundant for the roles that carry the agent as a section of
+              // its own; the operator console keeps the shortcut.
+              className={`h-8 px-2.5 sm:px-3 text-xs bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5 ${
+                usesBottomNav ? "hidden" : ""
+              }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
               <span className="hidden sm:inline">AI Agent</span>
             </Button>
 
             {/* Emergency SAR shortcut */}
-            <Link
-              href="/app/lost-fisherman"
-              className="hidden md:inline-flex items-center gap-1.5 text-xs h-8 px-2.5 rounded-md border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 font-medium transition-colors"
-            >
-              <LifeBuoy className="h-3.5 w-3.5 text-rose-600" />
-              <span>SAR / Lost</span>
-            </Link>
+            {role === "operator" && (
+              <Link
+                href="/app/lost-fisherman"
+                className="hidden md:inline-flex items-center gap-1.5 text-xs h-8 px-2.5 rounded-md border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 font-medium transition-colors"
+              >
+                <LifeBuoy className="h-3.5 w-3.5 text-rose-600" />
+                <span>SAR / Lost</span>
+              </Link>
+            )}
 
             {/* Back to landing link */}
             <Link
@@ -458,7 +501,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !usesBottomNav && (
           <div className="lg:hidden fixed inset-0 z-40 flex">
             <div
               className="fixed inset-0 bg-black/30 backdrop-blur-xs"
@@ -530,14 +573,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Dynamic Page Content */}
         <main
           className={`flex-1 ${
-            pathname === "/app/ai-agent"
+            isAgentPage
               ? "overflow-hidden flex flex-col p-2 sm:p-4"
               : "overflow-y-auto p-4 sm:p-6 lg:p-8"
-          }`}
+          } ${usesBottomNav ? "pb-20 lg:pb-4" : ""}`}
         >
           <div
             className={`w-full ${
-              pathname === "/app/ai-agent"
+              isAgentPage
                 ? "max-w-4xl mx-auto flex-1 flex flex-col h-full min-h-0"
                 : "mx-auto max-w-7xl"
             }`}
@@ -546,6 +589,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+
+      {/* Mobile-first bottom tab bar (fisherman role only) */}
+      {usesBottomNav && <MobileBottomNav items={sortedNav} />}
 
       {/* Global AI Assistant Drawer */}
       <AiDrawer />

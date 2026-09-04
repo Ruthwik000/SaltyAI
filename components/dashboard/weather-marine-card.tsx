@@ -65,7 +65,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
             <CloudSun className="h-4 w-4" />
           </div>
           <div>
-            <CardTitle className="text-base font-semibold text-zinc-950">
+            <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
               Weather & Marine Conditions
             </CardTitle>
             <p className="text-[11px] text-zinc-500">

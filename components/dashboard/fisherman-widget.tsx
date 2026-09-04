@@ -26,7 +26,7 @@ export function FishermanWidget({
     <Card className="border-zinc-200">
       <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-base font-semibold text-zinc-950">
+          <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
             Highest Suitability Fishing Zone Today
           </CardTitle>
         </div>
@@ -41,7 +41,7 @@ export function FishermanWidget({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-zinc-50 border border-zinc-200/80">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-sm text-zinc-950">
+              <span className="font-semibold text-[13px] sm:text-sm text-zinc-950 leading-snug">
                 {nearbyPFZ.name}
               </span>
               <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">
@@ -67,14 +67,12 @@ export function FishermanWidget({
                 School: {schoolUpdate.schoolType}
               </span>
               <span>•</span>
-              <span>Front: {nearbyPFZ.sstGradientC}</span>
+              <span>About {nearbyPFZ.transitHours} h out</span>
               <span>•</span>
-              <span>Chl-a: {nearbyPFZ.chlorophyllMgM3} mg/m³</span>
-              <span>•</span>
-              <span>Est. Fuel: {nearbyPFZ.fuelEstimatedLiters} L</span>
+              <span>Fuel ~{nearbyPFZ.fuelEstimatedLiters} L</span>
             </div>
             <p className="text-[11px] text-emerald-900 bg-emerald-50/70 border border-emerald-100 rounded px-2 py-1 font-medium mt-1">
-              ⚡ Rapid School Growth Alert: {schoolUpdate.schoolAlert}
+              ⚡ Fish are gathering here: {schoolUpdate.schoolAlert}
             </p>
           </div>
 

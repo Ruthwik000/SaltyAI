@@ -17,7 +17,7 @@ export function ResearcherWidget({ location }: ResearcherWidgetProps) {
           <Badge variant="minimal" className="text-[10px] uppercase mb-1">
             Data Observation
           </Badge>
-          <CardTitle className="text-base font-semibold text-zinc-950">
+          <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
             SST & Chlorophyll Front Dynamics
           </CardTitle>
         </div>

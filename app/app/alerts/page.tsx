@@ -8,6 +8,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Sparkles, ArrowLeft } from "lucide-react";
+import { ResearchAlertsCard } from "@/components/operator/research-alerts-card";
 
 type SourceFilterType = "all" | "official" | "salty";
 
@@ -47,7 +48,7 @@ export default function AlertsDisastersPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
             Alerts & Disaster Early Warning
           </h1>
         </div>
@@ -63,6 +64,9 @@ export default function AlertsDisastersPage() {
           </Button>
         </div>
       </div>
+
+      {/* Findings escalated from the research console */}
+      <ResearchAlertsCard />
 
       {/* Critical Verification Notice: Official vs AI Distinction */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">

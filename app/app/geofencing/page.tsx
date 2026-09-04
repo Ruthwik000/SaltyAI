@@ -37,7 +37,7 @@ export default function GeofencingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
             Geofencing & Boundary Compliance
           </h1>
         </div>
