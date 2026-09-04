@@ -26,7 +26,6 @@ import {
 } from "@/lib/marine-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { frontendMapLayers } from "@/lib/frontend-map-data";
 
 const layerControls: {
   id: MapLayer;
@@ -35,13 +34,15 @@ const layerControls: {
   color?: string;
 }[] = [
   { id: "geofence", label: "Geofences & IMBL", icon: ShieldAlert, color: "#ef4444" },
-  { id: "pfz", label: "PFZ Catch Zones", icon: Fish, color: "#eab308" },
   { id: "sst", label: "SST Fronts", icon: Thermometer, color: "#f97316" },
   { id: "wind", label: "Wind Stream", icon: Wind, color: "#38bdf8" },
-  { id: "chlorophyll", label: "Chlorophyll", icon: Eye, color: "#22c55e" },
   { id: "waves", label: "Wave State", icon: Waves, color: "#818cf8" },
   { id: "swell", label: "Swell", icon: Waves, color: "#a78bfa" },
+  { id: "wavePeriod", label: "Wave Period", icon: Waves, color: "#38bdf8" },
+  { id: "swellPeriod", label: "Swell Period", icon: Waves, color: "#a78bfa" },
   { id: "currents", label: "Currents", icon: Compass, color: "#14b8a6" },
+  { id: "mld", label: "Mixed Layer Depth", icon: Waves, color: "#22c55e" },
+  { id: "d20", label: "D20", icon: Waves, color: "#eab308" },
 ];
 
 function getGeofenceProximity(station: MarineLocation) {
@@ -80,9 +81,9 @@ export default function MarineMapPage() {
     "wind",
   ]);
   const [selectedStation, setSelectedStation] = React.useState<MarineLocation>(location);
-  // Map visualization is intentionally frontend-only. The backend status is
-  // retained for the rest of the application, but it does not gate map layers.
-  const layers = frontendMapLayers;
+  // Forecast fields come directly from INCOIS WMS in MarineMap. No local or
+  // synthetic ocean values are passed to the renderer.
+  const layers = { layers: {} as Record<string, never[]> };
 
   const effectiveActiveLayers = React.useMemo(() => {
     return isFisherman ? activeLayers : activeLayers.filter((l) => l !== "geofence");
@@ -110,6 +111,19 @@ export default function MarineMapPage() {
       pfzZones.find((z) => z.referencePort === selectedStation.name) || pfzZones[0]
     );
   }, [selectedStation]);
+
+  return (
+    <main className="relative -m-4 h-[calc(100vh-56px)] overflow-hidden bg-slate-900 sm:-m-6 lg:-m-8">
+      <div className="h-full w-full overflow-hidden bg-white">
+        <iframe
+          title="INCOIS Ocean State Forecast"
+          src="/api/incois/frame/oceanservices/osfforecast.jsp"
+          className="h-[calc(100%+86px)] w-full -translate-y-[86px] border-0 bg-white"
+          allow="fullscreen"
+        />
+      </div>
+    </main>
+  );
 
   return (
     <div className="space-y-6">
