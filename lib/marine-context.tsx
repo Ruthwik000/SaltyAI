@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { marineLocations, MarineLocation } from "./marine-data";
-import { MapLayersResponse, saltyFetch } from "./api";
+import { saltyFetch } from "./api";
 
 export type UserRole = "fisherman" | "researcher" | "operator";
 
@@ -37,7 +37,7 @@ interface MarineContextType {
   toggleSaveZone: (id: string) => void;
   activeAlertCount: number;
   backendStatus: "loading" | "ready" | "offline";
-  backendLayers: MapLayersResponse | null;
+  backendLayers: null;
   refreshBackendLayers: () => void;
   operatorNotifications: OperatorNotification[];
   addOperatorNotification: (notif: Omit<OperatorNotification, "id" | "timestamp">) => void;
@@ -81,13 +81,12 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
   const [isAiDrawerOpen, setIsAiDrawerOpen] = React.useState(false);
   const [savedZoneIds, setSavedZoneIds] = React.useState<string[]>(["pfz-vizag-01"]);
   const [backendStatus, setBackendStatus] = React.useState<"loading" | "ready" | "offline">("loading");
-  const [backendLayers, setBackendLayers] = React.useState<MapLayersResponse | null>(null);
+  const [backendLayers] = React.useState<null>(null);
 
   const refreshBackendLayers = React.useCallback(() => {
     const controller = new AbortController();
-    saltyFetch<MapLayersResponse>("/api/map/layers", controller.signal)
-      .then((data) => {
-        setBackendLayers(data);
+    saltyFetch<{ ok: boolean }>("/api/health", controller.signal)
+      .then(() => {
         setBackendStatus("ready");
       })
       .catch(() => setBackendStatus("offline"));
