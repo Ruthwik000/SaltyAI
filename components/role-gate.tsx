@@ -13,14 +13,16 @@ export function RoleGate({ children }: { children: React.ReactNode }) {
   );
 
   const hasRole = isClient ? Boolean(window.localStorage.getItem("salty_role")) : false;
+  const hasPhoneNumber = isClient ? Boolean(window.localStorage.getItem("salty_phone_number")) : false;
+  const onboardingComplete = hasRole && hasPhoneNumber;
 
   React.useEffect(() => {
-    if (isClient && !hasRole) {
+    if (isClient && !onboardingComplete) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [isClient, hasRole, pathname, router]);
+  }, [isClient, onboardingComplete, pathname, router]);
 
-  if (!isClient || !hasRole) {
+  if (!isClient || !onboardingComplete) {
     return <div className="min-h-screen bg-zinc-50" aria-label="Loading SALTY Marine" />;
   }
 
