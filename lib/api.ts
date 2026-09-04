@@ -1,6 +1,21 @@
 export type BackendStatus = "loading" | "ready" | "offline";
 
 const API_BASE = process.env.NEXT_PUBLIC_SALTY_API_URL || "http://127.0.0.1:8010";
+export const CALL_AGENT_BASE =
+  process.env.NEXT_PUBLIC_SALTY_CALL_AGENT_URL || "http://127.0.0.1:8001";
+
+export interface CallAgentStatus {
+  status: string;
+  timestamp?: string;
+}
+
+export async function checkCallAgent(): Promise<CallAgentStatus> {
+  const response = await fetch(`${CALL_AGENT_BASE}/health/live`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`Call Agent ${response.status}`);
+  return response.json() as Promise<CallAgentStatus>;
+}
 
 export async function saltyFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, { signal, cache: "no-store" });

@@ -29,6 +29,8 @@ export interface ActiveJourney {
 interface MarineContextType {
   role: UserRole;
   setRole: (role: UserRole) => void;
+  phoneNumber: string;
+  setPhoneNumber: (phoneNumber: string) => void;
   location: MarineLocation;
   setLocationId: (id: string) => void;
   isAiDrawerOpen: boolean;
@@ -78,6 +80,17 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
     return "vizag";
   });
 
+  const [phoneNumber, setPhoneNumberState] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("salty_phone_number") || "";
+      } catch {
+        // ignore
+      }
+    }
+    return "";
+  });
+
   const [isAiDrawerOpen, setIsAiDrawerOpen] = React.useState(false);
   const [savedZoneIds, setSavedZoneIds] = React.useState<string[]>(["pfz-vizag-01"]);
   const [backendStatus, setBackendStatus] = React.useState<"loading" | "ready" | "offline">("loading");
@@ -100,6 +113,15 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
     setRoleState(newRole);
     try {
       localStorage.setItem("salty_role", newRole);
+    } catch {
+      // ignore
+    }
+  };
+
+  const setPhoneNumber = (newPhoneNumber: string) => {
+    setPhoneNumberState(newPhoneNumber);
+    try {
+      localStorage.setItem("salty_phone_number", newPhoneNumber);
     } catch {
       // ignore
     }
@@ -196,6 +218,8 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
       value={{
         role,
         setRole,
+        phoneNumber,
+        setPhoneNumber,
         location,
         setLocationId,
         isAiDrawerOpen,

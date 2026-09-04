@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
 import { generateMessageId } from "@/lib/id";
 import { askMarineAgent } from "@/lib/api";
+import { CallAgentLauncher } from "@/components/call-agent-launcher";
 import {
   Sparkles,
   ArrowUp,
@@ -493,6 +494,9 @@ export default function AiAgentPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 relative">
+      <div className="flex shrink-0 justify-end pb-2">
+        <CallAgentLauncher />
+      </div>
       {/* Active Conversation Top Bar (only visible once chat has started) */}
       {hasStarted && (
         <header className="shrink-0 flex items-center justify-between pb-3 mb-2 border-b border-zinc-200/80">
