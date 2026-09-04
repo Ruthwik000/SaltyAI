@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
 import { generateMessageId } from "@/lib/id";
+import { askMarineAgent } from "@/lib/api";
 import {
   Sparkles,
   ArrowUp,
@@ -186,6 +187,42 @@ export default function AiAgentPage() {
       }
     }
     setIsTyping(true);
+    if (mode === "research") {
+      setResearchStage("Grounding your question with approved marine datasets...");
+    }
+
+    void askMarineAgent(query, { mode })
+      .then((result) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateMessageId("a"),
+            sender: "agent",
+            mode,
+            text: result.response || "NOT AVAILABLE",
+            sources: result.tool_calls.map((call) => call.tool),
+            time: "Just now",
+          },
+        ]);
+      })
+      .catch((error: unknown) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateMessageId("a"),
+            sender: "agent",
+            mode,
+            text: `The grounded marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and Ollama, then try again."}`,
+            time: "Just now",
+          },
+        ]);
+      })
+      .finally(() => {
+        setIsTyping(false);
+        setResearchStage("");
+      });
+
+    return;
 
     const isResearchMode = mode === "research";
 

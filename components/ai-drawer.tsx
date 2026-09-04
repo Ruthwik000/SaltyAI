@@ -6,6 +6,7 @@ import { useMarine } from "@/lib/marine-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateMessageId } from "@/lib/id";
+import { askMarineAgent } from "@/lib/api";
 import {
   X,
   Send,
@@ -64,6 +65,36 @@ export function AiDrawer() {
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputQuery("");
     setIsTyping(true);
+
+    void askMarineAgent(query)
+      .then((result) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateMessageId("a"),
+            sender: "agent",
+            text: result.response || "NOT AVAILABLE",
+            sources: result.tool_calls.map((call) => call.tool),
+            time: "Just now",
+          },
+        ]);
+      })
+      .catch((error: unknown) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateMessageId("a"),
+            sender: "agent",
+            text: `The marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and Ollama, then try again."}`,
+            time: "Just now",
+          },
+        ]);
+      })
+      .finally(() => setIsTyping(false));
+
+    // The previous browser-only response tree remains below as a fallback reference
+    // for the prototype UI; live requests return through the grounded API above.
+    return;
 
     setTimeout(() => {
       let reply: ChatMessage;

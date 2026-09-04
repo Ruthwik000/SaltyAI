@@ -67,7 +67,7 @@ function getGeofenceProximity(station: MarineLocation) {
 }
 
 export default function MarineMapPage() {
-  const { role, location, setLocationId, setIsAiDrawerOpen, backendStatus, backendLayers } =
+  const { role, location, setLocationId, setIsAiDrawerOpen, backendStatus, backendLayers, refreshBackendLayers } =
     useMarine();
   const isFisherman = role === "fisherman";
 
@@ -186,6 +186,15 @@ export default function MarineMapPage() {
               </button>
             );
           })}
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+          <span className={`h-2 w-2 rounded-full ${backendStatus === "ready" ? "bg-emerald-500" : backendStatus === "loading" ? "bg-amber-400 animate-pulse" : "bg-rose-500"}`} />
+          <span>{backendStatus === "ready" ? "Live telemetry connected" : backendStatus === "loading" ? "Loading telemetry…" : "Telemetry offline"}</span>
+          {backendStatus === "offline" && (
+            <button type="button" onClick={refreshBackendLayers} className="font-medium text-zinc-900 underline underline-offset-2">
+              Retry
+            </button>
+          )}
         </div>
       </div>
 

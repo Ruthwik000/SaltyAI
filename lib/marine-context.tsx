@@ -38,6 +38,7 @@ interface MarineContextType {
   activeAlertCount: number;
   backendStatus: "loading" | "ready" | "offline";
   backendLayers: MapLayersResponse | null;
+  refreshBackendLayers: () => void;
   operatorNotifications: OperatorNotification[];
   addOperatorNotification: (notif: Omit<OperatorNotification, "id" | "timestamp">) => void;
   dismissNotification: (id: string) => void;
@@ -82,7 +83,7 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
   const [backendStatus, setBackendStatus] = React.useState<"loading" | "ready" | "offline">("loading");
   const [backendLayers, setBackendLayers] = React.useState<MapLayersResponse | null>(null);
 
-  React.useEffect(() => {
+  const refreshBackendLayers = React.useCallback(() => {
     const controller = new AbortController();
     saltyFetch<MapLayersResponse>("/api/map/layers", controller.signal)
       .then((data) => {
@@ -90,8 +91,11 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
         setBackendStatus("ready");
       })
       .catch(() => setBackendStatus("offline"));
-    return () => controller.abort();
   }, []);
+
+  React.useEffect(() => {
+    refreshBackendLayers();
+  }, [refreshBackendLayers]);
 
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
@@ -202,6 +206,7 @@ export function MarineProvider({ children }: { children: React.ReactNode }) {
         activeAlertCount: 4,
         backendStatus,
         backendLayers,
+        refreshBackendLayers: () => { void refreshBackendLayers(); },
         operatorNotifications,
         addOperatorNotification,
         dismissNotification,

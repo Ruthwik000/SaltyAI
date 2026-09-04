@@ -8,6 +8,32 @@ export async function saltyFetch<T>(path: string, signal?: AbortSignal): Promise
   return response.json() as Promise<T>;
 }
 
+export interface AgentResponse {
+  user_query: string;
+  response: string;
+  tool_calls: { tool: string; arguments: Record<string, unknown> }[];
+  returned_data: { tool: string; data: unknown }[];
+  synthetic?: boolean;
+}
+
+export async function askMarineAgent(
+  query: string,
+  options: { mode?: "normal" | "research"; signal?: AbortSignal } = {}
+): Promise<AgentResponse> {
+  const response = await fetch(`${API_BASE}/api/llm/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, mode: options.mode || "normal" }),
+    signal: options.signal,
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}));
+    throw new Error(detail.error || `SALTY LLM ${response.status}`);
+  }
+  return response.json() as Promise<AgentResponse>;
+}
+
 export interface MapLayerRecord {
   latitude: number;
   longitude: number;
