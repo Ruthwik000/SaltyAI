@@ -200,7 +200,9 @@ export default function AiAgentPage() {
             sender: "agent",
             mode,
             text: result.response || "NOT AVAILABLE",
-            sources: result.tool_calls.map((call) => call.tool),
+            sources: result.synthetic
+              ? ["mock_marine_forecast"]
+              : result.tool_calls.map((call) => call.tool),
             time: "Just now",
           },
         ]);
