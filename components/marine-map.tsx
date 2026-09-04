@@ -13,6 +13,7 @@ export type MapLayer =
   | "chlorophyll"
   | "wind"
   | "waves"
+  | "swell"
   | "currents"
   | "pfz"
   | "geofence";
@@ -32,6 +33,7 @@ const sourceNames: Record<string, MapLayer> = {
   chlorophyll: "chlorophyll",
   wind: "wind",
   wave: "waves",
+  swell: "swell",
   current: "currents",
 };
 
@@ -42,6 +44,15 @@ const layerColors: Record<string, string> = {
   wave: "#818cf8",
   current: "#14b8a6",
   swell: "#a78bfa",
+};
+
+const heatmapColors: Record<string, string[]> = {
+  SST: ["#24126a", "#2146c7", "#12a7d4", "#72d55b", "#f4e64c", "#ef762f"],
+  chlorophyll: ["#071b4a", "#064b8f", "#00a6a6", "#53c653", "#d8e64b", "#f4a340"],
+  wind: ["#111b69", "#154cc1", "#16b6dc", "#53d6c1", "#f3e95b", "#eb552d"],
+  wave: ["#17105b", "#2d55c8", "#1cb6d0", "#75d36d", "#f2df51", "#e85b32"],
+  swell: ["#17105b", "#3846bd", "#169dd0", "#7dca71", "#e6d553", "#e45535"],
+  current: ["#17105b", "#2254c1", "#12b8d0", "#58d18a", "#e9e34e", "#e95f32"],
 };
 
 function pointFeature(record: MapLayerRecord) {
@@ -74,6 +85,7 @@ export function MarineMap({
   const mapRef = React.useRef<MapLibreMap | null>(null);
   const particleCanvas = React.useRef<HTMLCanvasElement>(null);
   const [basemap, setBasemap] = React.useState<"openmap" | "satellite">("openmap");
+  const [mapError, setMapError] = React.useState<string | null>(null);
 
   const onSelectStationRef = React.useRef(onSelectStation);
   React.useEffect(() => {
@@ -87,7 +99,8 @@ export function MarineMap({
     if (!mapNode.current || mapRef.current) return;
     const initial = initialStationRef.current;
 
-    const map = new maplibregl.Map({
+    try {
+      const map = new maplibregl.Map({
       container: mapNode.current,
       center: [initial.lon, initial.lat],
       zoom: 5.25,
@@ -148,8 +161,11 @@ export function MarineMap({
       },
     });
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "nautical" }), "bottom-right");
+      map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
+      map.addControl(new maplibregl.ScaleControl({ unit: "nautical" }), "bottom-right");
+      map.on("error", (event) => {
+        setMapError(event.error?.message || "Map tiles are unavailable");
+      });
 
     map.on("load", () => {
       // 1. Add Station Markers
@@ -388,11 +404,15 @@ export function MarineMap({
       });
     });
 
-    mapRef.current = map;
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
+      mapRef.current = map;
+      return () => {
+        map.remove();
+        mapRef.current = null;
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Map renderer unavailable";
+      window.setTimeout(() => setMapError(message), 0);
+    }
   }, [geofences, pfzZones, stations]);
 
   // Handle basemap switching
@@ -441,14 +461,23 @@ export function MarineMap({
           map.addSource(sourceId, { type: "geojson", data });
           map.addLayer({
             id: sourceId,
-            type: "circle",
+            type: "heatmap",
             source: sourceId,
             paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 3, 8, 7],
-              "circle-color": layerColors[parameter] || "#38bdf8",
-              "circle-opacity": 0.72,
-              "circle-stroke-color": "#ffffff",
-              "circle-stroke-width": 0.8,
+              "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 3, 18, 6, 30, 10, 48],
+              "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 3, 0.7, 8, 1.4],
+              "heatmap-opacity": 0.8,
+              "heatmap-weight": 1,
+              "heatmap-color": [
+                "interpolate", ["linear"], ["heatmap-density"],
+                0, "rgba(0,0,0,0)",
+                0.12, heatmapColors[parameter]?.[0] || "#17105b",
+                0.28, heatmapColors[parameter]?.[1] || "#2254c1",
+                0.45, heatmapColors[parameter]?.[2] || "#12b8d0",
+                0.62, heatmapColors[parameter]?.[3] || "#58d18a",
+                0.8, heatmapColors[parameter]?.[4] || "#e9e34e",
+                1, heatmapColors[parameter]?.[5] || "#e95f32",
+              ],
             },
             layout: {
               visibility: activeLayers.includes(mapLayer) ? "visible" : "none",
@@ -557,8 +586,96 @@ export function MarineMap({
 
   return (
     <div className="relative h-[560px] w-full overflow-hidden bg-slate-900">
+      {/* Offline-safe geographic basemap. It remains visible when external raster
+          tiles are blocked, while MapLibre renders above it when available. */}
+      <div className="absolute inset-0 z-0 overflow-hidden bg-[#bfe3eb]">
+        <svg
+          aria-label="Bay of Bengal marine map"
+          className="h-full w-full"
+          viewBox="0 0 1000 620"
+          preserveAspectRatio="none"
+          role="img"
+        >
+          <rect width="1000" height="620" fill="#bfe3eb" />
+          <path
+            d="M0 0H318C344 64 361 121 350 180C341 235 365 283 349 329C329 386 290 415 255 455C225 490 210 549 197 620H0Z"
+            fill="#e8e2cf"
+            stroke="#9aa99a"
+            strokeWidth="2"
+          />
+          <path
+            d="M1000 0H890C862 80 853 150 866 221C879 292 855 361 868 438C879 501 909 557 922 620H1000Z"
+            fill="#e8e2cf"
+            stroke="#9aa99a"
+            strokeWidth="2"
+          />
+          <g fill="none" stroke="#70b5c4" strokeWidth="1" opacity=".55">
+            <path d="M0 124H1000M0 248H1000M0 372H1000M0 496H1000" />
+            <path d="M166 0V620M332 0V620M498 0V620M664 0V620M830 0V620" />
+          </g>
+          <g fill="#397f91" fontFamily="sans-serif" fontSize="16" letterSpacing="2" opacity=".8">
+            <text x="515" y="290">BAY OF BENGAL</text>
+            <text x="515" y="316" fontSize="11" letterSpacing="1">MARINE OPERATIONS CHART</text>
+          </g>
+          <g fill="#526b62" fontFamily="sans-serif" fontSize="12">
+            <text x="205" y="205">INDIA</text>
+            <text x="845" y="410">MYANMAR</text>
+            <text x="265" y="385">VISAKHAPATNAM</text>
+            <text x="220" y="400" fontSize="10">EAST COAST</text>
+          </g>
+          <circle cx="302" cy="373" r="6" fill="#0284c7" stroke="white" strokeWidth="3" />
+          <circle cx="302" cy="373" r="18" fill="none" stroke="#0284c7" strokeWidth="2" opacity=".4" />
+        </svg>
+      </div>
       {/* MapLibre DOM node */}
-      <div ref={mapNode} className="absolute inset-0" />
+      <div ref={mapNode} className="absolute inset-0 z-[1]" />
+
+      {(mapError || Object.keys(layers).length > 0) && (
+        <div className="absolute inset-0 z-[2] overflow-hidden bg-transparent text-zinc-800">
+          {mapError && <div className="absolute inset-0 bg-[#dcecf0]" />}
+          <div className="absolute inset-0 opacity-45" style={{ backgroundImage: "linear-gradient(rgba(14,116,144,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(14,116,144,.18) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          <div className="absolute left-1/2 top-1/2 h-72 w-[34rem] max-w-[90%] -translate-x-1/2 -translate-y-1/2 rounded-[50%] border border-cyan-700/20 bg-cyan-600/10" />
+          <div className="absolute left-4 top-20 rounded-md border border-amber-200 bg-white/90 px-3 py-2 text-[11px] shadow-sm">
+            Map tiles unavailable — showing marine data overlay
+          </div>
+          {stations.map((station) => (
+            <button
+              key={station.id}
+              type="button"
+              title={station.name}
+              onClick={() => onSelectStation(station)}
+              className={`absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow ${station.id === selectedStation.id ? "bg-sky-700 ring-4 ring-sky-700/20" : "bg-slate-600"}`}
+              style={{ left: `${30 + ((station.lon - 82.5) / 2) * 55}%`, top: `${65 - ((station.lat - 17) / 1.5) * 45}%` }}
+            />
+          ))}
+          {pfzZones.map((zone) => (
+            <button
+              key={zone.id}
+              type="button"
+              title={`${zone.name} (${zone.suitabilityScore}% match)`}
+              onClick={() => onSelectStation(selectedStation)}
+              className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-amber-400 shadow ring-4 ring-amber-300/30"
+              style={{ left: `${30 + ((zone.lon - 82.5) / 2) * 55}%`, top: `${65 - ((zone.lat - 17) / 1.5) * 45}%` }}
+            />
+          ))}
+          {Object.entries(layers).flatMap(([parameter, records]) => {
+            const mapLayer = sourceNames[parameter];
+            if (!mapLayer || !activeLayers.includes(mapLayer)) return [];
+            return records.map((record, index) => (
+              <span
+                key={`${parameter}-${record.timestamp}-${index}`}
+                title={`${parameter}: ${record.value} ${record.unit}`}
+                className="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow"
+                style={{
+                  left: `${30 + ((record.longitude - 82.5) / 2) * 55}%`,
+                  top: `${65 - ((record.latitude - 17) / 1.5) * 45}%`,
+                  backgroundColor: layerColors[parameter] || "#38bdf8",
+                }}
+              />
+            ));
+          })}
+        </div>
+      )}
 
       {/* Dynamic wind particles canvas */}
       <canvas ref={particleCanvas} className="pointer-events-none absolute inset-0 h-full w-full" />

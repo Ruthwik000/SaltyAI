@@ -26,6 +26,7 @@ import {
 } from "@/lib/marine-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { frontendMapLayers } from "@/lib/frontend-map-data";
 
 const layerControls: {
   id: MapLayer;
@@ -39,6 +40,7 @@ const layerControls: {
   { id: "wind", label: "Wind Stream", icon: Wind, color: "#38bdf8" },
   { id: "chlorophyll", label: "Chlorophyll", icon: Eye, color: "#22c55e" },
   { id: "waves", label: "Wave State", icon: Waves, color: "#818cf8" },
+  { id: "swell", label: "Swell", icon: Waves, color: "#a78bfa" },
   { id: "currents", label: "Currents", icon: Compass, color: "#14b8a6" },
 ];
 
@@ -67,7 +69,7 @@ function getGeofenceProximity(station: MarineLocation) {
 }
 
 export default function MarineMapPage() {
-  const { role, location, setLocationId, setIsAiDrawerOpen, backendStatus, backendLayers, refreshBackendLayers } =
+  const { role, location, setLocationId, setIsAiDrawerOpen } =
     useMarine();
   const isFisherman = role === "fisherman";
 
@@ -78,7 +80,9 @@ export default function MarineMapPage() {
     "wind",
   ]);
   const [selectedStation, setSelectedStation] = React.useState<MarineLocation>(location);
-  const layers = backendLayers;
+  // Map visualization is intentionally frontend-only. The backend status is
+  // retained for the rest of the application, but it does not gate map layers.
+  const layers = frontendMapLayers;
 
   const effectiveActiveLayers = React.useMemo(() => {
     return isFisherman ? activeLayers : activeLayers.filter((l) => l !== "geofence");
@@ -188,13 +192,8 @@ export default function MarineMapPage() {
           })}
         </div>
         <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-          <span className={`h-2 w-2 rounded-full ${backendStatus === "ready" ? "bg-emerald-500" : backendStatus === "loading" ? "bg-amber-400 animate-pulse" : "bg-rose-500"}`} />
-          <span>{backendStatus === "ready" ? "Live telemetry connected" : backendStatus === "loading" ? "Loading telemetry…" : "Telemetry offline"}</span>
-          {backendStatus === "offline" && (
-            <button type="button" onClick={refreshBackendLayers} className="font-medium text-zinc-900 underline underline-offset-2">
-              Retry
-            </button>
-          )}
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span>Frontend layers ready</span>
         </div>
       </div>
 
@@ -214,7 +213,7 @@ export default function MarineMapPage() {
 
           <MarineMap
             activeLayers={effectiveActiveLayers}
-            layers={layers?.layers || {}}
+            layers={layers.layers}
             stations={marineLocations}
             pfzZones={pfzZones}
             geofences={isFisherman ? geofenceZones : []}
