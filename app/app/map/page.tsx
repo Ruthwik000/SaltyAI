@@ -34,12 +34,15 @@ const layerControls: {
   color?: string;
 }[] = [
   { id: "geofence", label: "Geofences & IMBL", icon: ShieldAlert, color: "#ef4444" },
-  { id: "pfz", label: "PFZ Catch Zones", icon: Fish, color: "#eab308" },
   { id: "sst", label: "SST Fronts", icon: Thermometer, color: "#f97316" },
   { id: "wind", label: "Wind Stream", icon: Wind, color: "#38bdf8" },
-  { id: "chlorophyll", label: "Chlorophyll", icon: Eye, color: "#22c55e" },
   { id: "waves", label: "Wave State", icon: Waves, color: "#818cf8" },
+  { id: "swell", label: "Swell", icon: Waves, color: "#a78bfa" },
+  { id: "wavePeriod", label: "Wave Period", icon: Waves, color: "#38bdf8" },
+  { id: "swellPeriod", label: "Swell Period", icon: Waves, color: "#a78bfa" },
   { id: "currents", label: "Currents", icon: Compass, color: "#14b8a6" },
+  { id: "mld", label: "Mixed Layer Depth", icon: Waves, color: "#22c55e" },
+  { id: "d20", label: "D20", icon: Waves, color: "#eab308" },
 ];
 
 function getGeofenceProximity(station: MarineLocation) {
@@ -67,7 +70,7 @@ function getGeofenceProximity(station: MarineLocation) {
 }
 
 export default function MarineMapPage() {
-  const { role, location, setLocationId, setIsAiDrawerOpen, backendStatus, backendLayers, refreshBackendLayers } =
+  const { role, location, setLocationId, setIsAiDrawerOpen } =
     useMarine();
   const isFisherman = role === "fisherman";
 
@@ -78,7 +81,9 @@ export default function MarineMapPage() {
     "wind",
   ]);
   const [selectedStation, setSelectedStation] = React.useState<MarineLocation>(location);
-  const layers = backendLayers;
+  // Forecast fields come directly from INCOIS WMS in MarineMap. No local or
+  // synthetic ocean values are passed to the renderer.
+  const layers = { layers: {} as Record<string, never[]> };
 
   const effectiveActiveLayers = React.useMemo(() => {
     return isFisherman ? activeLayers : activeLayers.filter((l) => l !== "geofence");
@@ -106,6 +111,19 @@ export default function MarineMapPage() {
       pfzZones.find((z) => z.referencePort === selectedStation.name) || pfzZones[0]
     );
   }, [selectedStation]);
+
+  return (
+    <main className="relative -m-4 h-[calc(100vh-56px)] overflow-hidden bg-slate-900 sm:-m-6 lg:-m-8">
+      <div className="h-full w-full overflow-hidden bg-white">
+        <iframe
+          title="INCOIS Ocean State Forecast"
+          src="/api/incois/frame/oceanservices/osfforecast.jsp"
+          className="h-[calc(100%+86px)] w-full -translate-y-[86px] border-0 bg-white"
+          allow="fullscreen"
+        />
+      </div>
+    </main>
+  );
 
   return (
     <div className="space-y-6">
@@ -188,13 +206,8 @@ export default function MarineMapPage() {
           })}
         </div>
         <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-          <span className={`h-2 w-2 rounded-full ${backendStatus === "ready" ? "bg-emerald-500" : backendStatus === "loading" ? "bg-amber-400 animate-pulse" : "bg-rose-500"}`} />
-          <span>{backendStatus === "ready" ? "Live telemetry connected" : backendStatus === "loading" ? "Loading telemetry…" : "Telemetry offline"}</span>
-          {backendStatus === "offline" && (
-            <button type="button" onClick={refreshBackendLayers} className="font-medium text-zinc-900 underline underline-offset-2">
-              Retry
-            </button>
-          )}
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span>Frontend layers ready</span>
         </div>
       </div>
 
@@ -214,7 +227,7 @@ export default function MarineMapPage() {
 
           <MarineMap
             activeLayers={effectiveActiveLayers}
-            layers={layers?.layers || {}}
+            layers={layers.layers}
             stations={marineLocations}
             pfzZones={pfzZones}
             geofences={isFisherman ? geofenceZones : []}

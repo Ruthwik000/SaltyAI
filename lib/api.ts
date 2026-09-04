@@ -45,6 +45,7 @@ export interface MapLayerRecord {
 }
 
 export interface MapLayersResponse {
+  region?: { min_lat: number; max_lat: number; min_lon: number; max_lon: number };
   layers: Record<string, MapLayerRecord[]>;
   sources: { parameter: string; dataset: string; variable: string; unit: string }[];
   unavailable_parameters: string[];
