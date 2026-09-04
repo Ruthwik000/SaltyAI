@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     const type = upstream.headers.get("content-type") || "application/octet-stream";
     if (type.includes("text/html") || type.includes("javascript") || type.includes("css")) {
       let body = await upstream.text();
-      if (type.includes("text/html")) body = body.replace(/<head>/i, '<head><base href="/api/incois/frame/oceanservices/">');
+      if (type.includes("text/html")) body = body.replace(/<head>/i, '<head><base href="/api/incois/frame/oceanservices/osfforecast.jsp">');
       // The official page contains a few root-relative WMS/geoserver URLs.
       // Keep them inside this same-origin proxy so the iframe can use them.
       body = body.replace(/(["'(])\/(thredds|geoserver|json|site|portal|assets)\//g, "$1/api/incois/frame/$2/");
