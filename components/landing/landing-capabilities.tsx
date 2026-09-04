@@ -57,7 +57,7 @@ const defaultCapabilities: CapabilityItem[] = [
     label: "Safety boundary",
     title: "Make the boundary unambiguous.",
     text: "Run point-in-zone checks and nearest-boundary queries against GeoJSON restricted areas.",
-    href: "/app/geofencing",
+    href: "/app/map",
     tag: "GEOFENCE / SAFETY",
   },
   {
@@ -79,9 +79,6 @@ export function LandingCapabilities({
     <section id="platform" className="border-b border-zinc-200/80 py-20 sm:py-28">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="mb-12 max-w-2xl">
-          <Badge variant="minimal" className="mb-2 text-[10px] uppercase tracking-widest">
-            One coastal workspace
-          </Badge>
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl text-zinc-950">
             From raw feeds to a decision you can inspect.
           </h2>
@@ -102,7 +99,7 @@ export function LandingCapabilities({
                 <div>
                   <div className="flex items-center justify-between">
                     <Icon className="h-5 w-5 text-zinc-700" />
-                    <span className="font-sans text-[10px] text-zinc-400">{item.tag}</span>
+  
                   </div>
                   <h3 className="mt-8 text-base font-semibold tracking-tight text-zinc-950">
                     {item.title}

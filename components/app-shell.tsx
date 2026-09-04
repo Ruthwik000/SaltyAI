@@ -23,6 +23,8 @@ import {
   ChevronDown,
   Menu,
   X,
+  Bell,
+  User,
 } from "lucide-react";
 
 interface NavItem {
@@ -51,7 +53,7 @@ const navItems: NavItem[] = [
     href: "/app/map",
     label: "Marine Map",
     icon: Map,
-    badge: "Live Layers",
+    //badge: "Live Layers",
     badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
     roles: ["fisherman", "researcher", "operator"],
     priority: { fisherman: 6, researcher: 1, operator: 5 },
@@ -60,7 +62,7 @@ const navItems: NavItem[] = [
     href: "/app/fishing-zones",
     label: "Fishing Zones",
     icon: Fish,
-    badge: "PFZ 94%",
+    //badge: "PFZ 94%",
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     roles: ["fisherman", "researcher"],
     priority: { fisherman: 2, researcher: 5, operator: 8 },
@@ -69,14 +71,14 @@ const navItems: NavItem[] = [
     href: "/app/weather",
     label: "Weather & Marine",
     icon: CloudSun,
-    roles: ["fisherman", "researcher", "operator"],
+    roles: ["researcher", "operator"],
     priority: { fisherman: 3, researcher: 4, operator: 6 },
   },
   {
     href: "/app/risk",
     label: "Risk & Safety",
     icon: ShieldAlert,
-    badge: "Low 28",
+    //badge: "Low 28",
     badgeColor: "bg-zinc-100 text-zinc-800 border-zinc-200",
     roles: ["fisherman", "operator", "researcher"],
     priority: { fisherman: 4, researcher: 6, operator: 4 },
@@ -85,34 +87,25 @@ const navItems: NavItem[] = [
     href: "/app/alerts",
     label: "Alerts & Disasters",
     icon: AlertTriangle,
-    badge: "4 Active",
+    //badge: "4 Active",
     badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-    roles: ["fisherman", "operator", "researcher"],
+    roles: ["operator", "researcher"],
     priority: { fisherman: 5, researcher: 7, operator: 3 },
-  },
-  {
-    href: "/app/geofencing",
-    label: "Geofencing",
-    icon: Compass,
-    badge: "IMBL",
-    badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
-    roles: ["fisherman", "operator"],
-    priority: { fisherman: 7, researcher: 8, operator: 4 },
   },
   {
     href: "/app/research",
     label: "Research & Data",
     icon: Database,
-    badge: "ERDDAP",
+    //badge: "ERDDAP",
     badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
-    roles: ["researcher", "operator"],
+    roles: ["researcher"],
     priority: { fisherman: 9, researcher: 2, operator: 7 },
   },
   {
     href: "/app/vessel",
     label: "Vessel / GPS",
     icon: Navigation,
-    badge: "Live AIS",
+    //badge: "Live AIS",
     badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     roles: ["fisherman", "operator"],
     priority: { fisherman: 4, researcher: 9, operator: 2 },
@@ -121,7 +114,7 @@ const navItems: NavItem[] = [
     href: "/app/lost-fisherman",
     label: "Lost Fisherman",
     icon: LifeBuoy,
-    badge: "SAR",
+    //badge: "SAR",
     badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
     roles: ["operator", "fisherman"],
     priority: { fisherman: 8, researcher: 10, operator: 3 },
@@ -130,7 +123,7 @@ const navItems: NavItem[] = [
     href: "/app/ai-agent",
     label: "AI Marine Agent",
     icon: Sparkles,
-    badge: "Grounded",
+    //badge: "Grounded",
     badgeColor: "bg-zinc-100 text-zinc-900 border-zinc-300",
     roles: ["fisherman", "researcher", "operator"],
     priority: { fisherman: 5, researcher: 3, operator: 5 },
@@ -139,14 +132,28 @@ const navItems: NavItem[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { role, location, setLocationId, setIsAiDrawerOpen, backendStatus } = useMarine();
+  const {
+    role,
+    setRole,
+    location,
+    setLocationId,
+    setIsAiDrawerOpen,
+    backendStatus,
+    operatorNotifications,
+  } = useMarine();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [locationDropdownOpen, setLocationDropdownOpen] = React.useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = React.useState(false);
+  const [notificationsDropdownOpen, setNotificationsDropdownOpen] = React.useState(false);
 
-  // Sort navigation items based on current role's priority
+  // Filter navigation items by active role and sort based on role priority
   const sortedNav = React.useMemo(() => {
-    return [...navItems].sort((a, b) => a.priority[role] - b.priority[role]);
+    return navItems
+      .filter((item) => item.roles.includes(role))
+      .sort((a, b) => a.priority[role] - b.priority[role]);
   }, [role]);
+
+  const hasCriticalAlert = operatorNotifications.some((n) => n.severity === "critical");
 
   return (
     <div className="min-h-screen bg-zinc-50/50 flex flex-col">
@@ -168,32 +175,74 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold tracking-tight text-zinc-950">
-                  salty<span className="text-zinc-400">.marine</span>
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-sans font-medium bg-zinc-100 text-zinc-600">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      backendStatus === "ready"
-                        ? "bg-emerald-500"
-                        : backendStatus === "loading"
-                        ? "bg-amber-500 animate-pulse"
-                        : "bg-zinc-400"
-                    }`}
-                  />
-                  {backendStatus === "ready"
-                    ? "LIVE TELEMETRY"
-                    : backendStatus === "loading"
-                    ? "SYNCING"
-                    : "STANDALONE"}
+                  salty<span className="text-zinc-400">.ai</span>
                 </span>
               </div>
             </Link>
-
-      
           </div>
 
-          {/* Right: Location Selector + Quick AI + SAR */}
+          {/* Right: Role Switcher + Location Selector + Operator Notifications + Quick AI + SAR */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Role Switcher Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 shadow-xs cursor-pointer font-medium capitalize"
+                title="Switch Active Operational Role"
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    role === "fisherman"
+                      ? "bg-emerald-500"
+                      : role === "operator"
+                      ? "bg-amber-500"
+                      : "bg-purple-500"
+                  }`}
+                />
+                <span className="font-semibold text-zinc-950 hidden sm:inline">
+                  {role === "fisherman"
+                    ? "Fisherman"
+                    : role === "operator"
+                    ? "Coastal Operator"
+                    : "Researcher"}
+                </span>
+                <ChevronDown className="h-3 w-3 text-zinc-400" />
+              </button>
+
+              {roleDropdownOpen && (
+                <div className="absolute right-0 mt-1.5 w-48 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 z-50 text-xs font-sans">
+                  <div className="px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold border-b border-zinc-100">
+                    Switch Role View
+                  </div>
+                  {(["fisherman", "operator", "researcher"] as UserRole[]).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => {
+                        setRole(r);
+                        setRoleDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-2.5 py-2 rounded-md transition-colors flex items-center justify-between cursor-pointer capitalize ${
+                        role === r
+                          ? "bg-zinc-100 font-semibold text-zinc-950"
+                          : "hover:bg-zinc-50 text-zinc-700"
+                      }`}
+                    >
+                      <span>
+                        {r === "fisherman"
+                          ? "Fisherman"
+                          : r === "operator"
+                          ? "Coastal Operator"
+                          : "Researcher"}
+                      </span>
+                      {role === r && <span className="text-[10px] text-zinc-500">Active</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Location Selector Dropdown */}
             <div className="relative">
               <button
@@ -239,6 +288,88 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               )}
             </div>
+
+            {/* Operator Notifications Bell Dropdown */}
+            {role === "operator" && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNotificationsDropdownOpen(!notificationsDropdownOpen)}
+                  className={`relative p-1.5 rounded-md border transition-colors cursor-pointer ${
+                    hasCriticalAlert
+                      ? "border-rose-400 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700"
+                  }`}
+                  title="Coastal Operator Fleet Notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                  {operatorNotifications.length > 0 && (
+                    <span
+                      className={`absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center text-white ${
+                        hasCriticalAlert ? "bg-rose-600 animate-pulse" : "bg-zinc-900"
+                      }`}
+                    >
+                      {operatorNotifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsDropdownOpen && (
+                  <div className="absolute right-0 mt-1.5 w-80 rounded-xl border border-zinc-200 bg-white shadow-xl p-3 z-50 text-xs font-sans">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-100">
+                      <span className="font-bold text-zinc-950 text-xs flex items-center gap-1.5">
+                        <Bell className="h-3.5 w-3.5 text-zinc-700" />
+                        Operator Fleet Alerts
+                      </span>
+                      <span className="text-[10px] text-zinc-500">
+                        {operatorNotifications.length} Broadcasts
+                      </span>
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                      {operatorNotifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`p-2.5 rounded-lg border text-xs ${
+                            notif.severity === "critical"
+                              ? "bg-rose-50 border-rose-200 text-rose-950"
+                              : "bg-zinc-50 border-zinc-200 text-zinc-900"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between font-semibold">
+                            <span className="truncate max-w-[170px]">{notif.title}</span>
+                            <span className="text-[10px] text-zinc-400 font-sans font-normal">
+                              {notif.timestamp}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-600 mt-1 leading-snug">
+                            {notif.message}
+                          </p>
+                          {notif.type === "lost_fisherman_sos" && (
+                            <Link
+                              href="/app/lost-fisherman"
+                              onClick={() => setNotificationsDropdownOpen(false)}
+                              className="inline-block mt-2 font-bold text-rose-700 hover:underline text-[11px]"
+                            >
+                              Open Search & Rescue (SAR) →
+                            </Link>
+                          )}
+                          {notif.type === "journey_start" && (
+                            <Link
+                              href="/app/vessel"
+                              onClick={() => setNotificationsDropdownOpen(false)}
+                              className="inline-block mt-2 font-semibold text-zinc-900 hover:underline text-[11px]"
+                            >
+                              Track Vessel Telemetry →
+                            </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Quick AI Assistant Trigger */}
             <Button
@@ -302,6 +433,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <span>{item.label}</span>
                   </div>
 
+                  {item.href === "/app/lost-fisherman" && operatorNotifications.some((n) => n.type === "lost_fisherman_sos") ? (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold animate-pulse">
+                      SOS ACTIVE
+                    </span>
+                  ) : item.badge ? (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-sans border font-medium ${
+                        isActive
+                          ? "bg-zinc-800 text-zinc-200 border-zinc-700"
+                          : item.badgeColor || "bg-zinc-100 text-zinc-600 border-zinc-200"
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}
@@ -353,6 +499,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <Icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </div>
+
+                      {item.href === "/app/lost-fisherman" && operatorNotifications.some((n) => n.type === "lost_fisherman_sos") ? (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold animate-pulse">
+                          SOS
+                        </span>
+                      ) : item.badge ? (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${item.badgeColor || "bg-zinc-100 text-zinc-600 border-zinc-200"}`}>
+                          {item.badge}
+                        </span>
+                      ) : null}
                     </Link>
                   );
                 })}
@@ -372,8 +528,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main
+          className={`flex-1 ${
+            pathname === "/app/ai-agent"
+              ? "overflow-hidden flex flex-col p-2 sm:p-4"
+              : "overflow-y-auto p-4 sm:p-6 lg:p-8"
+          }`}
+        >
+          <div
+            className={`w-full ${
+              pathname === "/app/ai-agent"
+                ? "max-w-4xl mx-auto flex-1 flex flex-col h-full min-h-0"
+                : "mx-auto max-w-7xl"
+            }`}
+          >
+            {children}
+          </div>
         </main>
       </div>
 

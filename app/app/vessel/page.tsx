@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 export default function VesselGpsPage() {
-  const { location, setIsAiDrawerOpen } = useMarine();
+  const { role, location, setIsAiDrawerOpen } = useMarine();
   const [selectedVessel, setSelectedVessel] = React.useState<Vessel>(activeVessels[0]);
   const [sosActive, setSosActive] = React.useState(selectedVessel.sosActive);
 
@@ -103,16 +103,29 @@ export default function VesselGpsPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge
-              variant="minimal"
-              className={
-                selectedVessel.geofenceStatus === "SAFE"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-amber-50 text-amber-700 border-amber-200 font-bold"
-              }
-            >
-              Geofence: {selectedVessel.geofenceStatus}
-            </Badge>
+            {role === "fisherman" ? (
+              <Badge
+                variant="minimal"
+                className={
+                  selectedVessel.geofenceStatus === "SAFE"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200 font-bold"
+                }
+              >
+                Geofence: {selectedVessel.geofenceStatus}
+              </Badge>
+            ) : (
+              <Badge
+                variant="minimal"
+                className={
+                  selectedVessel.riskRating === "Low"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200 font-bold"
+                }
+              >
+                Vessel Risk: {selectedVessel.riskRating}
+              </Badge>
+            )}
             <span className="font-sans text-[11px] text-zinc-400">
               Ping: {selectedVessel.lastPingTime}
             </span>
@@ -170,19 +183,31 @@ export default function VesselGpsPage() {
               </span>
             </div>
 
-            <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
-              <span className="text-zinc-400 text-[10px] block uppercase">Distance to IMBL</span>
-              <span
-                className={`font-bold text-sm ${
-                  selectedVessel.distanceToIMBLNM < 10 ? "text-amber-700" : "text-zinc-950"
-                }`}
-              >
-                {selectedVessel.distanceToIMBLNM} NM
-              </span>
-              <span className="text-[11px] text-zinc-500 block">
-                From Port: {selectedVessel.distanceFromPortNM} NM
-              </span>
-            </div>
+            {role === "fisherman" ? (
+              <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
+                <span className="text-zinc-400 text-[10px] block uppercase">Distance to IMBL</span>
+                <span
+                  className={`font-bold text-sm ${
+                    selectedVessel.distanceToIMBLNM < 10 ? "text-amber-700" : "text-zinc-950"
+                  }`}
+                >
+                  {selectedVessel.distanceToIMBLNM} NM
+                </span>
+                <span className="text-[11px] text-zinc-500 block">
+                  From Port: {selectedVessel.distanceFromPortNM} NM
+                </span>
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
+                <span className="text-zinc-400 text-[10px] block uppercase">Operational State</span>
+                <span className="font-bold text-zinc-950 text-sm">
+                  {selectedVessel.sogKnots > 0.5 ? "Underway" : "Anchored"}
+                </span>
+                <span className="text-[11px] text-zinc-500 block">
+                  Heading: {selectedVessel.headingText} ({selectedVessel.cogDegrees}°)
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

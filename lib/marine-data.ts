@@ -684,3 +684,338 @@ export const researchDatasets: ResearchDataset[] = [
     description: "Autonomous profiling floats measuring North Indian Ocean heat content, halocline structure, and ocean barrier layers.",
   },
 ];
+
+export type VesselTelemetry = Vessel;
+
+export interface FishMarketItem {
+  species: string;
+  localName: string;
+  pricePerKg: number;
+  priceChange24h: number; // in ₹
+  priceChangePercent: number; // in %
+  trend: "up" | "down" | "stable";
+  demandLevel: "Very High" | "High" | "Moderate";
+  landingTons: number;
+}
+
+export interface LocationMarketProfile {
+  locationId: string;
+  harbourName: string;
+  topSpecies: string;
+  topSpeciesScientific: string;
+  demandLevel: string;
+  landingVolumeText: string;
+  clearanceRate: string;
+  benchmarkPrice: number;
+  benchmarkSpecies: string;
+  priceChangeText: string;
+  priceTrendPositive: boolean;
+  marketStatus: string;
+  priceUpdateNote: string;
+  auctionTime: string;
+  items: FishMarketItem[];
+}
+
+export interface FishSchoolUpdate {
+  locationId: string;
+  zoneId: string;
+  zoneName: string;
+  zoneSector: string;
+  distanceBearing: string;
+  distanceNM: number;
+  bearing: string;
+  biomassSurge: string; // e.g. "+38%"
+  surgePercentage: number;
+  growthRateText: string; // e.g. "Rapid Aggregation Surge"
+  schoolType: string;
+  targetSpecies: string[];
+  depthRange: string;
+  estimatedBiomassMT: string;
+  schoolAlert: string;
+  environmentalTrigger: string;
+  recommendedGear: string;
+  lastUpdated: string;
+}
+
+export const locationMarketData: Record<string, LocationMarketProfile> = {
+  vizag: {
+    locationId: "vizag",
+    harbourName: "Visakhapatnam Fishing Harbour",
+    topSpecies: "Yellowfin Tuna (Surai)",
+    topSpeciesScientific: "Thunnus albacares",
+    demandLevel: "High Demand (Top Traded)",
+    landingVolumeText: "4.8 MT landed today",
+    clearanceRate: "94%",
+    benchmarkPrice: 420,
+    benchmarkSpecies: "Yellowfin Tuna",
+    priceChangeText: "+₹45 (+12%)",
+    priceTrendPositive: true,
+    marketStatus: "APMC Daily Auction Active",
+    priceUpdateNote: "Export demand surge",
+    auctionTime: "05:00 - 11:30 IST",
+    items: [
+      { species: "Yellowfin Tuna", localName: "Surai", pricePerKg: 420, priceChange24h: 45, priceChangePercent: 12.0, trend: "up", demandLevel: "Very High", landingTons: 4.8 },
+      { species: "Seer Fish (King Mackerel)", localName: "Vanjaram", pricePerKg: 650, priceChange24h: 50, priceChangePercent: 8.3, trend: "up", demandLevel: "High", landingTons: 2.1 },
+      { species: "Indian Mackerel", localName: "Kanagurtalu", pricePerKg: 180, priceChange24h: -10, priceChangePercent: -5.2, trend: "down", demandLevel: "Moderate", landingTons: 6.4 },
+      { species: "White Pomfret", localName: "Tella Chanduva", pricePerKg: 720, priceChange24h: 40, priceChangePercent: 5.8, trend: "up", demandLevel: "High", landingTons: 1.2 },
+      { species: "Oil Sardines", localName: "Kavallu", pricePerKg: 110, priceChange24h: 0, priceChangePercent: 0, trend: "stable", demandLevel: "Moderate", landingTons: 5.0 },
+    ],
+  },
+  chennai: {
+    locationId: "chennai",
+    harbourName: "Kasimedu Fishing Harbour",
+    topSpecies: "White Pomfret (Vellai Vaval)",
+    topSpeciesScientific: "Pampus argenteus",
+    demandLevel: "Peak Auction Demand",
+    landingVolumeText: "5.4 MT landed today",
+    clearanceRate: "96%",
+    benchmarkPrice: 780,
+    benchmarkSpecies: "White Pomfret",
+    priceChangeText: "+₹60 (+8.3%)",
+    priceTrendPositive: true,
+    marketStatus: "Kasimedu Wholesale Wharf",
+    priceUpdateNote: "High retail buying",
+    auctionTime: "04:30 - 10:00 IST",
+    items: [
+      { species: "White Pomfret", localName: "Vellai Vaval", pricePerKg: 780, priceChange24h: 60, priceChangePercent: 8.3, trend: "up", demandLevel: "Very High", landingTons: 1.8 },
+      { species: "Tiger Prawns", localName: "Kara Eral", pricePerKg: 580, priceChange24h: 70, priceChangePercent: 13.7, trend: "up", demandLevel: "Very High", landingTons: 3.2 },
+      { species: "Seer Fish", localName: "Vanjaram", pricePerKg: 720, priceChange24h: 40, priceChangePercent: 5.9, trend: "up", demandLevel: "High", landingTons: 1.5 },
+      { species: "Ribbonfish", localName: "Savalai", pricePerKg: 140, priceChange24h: 0, priceChangePercent: 0, trend: "stable", demandLevel: "Moderate", landingTons: 4.1 },
+      { species: "Barracuda", localName: "Sheela", pricePerKg: 310, priceChange24h: 15, priceChangePercent: 5.1, trend: "up", demandLevel: "Moderate", landingTons: 2.0 },
+    ],
+  },
+  kochi: {
+    locationId: "kochi",
+    harbourName: "Cochin Fisheries Harbour (Thoppumpady)",
+    topSpecies: "Indian Oil Sardine (Mathi)",
+    topSpeciesScientific: "Sardinella longiceps",
+    demandLevel: "Heavy Supply Clearance",
+    landingVolumeText: "8.2 MT landed today",
+    clearanceRate: "91%",
+    benchmarkPrice: 140,
+    benchmarkSpecies: "Oil Sardine",
+    priceChangeText: "-₹15 (-9.7%)",
+    priceTrendPositive: false,
+    marketStatus: "Thoppumpady Morning Bidding",
+    priceUpdateNote: "Abundant boat arrivals",
+    auctionTime: "05:30 - 12:00 IST",
+    items: [
+      { species: "Indian Oil Sardine", localName: "Mathi / Chaala", pricePerKg: 140, priceChange24h: -15, priceChangePercent: -9.7, trend: "down", demandLevel: "High", landingTons: 8.2 },
+      { species: "Karimeen (Pearl Spot)", localName: "Karimeen", pricePerKg: 540, priceChange24h: 30, priceChangePercent: 5.9, trend: "up", demandLevel: "Very High", landingTons: 1.1 },
+      { species: "Squid / Cuttlefish", localName: "Koonthal", pricePerKg: 320, priceChange24h: 20, priceChangePercent: 6.7, trend: "up", demandLevel: "High", landingTons: 2.9 },
+      { species: "Indian Mackerel", localName: "Ayala", pricePerKg: 210, priceChange24h: -10, priceChangePercent: -4.5, trend: "down", demandLevel: "Moderate", landingTons: 4.3 },
+      { species: "Yellowfin Tuna", localName: "Kera", pricePerKg: 380, priceChange24h: 25, priceChangePercent: 7.0, trend: "up", demandLevel: "Moderate", landingTons: 1.9 },
+    ],
+  },
+  mumbai: {
+    locationId: "mumbai",
+    harbourName: "Sassoon Docks & Bhaucha Dhakka",
+    topSpecies: "Silver Pomfret (Paplet)",
+    topSpeciesScientific: "Pampus argenteus",
+    demandLevel: "Highest Value Traded",
+    landingVolumeText: "6.1 MT landed today",
+    clearanceRate: "95%",
+    benchmarkPrice: 850,
+    benchmarkSpecies: "Silver Pomfret",
+    priceChangeText: "+₹70 (+9.0%)",
+    priceTrendPositive: true,
+    marketStatus: "Sassoon Dock APMC Block",
+    priceUpdateNote: "Metropolitan premium demand",
+    auctionTime: "04:00 - 10:30 IST",
+    items: [
+      { species: "Silver Pomfret", localName: "Paplet", pricePerKg: 850, priceChange24h: 70, priceChangePercent: 9.0, trend: "up", demandLevel: "Very High", landingTons: 2.2 },
+      { species: "Bombay Duck", localName: "Bombil", pricePerKg: 160, priceChange24h: 20, priceChangePercent: 14.3, trend: "up", demandLevel: "High", landingTons: 5.5 },
+      { species: "King Mackerel", localName: "Surmai", pricePerKg: 740, priceChange24h: 35, priceChangePercent: 5.0, trend: "up", demandLevel: "High", landingTons: 2.4 },
+      { species: "Tiger Prawns", localName: "Kolambi", pricePerKg: 620, priceChange24h: 40, priceChangePercent: 6.9, trend: "up", demandLevel: "Very High", landingTons: 3.1 },
+      { species: "Indian Salmon", localName: "Rawas", pricePerKg: 890, priceChange24h: 50, priceChangePercent: 6.0, trend: "up", demandLevel: "High", landingTons: 1.0 },
+    ],
+  },
+  paradip: {
+    locationId: "paradip",
+    harbourName: "Paradip Major Fishing Harbour",
+    topSpecies: "Hilsa / Ilish (Ilishi)",
+    topSpeciesScientific: "Tenualosa ilisha",
+    demandLevel: "Severe Scarcity Demand",
+    landingVolumeText: "3.6 MT landed today",
+    clearanceRate: "98%",
+    benchmarkPrice: 920,
+    benchmarkSpecies: "Hilsa (Ilish)",
+    priceChangeText: "+₹110 (+13.6%)",
+    priceTrendPositive: true,
+    marketStatus: "Paradip Auction Shed",
+    priceUpdateNote: "High export demand spike",
+    auctionTime: "05:00 - 11:00 IST",
+    items: [
+      { species: "Hilsa (Ilish)", localName: "Ilishi", pricePerKg: 920, priceChange24h: 110, priceChangePercent: 13.6, trend: "up", demandLevel: "Very High", landingTons: 1.4 },
+      { species: "Croakers", localName: "Poha / Croaker", pricePerKg: 240, priceChange24h: 15, priceChangePercent: 6.7, trend: "up", demandLevel: "Moderate", landingTons: 3.2 },
+      { species: "Black Pomfret", localName: "Kala Chandi", pricePerKg: 560, priceChange24h: 30, priceChangePercent: 5.7, trend: "up", demandLevel: "High", landingTons: 1.8 },
+      { species: "Tiger Shrimp", localName: "Bagda Chingri", pricePerKg: 520, priceChange24h: 40, priceChangePercent: 8.3, trend: "up", demandLevel: "Very High", landingTons: 2.1 },
+      { species: "Sea Bass / Bhetki", localName: "Bhetki", pricePerKg: 680, priceChange24h: 45, priceChangePercent: 7.1, trend: "up", demandLevel: "High", landingTons: 1.1 },
+    ],
+  },
+  kanyakumari: {
+    locationId: "kanyakumari",
+    harbourName: "Chinnamuttam Fishing Harbour",
+    topSpecies: "Yellowfin Tuna & Seer Fish",
+    topSpeciesScientific: "Thunnus albacares",
+    demandLevel: "High Export Interest",
+    landingVolumeText: "4.1 MT landed today",
+    clearanceRate: "93%",
+    benchmarkPrice: 460,
+    benchmarkSpecies: "Yellowfin Tuna",
+    priceChangeText: "+₹35 (+8.2%)",
+    priceTrendPositive: true,
+    marketStatus: "Chinnamuttam Auction Shed",
+    priceUpdateNote: "Firm aggregator buying",
+    auctionTime: "05:00 - 11:30 IST",
+    items: [
+      { species: "Yellowfin Tuna", localName: "Soorai", pricePerKg: 460, priceChange24h: 35, priceChangePercent: 8.2, trend: "up", demandLevel: "High", landingTons: 2.8 },
+      { species: "Seer Fish", localName: "Neimeen", pricePerKg: 640, priceChange24h: 40, priceChangePercent: 6.7, trend: "up", demandLevel: "High", landingTons: 1.6 },
+      { species: "Reef Snapper", localName: "Sankara", pricePerKg: 340, priceChange24h: 10, priceChangePercent: 3.0, trend: "up", demandLevel: "Moderate", landingTons: 2.2 },
+      { species: "Skipjack Tuna", localName: "Choora", pricePerKg: 280, priceChange24h: -15, priceChangePercent: -5.1, trend: "down", demandLevel: "Moderate", landingTons: 3.0 },
+      { species: "Trevally / Caranx", localName: "Parai", pricePerKg: 360, priceChange24h: 20, priceChangePercent: 5.9, trend: "up", demandLevel: "Moderate", landingTons: 1.7 },
+    ],
+  },
+};
+
+export const fishSchoolUpdates: Record<string, FishSchoolUpdate> = {
+  vizag: {
+    locationId: "vizag",
+    zoneId: "pfz-vizag-01",
+    zoneName: "Bheemunipatnam Offshore Front",
+    zoneSector: "Sector-A (East)",
+    distanceBearing: "18.2 NM • 068° ENE",
+    distanceNM: 18.2,
+    bearing: "ENE",
+    biomassSurge: "+38%",
+    surgePercentage: 38,
+    growthRateText: "Rapid Aggregation Surge",
+    schoolType: "Yellowfin & Skipjack Pods",
+    targetSpecies: ["Yellowfin Tuna", "Skipjack", "Indian Mackerel"],
+    depthRange: "20 - 55m",
+    estimatedBiomassMT: "16.5 MT",
+    schoolAlert: "Dense Skipjack and Yellowfin schools rapidly clustering along 0.8°C thermal front 18 NM ENE. High feeding activity detected.",
+    environmentalTrigger: "0.8°C / 2km SST confluence front with 1.15 mg/m³ chlorophyll bloom",
+    recommendedGear: "Gillnet / Hook & Line",
+    lastUpdated: "20 mins ago (INCOIS Telemetry)",
+  },
+  chennai: {
+    locationId: "chennai",
+    zoneId: "pfz-chennai-01",
+    zoneName: "Pulicat Shoal Chlorophyll Bloom",
+    zoneSector: "Pulicat Deep Sector",
+    distanceBearing: "22.8 NM • 028° NNE",
+    distanceNM: 22.8,
+    bearing: "NNE",
+    biomassSurge: "+45%",
+    surgePercentage: 45,
+    growthRateText: "Massive School Influx",
+    schoolType: "Prawn & Ribbonfish Shoal",
+    targetSpecies: ["Tiger Prawns", "Ribbonfish", "Pomfret"],
+    depthRange: "15 - 40m",
+    estimatedBiomassMT: "21.0 MT",
+    schoolAlert: "Rapid chlorophyll plume spike (1.38 mg/m³) triggering explosive juvenile prawn and ribbonfish aggregation 22 NM NNE.",
+    environmentalTrigger: "0.9°C thermal boundary & Sentinel-3 OLCI chlorophyll bloom",
+    recommendedGear: "Trawl Net / Bottom Gillnet",
+    lastUpdated: "35 mins ago (Sentinel-3 OLCI)",
+  },
+  kochi: {
+    locationId: "kochi",
+    zoneId: "pfz-kochi-01",
+    zoneName: "Wadge Bank Edge Upwelling",
+    zoneSector: "Southwest Wadge Bank",
+    distanceBearing: "28.4 NM • 245° WSW",
+    distanceNM: 28.4,
+    bearing: "WSW",
+    biomassSurge: "+52%",
+    surgePercentage: 52,
+    growthRateText: "Upwelling Surge Multiplier",
+    schoolType: "Oil Sardine & Mackerel Shoals",
+    targetSpecies: ["Indian Oil Sardine", "Mackerel", "Squid"],
+    depthRange: "25 - 65m",
+    estimatedBiomassMT: "32.0 MT",
+    schoolAlert: "1.2°C coastal upwelling front driving explosive baitfish clustering; rapid multi-kilometer school expansion underway.",
+    environmentalTrigger: "1.2°C / 2km Upwelling front with 1.62 mg/m³ chlorophyll saturation",
+    recommendedGear: "Ring Seine / Purse Seine",
+    lastUpdated: "15 mins ago (Moored Buoy AD02)",
+  },
+  mumbai: {
+    locationId: "mumbai",
+    zoneId: "pfz-mumbai-01",
+    zoneName: "Bombay High Shelf Edge",
+    zoneSector: "Northwest Offshore Trench",
+    distanceBearing: "34.0 NM • 285° WNW",
+    distanceNM: 34.0,
+    bearing: "WNW",
+    biomassSurge: "+31%",
+    surgePercentage: 31,
+    growthRateText: "Shelf Aggregation Surge",
+    schoolType: "King Mackerel & Carangid School",
+    targetSpecies: ["King Mackerel", "Carangids", "Pomfret"],
+    depthRange: "40 - 75m",
+    estimatedBiomassMT: "19.5 MT",
+    schoolAlert: "Thermal gradient edge at 45m shelf break causing rapid schooling of pelagic predator fish and bait shoals.",
+    environmentalTrigger: "0.7°C thermal front at outer continental shelf break",
+    recommendedGear: "Trolling / Longline / Gillnet",
+    lastUpdated: "40 mins ago (Satellite Radiometry)",
+  },
+  paradip: {
+    locationId: "paradip",
+    zoneId: "pfz-paradip-01",
+    zoneName: "Dhamra Estuarine Thermal Confluence",
+    zoneSector: "Mouth of Dhamra River Plume",
+    distanceBearing: "32.1 NM • 062° ENE",
+    distanceNM: 32.1,
+    bearing: "ENE",
+    biomassSurge: "+41%",
+    surgePercentage: 41,
+    growthRateText: "Estuarine Plume Run",
+    schoolType: "Hilsa & Estuarine Croaker Run",
+    targetSpecies: ["Hilsa", "Croakers", "Catfish", "Pomfret"],
+    depthRange: "15 - 38m",
+    estimatedBiomassMT: "18.2 MT",
+    schoolAlert: "Freshwater discharge confluence creating sudden rapid schooling of upstream migrating Hilsa.",
+    environmentalTrigger: "1.0°C / 2km Front with 1.84 mg/m³ high nutrient plume",
+    recommendedGear: "Drift Gillnet",
+    lastUpdated: "25 mins ago (MODIS Chl-a)",
+  },
+  kanyakumari: {
+    locationId: "kanyakumari",
+    zoneId: "pfz-kanyakumari-01",
+    zoneName: "Tri-Sea Convergence Front",
+    zoneSector: "Cape Comorin Deep Shelf",
+    distanceBearing: "19.5 NM • 155° SSE",
+    distanceNM: 19.5,
+    bearing: "SSE",
+    biomassSurge: "+36%",
+    surgePercentage: 36,
+    growthRateText: "Convergence Surge",
+    schoolType: "Deep-Sea Tuna & Trevally Pods",
+    targetSpecies: ["Yellowfin Tuna", "Seer Fish", "Skipjack"],
+    depthRange: "30 - 70m",
+    estimatedBiomassMT: "15.0 MT",
+    schoolAlert: "Tri-sea current confluence generating dynamic eddies; rapid schooling of tuna and skipjack pods verified.",
+    environmentalTrigger: "Three-current confluence front with 1.12 mg/m³ chlorophyll boundary",
+    recommendedGear: "Hook & Line / Deep-Sea Longline",
+    lastUpdated: "30 mins ago (OON Buoy BD08)",
+  },
+};
+
+export function getLocationMarketProfile(locationIdOrName: string): LocationMarketProfile {
+  const key = locationIdOrName.toLowerCase();
+  if (locationMarketData[key]) return locationMarketData[key];
+  const found = Object.values(locationMarketData).find((m) =>
+    m.harbourName.toLowerCase().includes(key) || key.includes(m.locationId)
+  );
+  return found || locationMarketData.vizag;
+}
+
+export function getFishSchoolUpdate(locationIdOrName: string): FishSchoolUpdate {
+  const key = locationIdOrName.toLowerCase();
+  if (fishSchoolUpdates[key]) return fishSchoolUpdates[key];
+  const found = Object.values(fishSchoolUpdates).find((s) =>
+    s.locationId.includes(key) || key.includes(s.locationId)
+  );
+  return found || fishSchoolUpdates.vizag;
+}
+

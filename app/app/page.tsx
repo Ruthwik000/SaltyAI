@@ -9,8 +9,8 @@ import {
   FishermanWidget,
   ResearcherWidget,
   OperatorWidget,
-  GeospatialSnapshot,
   HazardAlertsCard,
+  WeatherMarineCard,
   AiConsultCard,
 } from "@/components/dashboard";
 
@@ -28,16 +28,19 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <DashboardHeader role={role} onOpenAiDrawer={() => setIsAiDrawerOpen(true)} />
 
-      <MarineMetricsGrid location={location} />
+      <MarineMetricsGrid location={location} role={role} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {role === "fisherman" && (
-            <FishermanWidget
-              location={location}
-              nearbyPFZ={nearbyPFZ}
-              totalZonesCount={pfzZones.length}
-            />
+            <>
+              <FishermanWidget
+                location={location}
+                nearbyPFZ={nearbyPFZ}
+                totalZonesCount={pfzZones.length}
+              />
+              <WeatherMarineCard location={location} />
+            </>
           )}
 
           {role === "researcher" && <ResearcherWidget location={location} />}
@@ -45,8 +48,6 @@ export default function DashboardPage() {
           {role === "operator" && (
             <OperatorWidget location={location} vessels={activeVessels} />
           )}
-
-          <GeospatialSnapshot location={location} nearbyPFZ={nearbyPFZ} />
         </div>
 
         <div className="space-y-6">

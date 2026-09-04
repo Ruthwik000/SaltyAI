@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useMarine } from "@/lib/marine-context";
 import { geofenceZones, activeVessels, GeofenceZone } from "@/lib/marine-data";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -22,9 +23,14 @@ import {
 } from "lucide-react";
 
 export default function GeofencingPage() {
+  const router = useRouter();
   const { location, setIsAiDrawerOpen } = useMarine();
   const [selectedZone, setSelectedZone] = React.useState<GeofenceZone>(geofenceZones[0]);
   const [proximityAlertActive, setProximityAlertActive] = React.useState(true);
+
+  React.useEffect(() => {
+    router.replace("/app/map");
+  }, [router]);
 
   return (
     <div className="space-y-6">

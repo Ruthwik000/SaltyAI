@@ -23,25 +23,12 @@ export function LandingHeader({ apiState }: LandingHeaderProps) {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-xs font-medium text-zinc-600 md:flex">
-          <Link href="#platform" className="hover:text-zinc-950 transition-colors">
-            Platform
-          </Link>
-          <Link href="#signals" className="hover:text-zinc-950 transition-colors">
-            Live signals
-          </Link>
-          <Link href="#workflow" className="hover:text-zinc-950 transition-colors">
-            How it works
-          </Link>
-          <Link href="#sources" className="hover:text-zinc-950 transition-colors">
-            Sources
-          </Link>
-        </nav>
+        <nav className="hidden items-center gap-6 text-xs font-medium text-zinc-600 md:flex"></nav>
 
         <div className="flex items-center gap-3">
           <Link href="/login">
             <Button size="sm" className="h-8 gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800">
-              Open console <ArrowRight className="h-3.5 w-3.5" />
+              Get Started <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
         </div>

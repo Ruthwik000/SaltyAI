@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,50 +12,83 @@ interface HazardAlertsCardProps {
 
 export function HazardAlertsCard({ alerts, totalAlertsCount }: HazardAlertsCardProps) {
   return (
-    <Card className="border-zinc-200">
+    <Card className="border-zinc-200 bg-white">
       <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <CardTitle className="text-sm font-semibold text-zinc-950">
-            Active Hazard Alerts
-          </CardTitle>
+          <div className="p-1 rounded-md bg-amber-50 border border-amber-200/80 text-amber-600">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-sm font-semibold text-zinc-950">
+              Alerts & Disasters
+            </CardTitle>
+            <span className="text-[10px] text-zinc-500 font-sans">
+              {alerts.length} Active in Sector
+            </span>
+          </div>
         </div>
+
+        {/* Know More button in header */}
         <Link href="/app/alerts">
-          <Badge variant="minimal" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
-            {totalAlertsCount} Total
-          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7.5 px-2.5 border-zinc-200 hover:bg-zinc-100 text-zinc-800 font-medium gap-1 cursor-pointer"
+          >
+            <span>Know More</span>
+            <ArrowRight className="h-3 w-3 text-zinc-500" />
+          </Button>
         </Link>
       </CardHeader>
+
       <CardContent className="pt-4 space-y-3">
         {alerts.length > 0 ? (
           alerts.slice(0, 3).map((a) => (
             <div
               key={a.id}
-              className="p-3 rounded-lg border border-zinc-200 bg-zinc-50/70 space-y-1 text-xs"
+              className="p-3 rounded-xl border border-zinc-200 bg-zinc-50/70 space-y-1.5 text-xs"
             >
               <div className="flex items-center justify-between">
                 <span className="font-sans text-[10px] font-semibold text-zinc-500 uppercase">
                   {a.source}
                 </span>
-                <span className="text-[10px] font-sans text-rose-600 font-medium">
+                <span
+                  className={`text-[10px] font-sans px-1.5 py-0.5 rounded font-medium ${
+                    a.severity === "Critical" || a.severity === "Severe"
+                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                      : "bg-amber-50 text-amber-700 border border-amber-200"
+                  }`}
+                >
                   {a.severity}
                 </span>
               </div>
-              <div className="font-medium text-zinc-900">{a.title}</div>
-              <p className="text-[11px] text-zinc-500 leading-snug line-clamp-2">
+              <div className="font-semibold text-zinc-950 text-xs">{a.title}</div>
+              <p className="text-[11px] text-zinc-600 leading-snug line-clamp-2">
                 {a.operationalAction}
               </p>
             </div>
           ))
         ) : (
-          <div className="p-4 text-center text-xs text-zinc-500">
-            No critical hazard warnings currently active for this sector.
+          <div className="p-4 rounded-xl border border-zinc-200 bg-emerald-50/50 text-center space-y-1">
+            <div className="flex items-center justify-center gap-1.5 text-emerald-800 font-semibold text-xs">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span>No Critical Warnings Active</span>
+            </div>
+            <p className="text-[11px] text-emerald-700">
+              Coastal waters are currently within normal statutory safety parameters.
+            </p>
           </div>
         )}
 
-        <Link href="/app/alerts" className="block pt-2">
-          <Button variant="outline" size="sm" className="w-full text-xs h-8 border-zinc-200">
-            Open Alerts & Disasters Hub →
+        {/* Know More footer button */}
+        <Link href="/app/alerts" className="block pt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs h-8 border-zinc-200 hover:bg-zinc-100 text-zinc-800 font-medium flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Know More — All Emergency Advisories ({totalAlertsCount})</span>
+            <ArrowRight className="h-3.5 w-3.5 text-zinc-500" />
           </Button>
         </Link>
       </CardContent>

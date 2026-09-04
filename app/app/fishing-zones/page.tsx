@@ -8,20 +8,15 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Fish,
   Navigation,
   Compass,
-  Thermometer,
-  Eye,
   CheckCircle2,
   Sparkles,
-  ArrowRight,
   Bookmark,
   BookmarkCheck,
   Scale,
   Fuel,
   Clock,
-  Waves,
 } from "lucide-react";
 
 export default function FishingZonesPage() {
@@ -49,6 +44,9 @@ export default function FishingZonesPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
             Potential Fishing Zones (PFZ)
           </h1>
+          <p className="mt-1 text-xs text-zinc-500 font-sans">
+            Grounded INCOIS ocean colour & thermal front advisories • Sector: {location.name}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">

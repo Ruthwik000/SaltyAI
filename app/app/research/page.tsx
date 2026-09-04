@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
 import { researchDatasets, ResearchDataset } from "@/lib/marine-data";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -24,12 +25,40 @@ import {
 } from "lucide-react";
 
 export default function ResearchPage() {
-  const { location, setIsAiDrawerOpen } = useMarine();
+  const { role, setIsAiDrawerOpen } = useMarine();
   const [selectedDataset, setSelectedDataset] = React.useState<ResearchDataset>(researchDatasets[0]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedParameter, setSelectedParameter] = React.useState("sea_surface_temperature");
   const [dateRange, setDateRange] = React.useState("2024-01-01 to 2024-12-31");
   const [copiedUrl, setCopiedUrl] = React.useState(false);
+
+  if (role === "fisherman") {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center max-w-xl mx-auto my-12 space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-600">
+            <Database className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-bold text-zinc-950">Research & Data Module</h2>
+          <p className="text-xs text-zinc-600 leading-relaxed">
+            Raw ERDDAP data exploration and NetCDF/CSV telemetry exports are configured for Researcher and Operator roles. As a Fisherman, your operational focus is on Potential Fishing Zones, live weather, and the Marine Map.
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/app/fishing-zones">
+              <Button size="sm" className="bg-zinc-950 text-white hover:bg-zinc-800 text-xs">
+                Go to Fishing Zones
+              </Button>
+            </Link>
+            <Link href="/app/map">
+              <Button size="sm" variant="outline" className="text-xs">
+                Open Marine Map
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredDatasets = researchDatasets.filter(
     (ds) =>

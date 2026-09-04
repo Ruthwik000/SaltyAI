@@ -57,19 +57,13 @@ function LoginForm() {
               S*
             </span>
             <span className="text-sm font-semibold tracking-tight">
-              salty<span className="text-zinc-400">.marine</span>
+              salty<span className="text-zinc-400">.ai</span>
             </span>
           </Link>
-          <span className="font-sans text-[10px] uppercase tracking-widest text-zinc-400">
-            Console access / role entry
-          </span>
         </header>
 
         <section className="m-auto w-full max-w-3xl py-12">
           <div className="mb-10 text-center">
-            <Badge variant="pill" className="gap-2 border-zinc-200 px-3 py-1 font-sans text-[10px]">
-              ROLE CONFIGURATION
-            </Badge>
             <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-5xl">
               Who is reading the coast?
             </h1>
@@ -125,9 +119,6 @@ function LoginForm() {
             >
               Enter marine console <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <p className="font-sans text-[10px] text-zinc-400">
-              Role can be changed anytime from the dashboard sidebar or by returning here.
-            </p>
           </div>
         </section>
       </div>

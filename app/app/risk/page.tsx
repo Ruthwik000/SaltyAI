@@ -222,45 +222,6 @@ export default function RiskSafetyPage() {
             })}
           </div>
 
-          {/* 24-Hour Risk Timeline */}
-          <Card className="border-zinc-200">
-            <CardHeader className="pb-3 border-b border-zinc-100">
-              <CardTitle className="text-sm font-semibold text-zinc-950">
-                24-Hour Risk Projection Curve
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-6 sm:grid-cols-12 gap-1 text-center font-sans text-[10px]">
-                {[
-                  { time: "06:00", score: 20 },
-                  { time: "08:00", score: 22 },
-                  { time: "10:00", score: 24 },
-                  { time: "12:00", score: 28 },
-                  { time: "14:00", score: 36 },
-                  { time: "16:00", score: 44 },
-                  { time: "18:00", score: 42 },
-                  { time: "20:00", score: 32 },
-                  { time: "22:00", score: 26 },
-                  { time: "00:00", score: 22 },
-                  { time: "02:00", score: 20 },
-                  { time: "04:00", score: 18 },
-                ].map((slot, i) => (
-                  <div key={i} className="p-2 rounded bg-zinc-50 border border-zinc-200/70 flex flex-col justify-between h-20">
-                    <span className="text-zinc-400">{slot.time}</span>
-                    <div className="flex items-end justify-center flex-1 my-1">
-                      <div
-                        className={`w-3 rounded-xs ${
-                          slot.score < 25 ? "bg-emerald-400" : slot.score < 40 ? "bg-amber-400" : "bg-rose-400"
-                        }`}
-                        style={{ height: `${slot.score * 1.5}px` }}
-                      />
-                    </div>
-                    <span className="font-bold text-zinc-800">{slot.score}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Right 1 Col: Interactive Trip Risk Calculator */}

@@ -5,4 +5,5 @@ export { ResearcherWidget } from "./researcher-widget";
 export { OperatorWidget } from "./operator-widget";
 export { GeospatialSnapshot } from "./geospatial-snapshot";
 export { HazardAlertsCard } from "./hazard-alerts-card";
+export { WeatherMarineCard } from "./weather-marine-card";
 export { AiConsultCard } from "./ai-consult-card";

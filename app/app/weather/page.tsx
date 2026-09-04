@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
 import { marineLocations, MarineLocation } from "@/lib/marine-data";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function WeatherMarinePage() {
@@ -55,6 +57,13 @@ export default function WeatherMarinePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
+          <Link
+            href="/app"
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-950 mb-1 font-medium transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to Dashboard</span>
+          </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
             Weather & Marine Conditions
           </h1>

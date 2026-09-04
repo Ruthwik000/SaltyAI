@@ -15,8 +15,8 @@ export function LandingFooter() {
           <Link href="/app/research" className="hover:text-zinc-950 transition-colors">
             Research
           </Link>
-          <Link href="/app/geofencing" className="hover:text-zinc-950 transition-colors">
-            Boundaries
+          <Link href="/app/map" className="hover:text-zinc-950 transition-colors">
+            Marine Map
           </Link>
           <Link href="/app/alerts" className="hover:text-zinc-950 transition-colors">
             Alerts
