@@ -52,6 +52,13 @@ export interface AgentResponse {
   synthetic?: boolean;
 }
 
+export interface AgentLocationContext {
+  name: string;
+  lat: number;
+  lon: number;
+  sea?: string;
+}
+
 const MOCK_MARINE_CONTEXT = {
   status: "DEMO DATA",
   location: "Visakhapatnam",
@@ -80,12 +87,20 @@ function mockAgentResponse(query: string): string {
 
 export async function askMarineAgent(
   query: string,
-  options: { mode?: "normal" | "research"; signal?: AbortSignal } = {}
+  options: {
+    mode?: "normal" | "research";
+    location?: AgentLocationContext;
+    signal?: AbortSignal;
+  } = {}
 ): Promise<AgentResponse> {
   const response = await fetch(`${API_BASE}/api/llm/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, mode: options.mode || "normal" }),
+    body: JSON.stringify({
+      query,
+      mode: options.mode || "normal",
+      location: options.location,
+    }),
     signal: options.signal,
     cache: "no-store",
   });

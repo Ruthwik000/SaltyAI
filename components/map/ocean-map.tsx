@@ -477,7 +477,13 @@ export function OceanMap({
     // "style.load" fires once the style is parsed. "load" additionally waits
     // for the first tiles, so gating on it would hide the zone overlays
     // entirely whenever a basemap host is unreachable.
-    const markReady = () => setReady(true);
+    let disposed = false;
+    const markReady = () => {
+      // In development React may tear down and recreate this effect while
+      // MapLibre is still finishing its first style event. Do not publish
+      // readiness for an instance that has already been removed.
+      if (!disposed && mapRef.current === map) setReady(true);
+    };
     map.on("style.load", markReady);
     map.on("load", markReady);
 
@@ -525,6 +531,7 @@ export function OceanMap({
       // and make remove() throw. Release the ref FIRST and swallow teardown
       // errors: if a throw got here with the ref still set, the second setup
       // would bail on its own guard and the map would never appear at all.
+      disposed = true;
       mapRef.current = null;
       setReady(false);
 
@@ -816,22 +823,38 @@ export function OceanMap({
   /* ---- vessel marker ---- */
   React.useEffect(() => {
     const map = mapRef.current;
-    if (!map || !ready) return;
+    if (!map || !ready || mapRef.current !== map) return;
 
-    if (!vessel) {
+    if (
+      !vessel ||
+      !Number.isFinite(vessel.lat) ||
+      !Number.isFinite(vessel.lon) ||
+      vessel.lat < -90 ||
+      vessel.lat > 90 ||
+      vessel.lon < -180 ||
+      vessel.lon > 180 ||
+      !map.getContainer().isConnected
+    ) {
       vesselMarker.current?.remove();
       vesselMarker.current = null;
       return;
     }
 
-    if (!vesselMarker.current) {
-      const element = document.createElement("div");
-      element.className = "salty-vessel-pin";
-      element.innerHTML = '<span class="salty-vessel-dot"></span>';
-      vesselMarker.current = new maplibregl.Marker({ element }).addTo(map);
+    try {
+      if (!vesselMarker.current) {
+        const element = document.createElement("div");
+        element.className = "salty-vessel-pin";
+        element.innerHTML = '<span class="salty-vessel-dot"></span>';
+        vesselMarker.current = new maplibregl.Marker({ element }).addTo(map);
+      }
+      vesselMarker.current.setLngLat([vessel.lon, vessel.lat]);
+      vesselMarker.current.setRotation(vessel.headingDeg ?? 0);
+    } catch (error) {
+      // A map can be removed between the checks above and Marker.addTo during
+      // a route transition. Retry naturally on the next ready/prop update.
+      console.warn("Could not update vessel marker", error);
+      vesselMarker.current = null;
     }
-    vesselMarker.current.setLngLat([vessel.lon, vessel.lat]);
-    vesselMarker.current.setRotation(vessel.headingDeg ?? 0);
   }, [vessel, ready]);
 
   /* ---- home port marker ---- */

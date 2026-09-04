@@ -66,7 +66,15 @@ export function AiDrawer() {
     if (!textToSend) setInputQuery("");
     setIsTyping(true);
 
-    void askMarineAgent(query)
+    void askMarineAgent(query, {
+      mode: "normal",
+      location: {
+        name: location.name,
+        lat: location.lat,
+        lon: location.lon,
+        sea: location.sea,
+      },
+    })
       .then((result) => {
         setMessages((prev) => [
           ...prev,

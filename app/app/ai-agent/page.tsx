@@ -212,8 +212,19 @@ export default function AiAgentPage() {
       ? `${describeAgentContext(dataContext)}\n\nQuestion: ${query}`
       : query;
 
-    void askMarineAgent(grounded, { mode })
+    void askMarineAgent(grounded, {
+      mode,
+      location: {
+        name: location.name,
+        lat: location.lat,
+        lon: location.lon,
+        sea: location.sea,
+      },
+    })
       .then((result) => {
+        const trace = result.tool_calls.map(
+          (call) => `${call.tool}${Object.keys(call.arguments || {}).length ? " — parameters supplied" : ""}`
+        );
         setMessages((prev) => [
           ...prev,
           {
@@ -222,8 +233,9 @@ export default function AiAgentPage() {
             mode,
             text: result.response || "NOT AVAILABLE",
             sources: result.synthetic
-              ? ["mock_marine_forecast"]
+              ? ["marine forecast context"]
               : result.tool_calls.map((call) => call.tool),
+            researchSteps: trace,
             time: "Just now",
           },
         ]);
