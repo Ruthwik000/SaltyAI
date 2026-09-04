@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ExternalLink, LoaderCircle, PhoneCall, X } from "lucide-react";
-import { CALL_AGENT_BASE, checkCallAgent } from "@/lib/api";
+import { CALL_AGENT_BASE, checkCallAgent, startExotelCall } from "@/lib/api";
 import { useMarine } from "@/lib/marine-context";
 
 type ConnectionState = "idle" | "checking" | "online" | "offline";
@@ -12,6 +12,8 @@ export function CallAgentLauncher() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [connection, setConnection] = React.useState<ConnectionState>("idle");
   const [error, setError] = React.useState("");
+  const [callMessage, setCallMessage] = React.useState("");
+  const [calling, setCalling] = React.useState(false);
 
   const checkConnection = React.useCallback(async () => {
     setConnection("checking");
@@ -29,7 +31,20 @@ export function CallAgentLauncher() {
     if (isOpen) void checkConnection();
   }, [isOpen, checkConnection]);
 
-  const telHref = phoneNumber.trim() ? `tel:${phoneNumber.trim()}` : undefined;
+  const startCall = async () => {
+    if (!phoneNumber.trim() || connection !== "online" || calling) return;
+    setCalling(true);
+    setError("");
+    setCallMessage("");
+    try {
+      const result = await startExotelCall(phoneNumber.trim());
+      setCallMessage(result.message);
+    } catch (callError) {
+      setError(callError instanceof Error ? callError.message : "Could not start Exotel call");
+    } finally {
+      setCalling(false);
+    }
+  };
 
   return (
     <>
@@ -112,22 +127,20 @@ export function CallAgentLauncher() {
                 <ExternalLink className="h-3.5 w-3.5" />
                 Service docs
               </a>
-              <a
-                href={telHref}
-                aria-disabled={!telHref}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
-                  telHref
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "pointer-events-none bg-zinc-100 text-zinc-400"
-                }`}
+              <button
+                type="button"
+                onClick={startCall}
+                disabled={!phoneNumber.trim() || connection !== "online" || calling}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:pointer-events-none disabled:bg-zinc-100 disabled:text-zinc-400"
               >
-                {connection === "checking" && <LoaderCircle className="h-3.5 w-3.5 animate-spin" />}
+                {(connection === "checking" || calling) && <LoaderCircle className="h-3.5 w-3.5 animate-spin" />}
                 <PhoneCall className="h-3.5 w-3.5" />
-                Call now
-              </a>
+                {calling ? "Starting call…" : "Call via Exotel"}
+              </button>
             </div>
+            {callMessage && <p className="mt-3 text-xs text-emerald-700">{callMessage}</p>}
             <p className="mt-3 text-[11px] leading-relaxed text-zinc-400">
-              The number was collected during sign-in. A browser phone app will handle the call.
+              Exotel will call this number and connect it to the SALTY voice agent. No SIP or browser phone app is used.
             </p>
           </section>
         </div>

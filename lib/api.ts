@@ -7,14 +7,35 @@ export const CALL_AGENT_BASE =
 export interface CallAgentStatus {
   status: string;
   timestamp?: string;
+  provider?: string;
 }
 
 export async function checkCallAgent(): Promise<CallAgentStatus> {
-  const response = await fetch(`${CALL_AGENT_BASE}/health/live`, {
+  const response = await fetch(`${CALL_AGENT_BASE}/exotel/status`, {
     cache: "no-store",
   });
   if (!response.ok) throw new Error(`Call Agent ${response.status}`);
-  return response.json() as Promise<CallAgentStatus>;
+  const result = (await response.json()) as CallAgentStatus;
+  if (result.status !== "ready") throw new Error("Exotel is not configured on the Call Agent");
+  return result;
+}
+
+export interface ExotelCallResponse {
+  status: "initiated";
+  call_sid?: string | null;
+  message: string;
+}
+
+export async function startExotelCall(phoneNumber: string): Promise<ExotelCallResponse> {
+  const response = await fetch(`${CALL_AGENT_BASE}/exotel/call`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone_number: phoneNumber }),
+    cache: "no-store",
+  });
+  const detail = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(detail.detail || `Exotel call ${response.status}`);
+  return detail as ExotelCallResponse;
 }
 
 export async function saltyFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
