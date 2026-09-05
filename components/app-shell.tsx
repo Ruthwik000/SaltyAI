@@ -27,12 +27,19 @@ import {
   Bell,
   User,
 } from "lucide-react";
+import { useT, type TranslationKey } from "@/lib/i18n";
+import { LanguageSwitch } from "@/components/fisherman/language-switch";
 
 interface NavItem {
   href: string;
   label: string;
   /** Compact label used by the mobile bottom tab bar. */
   shortLabel?: string;
+  /**
+   * Dictionary key for the fisherman console, which runs in the language the
+   * skipper chose. Roles without a key keep the English label.
+   */
+  i18nKey?: TranslationKey;
   icon: React.ElementType;
   badge?: string;
   badgeColor?: string;
@@ -49,6 +56,7 @@ const navItems: NavItem[] = [
     href: "/app",
     label: "Dashboard",
     shortLabel: "Home",
+    i18nKey: "nav.home",
     icon: LayoutDashboard,
     roles: ["fisherman", "researcher", "operator"],
     priority: { fisherman: 1, researcher: 1, operator: 1 },
@@ -68,6 +76,7 @@ const navItems: NavItem[] = [
   {
     href: "/app/fishing-zones",
     label: "Fishing Zones",
+    i18nKey: "nav.zones",
     shortLabel: "Zones",
     icon: Fish,
     //badge: "PFZ 94%",
@@ -86,6 +95,7 @@ const navItems: NavItem[] = [
   {
     href: "/app/risk",
     label: "Risk & Safety",
+    i18nKey: "nav.safety",
     shortLabel: "Safety",
     icon: ShieldAlert,
     //badge: "Low 28",
@@ -116,6 +126,7 @@ const navItems: NavItem[] = [
   {
     href: "/app/vessel",
     label: "Vessel / GPS",
+    i18nKey: "nav.trip",
     shortLabel: "Trip",
     icon: Navigation,
     //badge: "Live AIS",
@@ -136,6 +147,7 @@ const navItems: NavItem[] = [
   {
     href: "/app/ai-agent",
     label: "AI Marine Agent",
+    i18nKey: "nav.assistant",
     shortLabel: "Assistant",
     icon: Sparkles,
     //badge: "Grounded",
@@ -161,13 +173,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [locationDropdownOpen, setLocationDropdownOpen] = React.useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = React.useState(false);
   const [notificationsDropdownOpen, setNotificationsDropdownOpen] = React.useState(false);
+  const { t } = useT();
 
   // Filter navigation items by active role and sort based on role priority
   const sortedNav = React.useMemo(() => {
-    return navItems
+    const items = navItems
       .filter((item) => item.roles.includes(role))
       .sort((a, b) => a.priority[role] - b.priority[role]);
-  }, [role]);
+
+    // Only the fisherman console is translated; the researcher and operator
+    // consoles stay in English, which is what those users work in.
+    if (role !== "fisherman") return items;
+    return items.map((item) =>
+      item.i18nKey
+        ? { ...item, label: t(item.i18nKey), shortLabel: t(item.i18nKey) }
+        : item
+    );
+  }, [role, t]);
 
   const isFisherman = role === "fisherman";
   // Each console is a small, fixed set of sections, so every role gets the
@@ -279,6 +301,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               )}
             </div>
+
+            {/* Language — fisherman console only */}
+            {role === "fisherman" && <LanguageSwitch />}
 
             {/* Location Selector Dropdown */}
             <div className="relative">

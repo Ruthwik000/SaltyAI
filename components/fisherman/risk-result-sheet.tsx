@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataBadge } from "@/components/fisherman/data-badge";
+import { SpeakButton } from "@/components/fisherman/speak-button";
+import {
+  riskLevelLabel,
+  riskSpeech,
+  riskVerdictLabel,
+} from "@/components/fisherman/speech-text";
+import { useT } from "@/lib/i18n";
 import type { DataSource, TripRiskResult } from "@/lib/fisherman-api";
 
 const LEVEL_STYLES: Record<
@@ -75,6 +82,8 @@ export function RiskResultSheet({
   added = false,
   onClose,
 }: RiskResultSheetProps) {
+  const { t } = useT();
+
   React.useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -99,7 +108,7 @@ export function RiskResultSheet({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Trip risk assessment"
+        aria-label={t("risk.result")}
         className="relative z-10 flex h-[100dvh] w-full flex-col border-zinc-200 bg-white shadow-2xl sm:h-auto sm:max-h-[88dvh] sm:max-w-lg sm:rounded-2xl sm:border"
       >
         <div
@@ -109,16 +118,17 @@ export function RiskResultSheet({
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-zinc-700" />
             <span className="text-sm font-semibold text-zinc-950">
-              Trip assessment
+              {t("risk.result")}
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {result && <SpeakButton size="sm" text={riskSpeech(t, result)} />}
             {result && <DataBadge source={source} reason={reason} />}
             <button
               type="button"
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 active:bg-zinc-100"
-              aria-label="Close"
+              aria-label={t("common.close")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -128,7 +138,7 @@ export function RiskResultSheet({
         {loading && (
           <div className="flex items-center gap-2 px-4 py-12 text-xs text-zinc-500">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Computing risk for your trip to {destinationName}…</span>
+            <span>{t("risk.checking")}</span>
           </div>
         )}
 
@@ -153,7 +163,7 @@ export function RiskResultSheet({
               variant="outline"
               className="h-10 w-full text-xs"
             >
-              Close
+              {t("common.close")}
             </Button>
           </div>
         )}
@@ -183,7 +193,9 @@ export function RiskResultSheet({
                 <span className="text-[9px] text-zinc-500">/100</span>
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-bold">{result.level} risk</div>
+                <div className="text-sm font-bold">
+                  {riskVerdictLabel(t, result.level)} · {riskLevelLabel(t, result.level)}
+                </div>
                 <p className="mt-0.5 text-xs leading-relaxed text-zinc-700">
                   {result.summary}
                 </p>
@@ -205,7 +217,7 @@ export function RiskResultSheet({
             {result.factors.length > 0 && (
               <section className="space-y-2">
                 <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                  What drives this score
+                  {t("risk.whatDrivesIt")}
                 </h3>
                 <div className="space-y-2">
                   {result.factors.map((factor) => (
@@ -246,7 +258,7 @@ export function RiskResultSheet({
             {result.recommendations.length > 0 && (
               <section className="space-y-2">
                 <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                  Recommendations
+                  {t("risk.advice")}
                 </h3>
                 <ul className="space-y-1.5">
                   {result.recommendations.map((item, index) => (
@@ -263,7 +275,7 @@ export function RiskResultSheet({
             {result.precautions.length > 0 && (
               <section className="space-y-2">
                 <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                  Precautions for {destinationName}
+                  {t("risk.precautions")} — {destinationName}
                 </h3>
                 <ul className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
                   {result.precautions.map((item, index) => (
@@ -293,12 +305,12 @@ export function RiskResultSheet({
                   {added ? (
                     <>
                       <Check className="h-4 w-4" />
-                      <span>Saved to your trips</span>
+                      <span>{t("risk.added")}</span>
                     </>
                   ) : (
                     <>
                       <Plus className="h-4 w-4" />
-                      <span>Add to my trips</span>
+                      <span>{t("risk.addToTrips")}</span>
                     </>
                   )}
                 </Button>
@@ -312,7 +324,7 @@ export function RiskResultSheet({
                     : "bg-zinc-950 text-white hover:bg-zinc-800"
                 }`}
               >
-                {added ? "Done" : "Close"}
+                {t("common.close")}
               </Button>
             </div>
           </div>

@@ -19,9 +19,11 @@ import {
   type ZoneDetail,
 } from "@/lib/fisherman-api";
 import type { OsfLayerKey } from "@/lib/incois-layers";
+import { useT } from "@/lib/i18n";
 
 export function ZonesMapView() {
   const { location } = useMarine();
+  const { t } = useT();
 
   const [zones, setZones] = React.useState<PfzZoneFeature[]>([]);
   const [zonesSource, setZonesSource] = React.useState<DataSource>("demo");
@@ -142,7 +144,7 @@ export function ZonesMapView() {
             <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 shadow-sm backdrop-blur lg:bottom-3">
               <MapPin className="h-3 w-3 text-sky-600" />
               <span>{location.name}</span>
-              {zonesLoading && <span className="text-zinc-400">· loading</span>}
+              {zonesLoading && <span className="text-zinc-400">· {t("common.loading")}</span>}
             </div>
           </OceanMap>
 
@@ -164,8 +166,8 @@ export function ZonesMapView() {
             >
               <span className="text-xs font-semibold text-zinc-950">
                 {selectedZoneId && detail
-                  ? shownDetail?.name || "Zone details"
-                  : `${zones.length} fishing ${zones.length === 1 ? "zone" : "zones"} nearby`}
+                  ? shownDetail?.name || t("zones.detail")
+                  : t("zones.nearbyCount", { count: zones.length })}
               </span>
               {sheetOpen ? (
                 <ChevronDown className="h-4 w-4 text-zinc-400" />

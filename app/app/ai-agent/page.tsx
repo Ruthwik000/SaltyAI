@@ -31,6 +31,7 @@ import {
   CloudSun,
   Navigation,
 } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 type AgentMode = "normal" | "research";
 
@@ -54,7 +55,9 @@ interface SuggestionItem {
 }
 
 export default function AiAgentPage() {
-  const { location } = useMarine();
+  const { location, role } = useMarine();
+  const { t } = useT();
+  const isFisherman = role === "fisherman";
   const dataContext = useAgentContext();
   const [mode, setMode] = React.useState<AgentMode>("normal");
   const [inputQuery, setInputQuery] = React.useState("");
@@ -130,26 +133,26 @@ export default function AiAgentPage() {
   const normalSuggestions: SuggestionItem[] = [
     {
       icon: Waves,
-      title: "Safe to sail tomorrow?",
-      desc: "Evaluates wave height, wind, and departure windows",
+      title: t("agent.suggestSafe"),
+      desc: t("agent.suggestSafeDesc"),
       query: `Is it safe to go fishing tomorrow morning off ${location.name}?`,
     },
     {
       icon: Fish,
-      title: "Nearest Fishing Zone",
-      desc: "Locates highest suitability PFZ bearing and distance",
+      title: t("agent.suggestZone"),
+      desc: t("agent.suggestZoneDesc"),
       query: `Where is the nearest potential fishing zone from ${location.name}?`,
     },
     {
       icon: CloudSun,
-      title: "3-Day Marine Forecast",
-      desc: "Swell progression, wind gusts, and sea state index",
+      title: t("agent.suggestForecast"),
+      desc: t("agent.suggestForecastDesc"),
       query: `Show me the 3-day marine weather forecast for ${location.name}.`,
     },
     {
       icon: ShieldAlert,
-      title: "Restricted & Hazard Areas",
-      desc: "IMBL caution buffer, naval ranges, and MPAs",
+      title: t("agent.suggestHazard"),
+      desc: t("agent.suggestHazardDesc"),
       query: `What maritime areas or boundaries should I avoid near ${location.name}?`,
     },
   ];
@@ -274,7 +277,7 @@ export default function AiAgentPage() {
                 }`}
               >
                 <Zap className="h-3 w-3 text-amber-500" />
-                <span>Quick</span>
+                <span>{isFisherman ? t("agent.quick") : "Quick"}</span>
               </button>
               <button
                 onClick={() => setMode("research")}
@@ -297,7 +300,7 @@ export default function AiAgentPage() {
               title="Start a new chat session"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>New Chat</span>
+              <span>{isFisherman ? t("agent.newChat") : "New Chat"}</span>
             </button>
           </div>
         </header>
@@ -311,12 +314,22 @@ export default function AiAgentPage() {
             <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-zinc-950 text-white shadow-md mb-2">
               <Sparkles className="h-6 w-6 text-zinc-100" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-950">
-              Where should we navigate today?
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">
+              {isFisherman ? t("agent.hero") : "Where should we navigate today?"}
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 max-w-lg mx-auto">
-              Real-time ocean state, satellite PFZ detection, voyage safety & research grounded in{" "}
-              <span className="font-medium text-zinc-800">{location.name}, {location.state}</span>.
+            <p className="mx-auto max-w-lg text-xs text-zinc-500 sm:text-sm">
+              {isFisherman ? (
+                t("agent.heroSub", { place: `${location.name}, ${location.state}` })
+              ) : (
+                <>
+                  Real-time ocean state, satellite PFZ detection, voyage safety &amp; research
+                  grounded in{" "}
+                  <span className="font-medium text-zinc-800">
+                    {location.name}, {location.state}
+                  </span>
+                  .
+                </>
+              )}
             </p>
           </div>
 
@@ -338,6 +351,8 @@ export default function AiAgentPage() {
               placeholder={
                 mode === "research"
                   ? "Ask deep oceanographic research questions, SST thermal fronts, chlorophyll anomalies..."
+                  : isFisherman
+                  ? t("agent.placeholderFisher")
                   : "Ask about wave conditions, fishing zones, safe departure, weather..."
               }
               className="w-full text-sm sm:text-base text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none bg-transparent min-h-[44px] max-h-[140px] px-1 py-1"

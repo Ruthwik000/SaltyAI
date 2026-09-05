@@ -3,6 +3,7 @@
 import * as React from "react";
 import { CloudDownload, Info, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
 /**
  * Offline map area control.
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
  * fisherman can rely on it at sea.
  */
 export function OfflineMapCard({ areaLabel }: { areaLabel: string }) {
+  const { t } = useT();
   const [online, setOnline] = React.useState(true);
 
   React.useEffect(() => {
@@ -31,7 +33,7 @@ export function OfflineMapCard({ areaLabel }: { areaLabel: string }) {
         <div className="min-w-0">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-zinc-950">
             <CloudDownload className="h-3.5 w-3.5 text-zinc-500" />
-            <span>Offline map</span>
+            <span>{t("offline.title")}</span>
           </h3>
           <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
             {areaLabel}
@@ -45,7 +47,7 @@ export function OfflineMapCard({ areaLabel }: { areaLabel: string }) {
           }`}
         >
           {!online && <WifiOff className="h-2.5 w-2.5" />}
-          <span>{online ? "Online" : "No signal"}</span>
+          <span>{online ? t("common.online") : t("common.noSignal")}</span>
         </span>
       </div>
 
@@ -54,15 +56,12 @@ export function OfflineMapCard({ areaLabel }: { areaLabel: string }) {
         variant="outline"
         className="mt-3 h-10 w-full border-zinc-200 text-xs"
       >
-        Download this area
+        {t("offline.download")}
       </Button>
 
       <p className="mt-2 flex items-start gap-1.5 text-[10px] leading-relaxed text-zinc-500">
         <Info className="mt-0.5 h-3 w-3 shrink-0 text-zinc-400" />
-        <span>
-          Not available yet. Offline tile storage is still being built — do not
-          plan on having this map beyond mobile signal range.
-        </span>
+        <span>{t("offline.notReady")}</span>
       </p>
     </div>
   );

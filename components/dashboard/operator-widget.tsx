@@ -17,14 +17,12 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
 
   return (
     <Card className="border-zinc-200">
-      <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
-            Active Vessels in {location.name} Sector
-          </CardTitle>
-        </div>
-        <Link href="/app/vessel">
-          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
+      <CardHeader className="flex flex-col items-start gap-2 border-b border-zinc-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="min-w-0 text-sm font-semibold text-zinc-950 sm:text-base">
+          Active Vessels in {location.name} Sector
+        </CardTitle>
+        <Link href="/app/vessel" className="shrink-0">
+          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
             <span>Fleet Tracking ({vessels.length})</span>
             <ArrowRight className="h-3 w-3" />
           </Button>
@@ -33,8 +31,8 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
       <CardContent className="pt-4 space-y-3">
         {/* Emergency SOS Banner if triggered by fisherman */}
         {criticalSos && (
-          <div className="p-3 rounded-lg bg-rose-50 border border-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2.5">
+          <div className="flex flex-col justify-between gap-2.5 rounded-lg border border-rose-300 bg-rose-50 p-3 text-xs sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-start gap-2.5 sm:items-center">
               <AlertTriangle className="h-5 w-5 text-rose-600 animate-pulse shrink-0" />
               <div>
                 <span className="font-bold text-rose-950 block">
@@ -58,10 +56,10 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
 
         {/* Live Journey Departure Notification to Operator */}
         {activeJourney && (
-          <div className="p-3 rounded-lg bg-sky-50 border border-sky-200 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-2.5 w-2.5 rounded-full bg-sky-600 animate-pulse shrink-0" />
-              <div>
+          <div className="flex flex-col justify-between gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-start gap-2.5 sm:items-center">
+              <div className="mt-1 h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-sky-600 sm:mt-0" />
+              <div className="min-w-0">
                 <span className="font-bold text-sky-950 block">
                   Fleet Departure Logged: {activeJourney.vesselName}
                 </span>
@@ -70,7 +68,7 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
                 </span>
               </div>
             </div>
-            <Badge className="bg-sky-600 text-white text-[10px]">
+            <Badge className="shrink-0 self-start whitespace-nowrap bg-sky-600 text-[10px] text-white sm:self-auto">
               Underway
             </Badge>
           </div>
@@ -79,12 +77,12 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
           {vessels.map((v) => (
             <div
               key={v.id}
-              className="p-3 bg-white hover:bg-zinc-50 transition-colors flex items-center justify-between"
+              className="flex flex-col gap-2 bg-white p-3 transition-colors hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                <div>
-                  <div className="font-semibold text-zinc-950 flex items-center gap-1.5">
+              <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3">
+                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 sm:mt-0" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 font-semibold text-zinc-950">
                     <span>{v.name}</span>
                     {activeJourney && v.name.includes("Matsya-Kuber") && (
                       <span className="text-[10px] bg-sky-100 text-sky-800 font-normal px-1.5 py-0.2 rounded font-sans">
@@ -92,24 +90,28 @@ export function OperatorWidget({ location, vessels }: OperatorWidgetProps) {
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-zinc-500 font-sans">
+                  <div className="font-sans text-[11px] leading-snug text-zinc-500">
                     {v.regNumber} • {v.vesselType}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 font-sans text-[11px] text-right">
-                <div>
-                  <div className="text-zinc-900">
+              <div className="flex shrink-0 items-center justify-between gap-3 pl-[18px] font-sans text-[11px] sm:justify-end sm:gap-4 sm:pl-0 sm:text-right">
+                <div className="whitespace-nowrap">
+                  <span className="tabular-nums text-zinc-900">
                     {v.sogKnots} kts ({v.headingText})
-                  </div>
-                  <div className="text-zinc-400">{v.distanceFromPortNM} NM from port</div>
+                  </span>
+                  <span className="text-zinc-400 sm:block">
+                    <span className="sm:hidden"> · </span>
+                    {v.distanceFromPortNM} NM from port
+                  </span>
                 </div>
                 <Badge
                   variant="minimal"
                   className={
-                    v.riskRating === "Low"
+                    "shrink-0 whitespace-nowrap " +
+                    (v.riskRating === "Low"
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200")
                   }
                 >
                   {v.riskRating} Risk

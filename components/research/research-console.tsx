@@ -603,12 +603,15 @@ export function ResearchConsole() {
           )}
 
           {origin === "demo" && series && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-              <strong>Demo series.</strong> The SALTY backend did not answer, so
-              these charts show a generated series with the right shape and
-              units. Do not cite these values — they are not measurements. The
-              griddap request below pulls the real data.
-            </p>
+            /* The badge on the chart header already says these numbers are a
+               stand-in. This is just the amber rule that marks the block, with
+               the explanation on hover for anyone who wants it. */
+            <div
+              role="note"
+              title="Demo series — generated values with the right shape and units, not measurements. The griddap request below pulls the real data."
+              aria-label="Demo series, not measurements"
+              className="h-1 w-full rounded-full bg-amber-400"
+            />
           )}
 
           {!activeVariable ? (

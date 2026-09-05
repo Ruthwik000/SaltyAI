@@ -5,6 +5,8 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Polygon, LineString } from "geojson";
 import { Crosshair, Fish, Layers, Map, Satellite, Waves } from "lucide-react";
+import { useT, type TranslationKey } from "@/lib/i18n";
+import { useMarine } from "@/lib/marine-context";
 import { circleRing, formatCoord } from "@/lib/geo";
 import {
   basicOsfLayers,
@@ -213,6 +215,15 @@ function setGeoJson(
   source?.setData(data as GeoJSON.GeoJSON);
 }
 
+/** What the shared map says outside the fisherman console. */
+const ENGLISH_MAP_LABELS: Record<string, string> = {
+  "map.ocean": "Ocean",
+  "map.streets": "Map",
+  "map.satellite": "Satellite",
+  "map.fishingZones": "Fishing zones",
+  "map.noLayer": "No layer",
+};
+
 export function OceanMap({
   center,
   zoom = 7,
@@ -243,6 +254,29 @@ export function OceanMap({
   className,
   children,
 }: OceanMapProps) {
+  const { t: translate } = useT();
+  const { role } = useMarine();
+
+  /* The map is shared by all three consoles, but only the fisherman console
+     is translated — a researcher who once picked Telugu on the other side
+     should still get the INCOIS wording here. */
+  const t = React.useCallback(
+    (key: TranslationKey) => (role === "fisherman" ? translate(key) : ENGLISH_MAP_LABELS[key]),
+    [role, translate]
+  );
+
+  const overlayLabel = (key: OsfLayerKey): string => {
+    const keys: Partial<Record<OsfLayerKey, TranslationKey>> = {
+      wind: "map.wind",
+      waves: "map.waves",
+      swell: "map.swell",
+      currents: "map.currents",
+      sst: "map.sst",
+    };
+    const dictKey = keys[key];
+    return dictKey && role === "fisherman" ? translate(dictKey) : osfLayers[key].label;
+  };
+
   const container = React.useRef<HTMLDivElement>(null);
   const mapRef = React.useRef<maplibregl.Map | null>(null);
   const vesselMarker = React.useRef<maplibregl.Marker | null>(null);
@@ -902,9 +936,9 @@ export function OceanMap({
       <div className="pointer-events-auto absolute left-3 top-3 z-10 flex overflow-hidden rounded-lg border border-zinc-200 bg-white/95 shadow-sm backdrop-blur">
         {(
           [
-            { id: "ocean", label: "Ocean", icon: Waves },
-            { id: "streets", label: "Map", icon: Map },
-            { id: "satellite", label: "Satellite", icon: Satellite },
+            { id: "ocean", label: t("map.ocean"), icon: Waves },
+            { id: "streets", label: t("map.streets"), icon: Map },
+            { id: "satellite", label: t("map.satellite"), icon: Satellite },
           ] as { id: Basemap; label: string; icon: React.ElementType }[]
         ).map(({ id, label, icon: Icon }) => (
           <button
@@ -938,7 +972,7 @@ export function OceanMap({
                 }`}
               >
                 <Fish className="h-3 w-3" />
-                <span>Fishing zones</span>
+                <span>{t("map.fishingZones")}</span>
                 {zones.length > 0 && (
                   <span
                     className={`rounded-full px-1 text-[10px] font-semibold ${
@@ -968,7 +1002,7 @@ export function OceanMap({
             }`}
           >
             <Layers className="h-3 w-3" />
-            <span>No layer</span>
+            <span>{t("map.noLayer")}</span>
           </button>
           )}
           {onOverlayChange && offeredOverlays.map((key) => (
@@ -984,7 +1018,7 @@ export function OceanMap({
                   : "border-zinc-200 bg-white/95 text-zinc-600"
               }`}
             >
-              {osfLayers[key].label}
+              {overlayLabel(key)}
             </button>
           ))}
         </div>

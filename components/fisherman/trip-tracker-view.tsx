@@ -57,12 +57,15 @@ import {
   type TripSession,
 } from "@/lib/fisherman-api";
 import type { OsfLayerKey } from "@/lib/incois-layers";
+import { useT, type TranslationKey } from "@/lib/i18n";
+import { SpeakButton } from "@/components/fisherman/speak-button";
+import { conditionsSpeech } from "@/components/fisherman/speech-text";
 
-const BOAT_TYPES: { id: BoatType; label: string }[] = [
-  { id: "craft", label: "Country craft (under 24 ft)" },
-  { id: "motorized", label: "Motorised FRP craft (28–34 ft)" },
-  { id: "trawler", label: "Mechanised trawler (48 ft)" },
-  { id: "longliner", label: "Deep-sea longliner (65 ft+)" },
+const BOAT_TYPES: { id: BoatType; labelKey: TranslationKey }[] = [
+  { id: "craft", labelKey: "boat.craft" },
+  { id: "motorized", labelKey: "boat.motorized" },
+  { id: "trawler", labelKey: "boat.trawler" },
+  { id: "longliner", labelKey: "boat.longliner" },
 ];
 
 const PING_INTERVAL_MS = 30_000;
@@ -113,6 +116,7 @@ function Stat({
 
 export function TripTrackerView() {
   const { location, startJourney } = useMarine();
+  const { t } = useT();
   const searchParams = useSearchParams();
   const presetZone = searchParams.get("zone");
 
@@ -344,7 +348,7 @@ export function TripTrackerView() {
             <section className="space-y-2">
               <h2 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                 <CalendarClock className="h-3 w-3" />
-                <span>Planned trips ({planned.length})</span>
+                <span>{t("trip.plannedCount", { count: planned.length })}</span>
               </h2>
 
               {planned.map((plan) => (
@@ -358,15 +362,16 @@ export function TripTrackerView() {
                         {plan.destinationZoneName}
                       </div>
                       <div className="mt-0.5 font-sans text-[11px] text-zinc-500">
-                        {whenLabel(plan.departureAt)} &middot; {plan.distanceNM} NM
+                        {whenLabel(plan.departureAt)} &middot; {plan.distanceNM}{" "}
+                        {t("common.unit.nm")}
                       </div>
                     </div>
                     {plan.risk && (
                       <span
                         title={
                           plan.risk.source === "demo"
-                            ? "Demo estimate, not the risk model"
-                            : "From the SALTY risk model"
+                            ? t("trip.riskDemoNote")
+                            : t("trip.riskLiveNote")
                         }
                         className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                           plan.risk.level === "Low"
@@ -389,12 +394,12 @@ export function TripTrackerView() {
                       className="h-9 flex-1 gap-1.5 bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700"
                     >
                       <Play className="h-3.5 w-3.5" />
-                      <span>Start this trip</span>
+                      <span>{t("trip.startThis")}</span>
                     </Button>
                     <button
                       type="button"
                       onClick={() => removePlannedTrip(plan.id)}
-                      aria-label={`Remove planned trip to ${plan.destinationZoneName}`}
+                      aria-label={t("trip.removePlanned", { zone: plan.destinationZoneName })}
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-zinc-200 text-zinc-400 active:bg-zinc-50"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -409,17 +414,16 @@ export function TripTrackerView() {
           <section className="space-y-4">
             <div>
               <h2 className="text-sm font-bold text-zinc-950">
-                {planned.length > 0 ? "Or start a new trip" : "Start a trip"}
+                {planned.length > 0 ? t("trip.orStartNew") : t("trip.start")}
               </h2>
             <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
-              SALTY follows your position and shares it with the coastal operator
-              console until you end the trip.
+              {t("trip.trackHint")}
             </p>
           </div>
 
           <div>
             <label htmlFor="trip-zone" className={LABEL}>
-              Where are you heading
+              {t("trip.whereHeading")}
             </label>
             <select
               id="trip-zone"
@@ -428,7 +432,7 @@ export function TripTrackerView() {
               className={FIELD}
               disabled={zones.length === 0}
             >
-              {zones.length === 0 && <option value="">Loading zones…</option>}
+              {zones.length === 0 && <option value="">{t("risk.loadingZones")}</option>}
               {zones.map((zone) => (
                 <option key={zone.id} value={zone.id}>
                   {zone.name}
@@ -437,7 +441,7 @@ export function TripTrackerView() {
             </select>
             {destination && (
               <p className="mt-1.5 font-sans text-[11px] text-zinc-500">
-                {destination.distanceNM} NM · {destination.bearing} (
+                {destination.distanceNM} {t("common.unit.nm")} · {destination.bearing} (
                 {destination.bearingDeg}°)
               </p>
             )}
@@ -445,7 +449,7 @@ export function TripTrackerView() {
 
           <div>
             <label htmlFor="trip-boat" className={LABEL}>
-              Boat
+              {t("trip.boat")}
             </label>
             <select
               id="trip-boat"
@@ -455,7 +459,7 @@ export function TripTrackerView() {
             >
               {BOAT_TYPES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </option>
               ))}
             </select>
@@ -471,26 +475,25 @@ export function TripTrackerView() {
             ) : (
               <Play className="h-4 w-4" />
             )}
-            <span>{starting ? "Starting…" : "Start trip & track me"}</span>
+            <span>{starting ? t("trip.starting") : t("trip.startAndTrack")}</span>
           </Button>
 
           </section>
 
           <OfflineMapCard
-            areaLabel={`${location.name} coast and the water out to your fishing zones`}
+            areaLabel={t("trip.offlineArea", { port: location.name })}
           />
 
           {/* Past trips */}
           <section className="space-y-2">
             <h2 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
               <History className="h-3 w-3" />
-              <span>Past trips</span>
+              <span>{t("trip.history")}</span>
             </h2>
 
             {history.length === 0 ? (
               <p className="rounded-xl border border-dashed border-zinc-200 px-3 py-4 text-center text-[11px] leading-relaxed text-zinc-500">
-                No trips recorded yet. Once you end a trip it is kept here with
-                the distance you covered.
+                {t("trip.noHistoryLong")}
               </p>
             ) : (
               <ul className="divide-y divide-zinc-100 overflow-hidden rounded-xl border border-zinc-200">
@@ -499,7 +502,7 @@ export function TripTrackerView() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate text-xs font-semibold text-zinc-950">
-                          {record.destinationZoneName || "Open water"}
+                          {record.destinationZoneName || t("trip.openWater")}
                         </div>
                         <div className="mt-0.5 font-sans text-[11px] text-zinc-500">
                           {whenLabel(record.startedAt)} &middot;{" "}
@@ -511,18 +514,18 @@ export function TripTrackerView() {
                       </div>
                       <div className="shrink-0 text-right font-sans text-[11px]">
                         <div className="font-semibold text-zinc-900">
-                          {record.distanceNM} NM
+                          {record.distanceNM} {t("common.unit.nm")}
                         </div>
                         {record.maxSpeedKnots != null && (
                           <div className="text-zinc-400">
-                            max {record.maxSpeedKnots} kts
+                            {t("trip.max")} {record.maxSpeedKnots} {t("common.unit.knots")}
                           </div>
                         )}
                       </div>
                     </div>
                     {record.offline && (
                       <p className="mt-1 text-[10px] text-amber-700">
-                        Not registered with the operator console
+                        {t("trip.notRegistered")}
                       </p>
                     )}
                   </li>
@@ -535,7 +538,7 @@ export function TripTrackerView() {
             <div className="space-y-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3">
               <h3 className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                <span>Active warnings</span>
+                <span>{t("trip.warnings")}</span>
               </h3>
               {severeAlerts.map((alert) => (
                 <div key={alert.id} className="text-[11px] leading-relaxed text-rose-900">
@@ -555,11 +558,15 @@ export function TripTrackerView() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
                 </span>
-                <span>Trip in progress</span>
+                <span>{t("trip.active")}</span>
               </h2>
               <p className="mt-0.5 text-[11px] text-zinc-500">
-                From {trip.departurePort}
-                {trip.destinationZoneName ? ` to ${trip.destinationZoneName}` : ""}
+                {trip.destinationZoneName
+                  ? t("trip.fromTo", {
+                      port: trip.departurePort,
+                      zone: trip.destinationZoneName,
+                    })
+                  : t("trip.fromOnly", { port: trip.departurePort })}
               </p>
             </div>
             <DataBadge source={tripSource} reason={tripReason} />
@@ -567,8 +574,7 @@ export function TripTrackerView() {
 
           {tripSource === "demo" && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-              Your track is being kept on this device, but SALTY could not reach the
-              operator console to register the trip. Nobody ashore is watching it yet.
+              {t("trip.demoTrack")}
             </p>
           )}
 
@@ -579,21 +585,21 @@ export function TripTrackerView() {
               ) : (
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
               )}
-              <span>{message || "Waiting for a GPS fix…"}</span>
+              <span>{message || t("trip.gpsWaiting")}</span>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-2">
             <Stat
               icon={Gauge}
-              label="Speed"
+              label={t("trip.speed")}
               value={
                 fix?.speedKnots != null ? `${fix.speedKnots.toFixed(1)} kts` : "—"
               }
             />
             <Stat
               icon={Compass}
-              label="Heading"
+              label={t("trip.heading")}
               value={
                 fix?.headingDeg != null
                   ? `${Math.round(fix.headingDeg)}° ${compassPoint(fix.headingDeg)}`
@@ -602,26 +608,26 @@ export function TripTrackerView() {
             />
             <Stat
               icon={Navigation}
-              label="From port"
+              label={t("trip.fromPort")}
               value={distanceFromPort != null ? `${distanceFromPort.toFixed(1)} NM` : "—"}
               hint={trip.departurePort}
             />
             <Stat
               icon={Sailboat}
-              label="To zone"
+              label={t("trip.toZone")}
               value={distanceToZone != null ? `${distanceToZone.toFixed(1)} NM` : "—"}
               hint={destination?.name.split("(")[0].trim()}
             />
             <Stat
               icon={Timer}
-              label="Elapsed"
+              label={t("trip.elapsed")}
               value={elapsedLabel(new Date(trip.startedAt).getTime(), now)}
             />
             <Stat
               icon={Activity}
-              label="Fix accuracy"
+              label={t("trip.accuracy")}
               value={fix?.accuracyM != null ? `±${Math.round(fix.accuracyM)} m` : "—"}
-              hint={`${track.length} points logged`}
+              hint={t("trip.pointsLogged", { count: track.length })}
             />
           </div>
 
@@ -634,16 +640,24 @@ export function TripTrackerView() {
           <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                Weather where you are
+                {t("trip.weatherHere")}
               </h3>
-              <DataBadge source={conditionsSource} />
+              <div className="flex items-center gap-1.5">
+                {conditions && (
+                  <SpeakButton
+                    size="sm"
+                    text={conditionsSpeech(t, location.name, conditions)}
+                  />
+                )}
+                <DataBadge source={conditionsSource} />
+              </div>
             </div>
             {conditions ? (
               <ConditionsGrid conditions={conditions} columns={2} />
             ) : (
               <div className="flex items-center gap-2 py-4 text-xs text-zinc-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading…</span>
+                <span>{t("common.loading")}</span>
               </div>
             )}
           </section>
@@ -652,7 +666,7 @@ export function TripTrackerView() {
             <div className="space-y-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3">
               <h3 className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                <span>Active warnings</span>
+                <span>{t("trip.warnings")}</span>
               </h3>
               {severeAlerts.map((alert) => (
                 <div key={alert.id} className="text-[11px] leading-relaxed text-rose-900">
@@ -669,7 +683,7 @@ export function TripTrackerView() {
             className="h-12 w-full gap-2 border-rose-200 bg-rose-50 text-sm font-semibold text-rose-700 hover:bg-rose-100"
           >
             <Square className="h-4 w-4" />
-            <span>End trip</span>
+            <span>{t("trip.end")}</span>
           </Button>
         </div>
       )}
@@ -718,7 +732,7 @@ export function TripTrackerView() {
               className="flex h-14 shrink-0 items-center justify-between px-4 text-left"
             >
               <span className="text-xs font-semibold text-zinc-950">
-                {trip ? "Trip in progress" : "Start a trip"}
+                {trip ? t("trip.active") : t("trip.start")}
               </span>
               {sheetOpen ? (
                 <ChevronDown className="h-4 w-4 text-zinc-400" />

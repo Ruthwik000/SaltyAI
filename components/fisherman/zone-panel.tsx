@@ -16,6 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { ConditionsGrid } from "@/components/fisherman/conditions-grid";
 import { DataBadge } from "@/components/fisherman/data-badge";
 import { formatCoord } from "@/lib/geo";
+import { useT } from "@/lib/i18n";
+import { SpeakButton } from "@/components/fisherman/speak-button";
+import { zoneSpeech } from "@/components/fisherman/speech-text";
 import type {
   DataSource,
   PfzZoneFeature,
@@ -52,6 +55,9 @@ export function ZonePanel({
   onBack,
   portName,
 }: ZonePanelProps) {
+  const { t } = useT();
+  const selectedZone = zones.find((zone) => zone.id === selectedZoneId) || null;
+
   if (selectedZoneId) {
     return (
       <div className="flex h-full flex-col">
@@ -60,27 +66,27 @@ export function ZonePanel({
             type="button"
             onClick={onBack}
             className="-ml-1 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100"
-            aria-label="Back to all zones"
+            aria-label={t("zones.back")}
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <span className="text-xs font-semibold text-zinc-950">Zone details</span>
-          {!detailLoading && (
-            <DataBadge source={detailSource} className="ml-auto" />
-          )}
+          <span className="text-xs font-semibold text-zinc-950">{t("zones.detail")}</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            {selectedZone && <SpeakButton size="sm" text={zoneSpeech(t, selectedZone)} />}
+            {!detailLoading && <DataBadge source={detailSource} />}
+          </div>
         </div>
 
         {detailLoading && (
           <div className="flex items-center gap-2 px-4 py-8 text-xs text-zinc-500">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading zone conditions…</span>
+            <span>{t("zones.loadingDetail")}</span>
           </div>
         )}
 
         {!detailLoading && !detail && (
           <div className="px-4 py-8 text-xs leading-relaxed text-zinc-500">
-            Conditions for this zone are not available right now. Check your
-            connection and try again.
+            {t("zones.detailUnavailable")}
           </div>
         )}
 
@@ -104,7 +110,7 @@ export function ZonePanel({
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Compass className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {detail.distanceNM} NM
+                  {detail.distanceNM} {t("common.unit.nm")}
                 </div>
                 <div className="text-[10px] text-zinc-500">
                   {detail.bearing} ({detail.bearingDeg}°)
@@ -113,16 +119,16 @@ export function ZonePanel({
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Waves className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {detail.depthMeters} m
+                  {detail.depthMeters} {t("common.unit.m")}
                 </div>
-                <div className="text-[10px] text-zinc-500">Depth</div>
+                <div className="text-[10px] text-zinc-500">{t("zones.depth")}</div>
               </div>
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Gauge className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {detail.radiusNM} NM
+                  {detail.radiusNM} {t("common.unit.nm")}
                 </div>
-                <div className="text-[10px] text-zinc-500">Zone radius</div>
+                <div className="text-[10px] text-zinc-500">{t("zones.radius")}</div>
               </div>
             </div>
 
@@ -130,12 +136,10 @@ export function ZonePanel({
             <section className="space-y-2">
               <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
                 <Fish className="h-3 w-3" />
-                <span>Species expected here</span>
+                <span>{t("zones.speciesHere")}</span>
               </h3>
               {detail.species.length === 0 ? (
-                <p className="text-xs text-zinc-500">
-                  No species breakdown published for this zone.
-                </p>
+                <p className="text-xs text-zinc-500">{t("zones.noSpecies")}</p>
               ) : (
                 <ul className="divide-y divide-zinc-100 overflow-hidden rounded-lg border border-zinc-200">
                   {detail.species.map((species) => (
@@ -165,7 +169,7 @@ export function ZonePanel({
             {/* Conditions at the zone coordinates */}
             <section className="space-y-2">
               <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                Weather &amp; sea at this zone
+                {t("zones.weatherHere")}
               </h3>
               <ConditionsGrid conditions={detail.conditions} columns={2} />
             </section>
@@ -173,17 +177,17 @@ export function ZonePanel({
             {/* Advisory */}
             <section className="space-y-2">
               <h3 className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                Advisory
+                {t("zones.advisory")}
               </h3>
               <div className="space-y-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-700">
                 <div className="flex justify-between gap-3">
-                  <span className="text-zinc-500">Gear</span>
+                  <span className="text-zinc-500">{t("zones.gear")}</span>
                   <span className="text-right font-medium text-zinc-900">
                     {detail.recommendedGear}
                   </span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-zinc-500">Valid</span>
+                  <span className="text-zinc-500">{t("zones.valid")}</span>
                   <span className="text-right font-medium text-zinc-900">
                     {detail.advisoryValidity}
                   </span>
@@ -200,7 +204,7 @@ export function ZonePanel({
               <Link href={`/app/risk?zone=${encodeURIComponent(detail.zoneId)}`}>
                 <Button className="h-10 w-full gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800">
                   <ShieldCheck className="h-4 w-4" />
-                  <span>Check trip safety to this zone</span>
+                  <span>{t("zones.checkSafety")}</span>
                 </Button>
               </Link>
               <Link href={`/app/vessel?zone=${encodeURIComponent(detail.zoneId)}`}>
@@ -209,7 +213,7 @@ export function ZonePanel({
                   className="h-10 w-full gap-1.5 border-zinc-200 text-xs"
                 >
                   <Compass className="h-4 w-4" />
-                  <span>Start a trip to this zone</span>
+                  <span>{t("zones.startTrip")}</span>
                 </Button>
               </Link>
             </div>
@@ -224,11 +228,10 @@ export function ZonePanel({
       <div className="flex items-center justify-between gap-2 border-b border-zinc-200 px-4 py-3">
         <div>
           <h2 className="text-xs font-semibold text-zinc-950">
-            Fishing zones near {portName}
+            {t("zones.near", { port: portName })}
           </h2>
           <p className="text-[10px] text-zinc-500">
-            {zones.length} advisory {zones.length === 1 ? "zone" : "zones"} · tap a
-            circle on the map
+            {t("zones.count", { count: zones.length })}
           </p>
         </div>
         <DataBadge source={zonesSource} reason={zonesReason} />
@@ -247,8 +250,8 @@ export function ZonePanel({
                   {zone.name}
                 </div>
                 <div className="mt-0.5 font-sans text-[11px] text-zinc-500">
-                  {zone.distanceNM} NM · {zone.bearing} ({zone.bearingDeg}°) ·{" "}
-                  {zone.depthMeters} m
+                  {zone.distanceNM} {t("common.unit.nm")} · {zone.bearing} (
+                  {zone.bearingDeg}°) · {zone.depthMeters} {t("common.unit.m")}
                 </div>
                 {zone.primarySpecies.length > 0 && (
                   <div className="mt-1 truncate text-[10px] text-zinc-400">
@@ -273,7 +276,7 @@ export function ZonePanel({
 
         {zones.length === 0 && (
           <li className="px-4 py-8 text-center text-xs text-zinc-500">
-            No fishing zone advisories for this stretch of coast right now.
+            {t("zones.noneCoast")}
           </li>
         )}
       </ul>

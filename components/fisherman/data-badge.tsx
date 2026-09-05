@@ -2,6 +2,7 @@
 
 import { CircleDashed, Radio } from "lucide-react";
 import type { DataSource } from "@/lib/fisherman-api";
+import { useT } from "@/lib/i18n";
 
 /**
  * States plainly whether the numbers on screen came from the SALTY backend or
@@ -16,6 +17,7 @@ export function DataBadge({
   reason?: string;
   className?: string;
 }) {
+  const { t } = useT();
   const isLive = source === "live";
   return (
     <span
@@ -31,7 +33,7 @@ export function DataBadge({
       ) : (
         <CircleDashed className="h-2.5 w-2.5" />
       )}
-      <span>{isLive ? "Live" : "Demo data"}</span>
+      <span>{isLive ? t("common.live") : t("common.demo")}</span>
     </span>
   );
 }

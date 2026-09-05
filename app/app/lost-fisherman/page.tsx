@@ -114,61 +114,65 @@ export default function LostFishermanPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
-        <div>
-          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950 flex items-center gap-2.5">
-            <LifeBuoy className="h-7 w-7 text-rose-600" />
-            <span>Lost Fisherman & Vessel Search Area</span>
-          </h1>
-        </div>
+      <div className="flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <h1 className="flex items-start gap-2 text-base font-bold leading-snug tracking-tight text-zinc-950 sm:items-center sm:gap-2.5 sm:text-2xl lg:text-3xl">
+          <LifeBuoy className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 sm:mt-0 sm:h-7 sm:w-7" />
+          <span className="text-balance">Lost Fisherman &amp; Vessel Search Area</span>
+        </h1>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => setIsAiDrawerOpen(true)}
-            className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
-            <span>SAR Assistant</span>
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          onClick={() => setIsAiDrawerOpen(true)}
+          className="h-9 w-full shrink-0 gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800 sm:h-8 sm:w-auto"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
+          <span>SAR Assistant</span>
+        </Button>
       </div>
 
       {/* Primary Emergency Banner */}
-      <div className="p-4 rounded-xl border border-rose-300 bg-rose-50/50 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-sans">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-rose-100 text-rose-800 shrink-0">
-            <AlertTriangle className="h-5 w-5" />
+      <div className="flex flex-col justify-between gap-3 rounded-xl border border-rose-300 bg-rose-50/50 p-3 font-sans text-xs shadow-xs sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+        <div className="flex items-start gap-2.5 sm:items-center sm:gap-3">
+          <div className="shrink-0 rounded-lg bg-rose-100 p-1.5 text-rose-800 sm:p-2">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-zinc-950">
+          <div className="min-w-0">
+            {/* The badge sits on its own line when the incident id is long
+                rather than being squeezed out of its pill. */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-[13px] font-bold text-zinc-950 sm:text-sm">
                 Active Search Incident: {incidentId}
               </span>
-              <Badge className="bg-rose-600 text-white text-[10px] px-1.5 py-0">
-                Drift In Progress ({elapsedHours} hrs)
+              <Badge className="shrink-0 whitespace-nowrap bg-rose-600 px-1.5 py-0 text-[10px] text-white">
+                Drift in progress · {elapsedHours} h
               </Badge>
             </div>
-            <p className="text-xs text-zinc-600 mt-0.5">
-              Target: <strong>{targetName}</strong>. Last known position: {lkpLat}°N, {lkpLon}°E off {location.name}.
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-600 sm:text-xs">
+              Target: <strong>{targetName}</strong>.
+              <br className="sm:hidden" />
+              <span className="sm:before:content-['_']">
+                Last known {lkpLat}°N, {lkpLon}°E off {location.name}.
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <Button
-            size="sm"
-            className="text-xs h-8 bg-rose-700 hover:bg-rose-800 text-white gap-1.5"
-            onClick={() => alert("Coast Guard MRCC Chennai & Visakhapatnam Port Signal Station dispatched with SAR coordinates.")}
-          >
-            <Radio className="h-3.5 w-3.5" />
-            <span>Dispatch MRCC Packet</span>
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          className="h-9 w-full shrink-0 gap-1.5 bg-rose-700 text-xs text-white hover:bg-rose-800 sm:h-8 sm:w-auto"
+          onClick={() =>
+            alert(
+              "Coast Guard MRCC Chennai & Visakhapatnam Port Signal Station dispatched with SAR coordinates."
+            )
+          }
+        >
+          <Radio className="h-3.5 w-3.5" />
+          <span>Dispatch MRCC Packet</span>
+        </Button>
       </div>
 
       {/* Grid: Operator Inputs (Left) + Drift Trajectory Results (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* Left 1 Col: Operator Input Form */}
         <div className="space-y-4">
           <Card className="border-zinc-200">
@@ -278,15 +282,13 @@ export default function LostFishermanPage() {
         </div>
 
         {/* Right 2 Cols: Search Datum, Drift Vector Decomposition & Search Plan */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-4 lg:col-span-2 lg:space-y-6">
           {/* Output Datum Card */}
           <Card className="border-zinc-200 bg-white shadow-xs">
-            <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-bold text-zinc-950">
-                  Predicted Search Datum & Probability Area
-                </CardTitle>
-              </div>
+            <CardHeader className="flex flex-col items-start gap-2 border-b border-zinc-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-sm font-bold text-zinc-950 sm:text-base">
+                Predicted Search Datum &amp; Probability Area
+              </CardTitle>
 
               <DataBadge
                 source={predictionSource}
@@ -298,30 +300,31 @@ export default function LostFishermanPage() {
               />
             </CardHeader>
 
-            <CardContent className="pt-4 space-y-6 text-xs font-sans">
+            <CardContent className="space-y-5 pt-4 font-sans text-xs sm:space-y-6">
               {/* Highlight Datum Coordinates Box */}
-              <div className="p-4 rounded-xl border border-sky-200 bg-sky-50/70 text-zinc-950 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-sans">
-                <div>
-                  <span className="text-[10px] text-sky-700 uppercase tracking-wider block font-semibold">
-                    Optimal Search Datum Center (Most Probable Point)
+              <div className="flex flex-col justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50/70 p-3 font-sans text-zinc-950 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                <div className="min-w-0">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-sky-700">
+                    Optimal search datum (most probable point)
                   </span>
-                  <div className="text-2xl font-bold tracking-tight text-zinc-950 mt-1">
+                  <div className="mt-1 text-lg font-bold tabular-nums tracking-tight text-zinc-950 sm:text-2xl">
                     {datumResult.datumLat}°N, {datumResult.datumLon}°E
                   </div>
-                  <span className="text-xs text-zinc-600 block mt-1">
-                    Net Displacement: <strong>{datumResult.netDriftDistanceNM} NM</strong> along bearing <strong>{datumResult.netDriftBearing}</strong>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600 sm:text-xs">
+                    Net displacement <strong>{datumResult.netDriftDistanceNM} NM</strong> along{" "}
+                    <strong>{datumResult.netDriftBearing}</strong>
                   </span>
                 </div>
 
-                <div className="text-right sm:border-l sm:border-sky-200 sm:pl-6 space-y-1">
-                  <div>
-                    <span className="text-zinc-500 text-[10px] block">Primary Search Radius</span>
-                    <span className="text-xl font-bold text-sky-700">
-                      {datumResult.searchRadiusNM} NM
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-zinc-500 block">
-                    Area: {datumResult.primarySearchAreaSqNM} sq NM
+                {/* On a phone this reads as a row under the datum rather than
+                    a right-aligned column squeezed against it. */}
+                <div className="flex shrink-0 items-baseline gap-2 border-t border-sky-200 pt-2 sm:block sm:space-y-1 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0 sm:text-right">
+                  <span className="text-[10px] text-zinc-500 sm:block">Primary search radius</span>
+                  <span className="text-lg font-bold tabular-nums text-sky-700 sm:text-xl">
+                    {datumResult.searchRadiusNM} NM
+                  </span>
+                  <span className="text-[11px] text-zinc-500 sm:block">
+                    · {datumResult.primarySearchAreaSqNM} sq NM
                   </span>
                 </div>
               </div>
@@ -332,41 +335,41 @@ export default function LostFishermanPage() {
                   Kinematic Vector Influence:
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-sans text-xs">
-                  <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
+                <div className="grid grid-cols-1 gap-2 font-sans text-xs sm:grid-cols-3 sm:gap-3">
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 sm:p-3">
                     <div className="flex items-center gap-1.5 text-zinc-500 mb-1 text-[10px] uppercase">
                       <Wind className="h-3.5 w-3.5 text-sky-500" />
                       <span>Wind Leeway Influence</span>
                     </div>
-                    <div className="text-base font-bold text-zinc-900">{datumResult.windLeewaySpeed}</div>
+                    <div className="text-sm font-bold tabular-nums text-zinc-900 sm:text-base">{datumResult.windLeewaySpeed}</div>
                     <span className="text-[10px] text-zinc-500 block">Downwind Leeway: 245°</span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 sm:p-3">
                     <div className="flex items-center gap-1.5 text-zinc-500 mb-1 text-[10px] uppercase">
                       <Droplets className="h-3.5 w-3.5 text-blue-500" />
                       <span>Surface Current Drift</span>
                     </div>
-                    <div className="text-base font-bold text-zinc-900">{datumResult.currentSpeed}</div>
+                    <div className="text-sm font-bold tabular-nums text-zinc-900 sm:text-base">{datumResult.currentSpeed}</div>
                     <span className="text-[10px] text-zinc-500 block">Geostrophic Vector: 048°</span>
                   </div>
 
-                  <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50">
+                  <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 sm:p-3">
                     <div className="flex items-center gap-1.5 text-zinc-500 mb-1 text-[10px] uppercase">
                       <Waves className="h-3.5 w-3.5 text-indigo-500" />
                       <span>Tidal & Stokes Drift</span>
                     </div>
-                    <div className="text-base font-bold text-zinc-900">{datumResult.tideInfluence}</div>
+                    <div className="text-sm font-bold tabular-nums text-zinc-900 sm:text-base">{datumResult.tideInfluence}</div>
                     <span className="text-[10px] text-zinc-500 block">Ebb Tide Mass Transport</span>
                   </div>
                 </div>
               </div>
 
               {/* Tactical Search Pattern Recommendations */}
-              <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/70 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-zinc-950 font-sans">
-                    Recommended Tactical Search Pattern:
+              <div className="space-y-2 rounded-xl border border-zinc-200 bg-zinc-50/70 p-3 text-xs sm:p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-sans font-semibold text-zinc-950">
+                    Recommended tactical search pattern
                   </span>
                   <Badge variant="minimal" className="font-sans text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
                     IAMSAR Level 1
@@ -386,33 +389,35 @@ export default function LostFishermanPage() {
                   Nearby Craft in Vicinity (Good Samaritan Network):
                 </span>
                 <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-lg overflow-hidden font-sans text-[11px]">
-                  <div className="p-2.5 bg-white flex items-center justify-between">
+                  <div className="flex flex-col gap-0.5 bg-white p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                     <span className="font-semibold text-zinc-900">Matsya-Kuber IV (Mechanized)</span>
-                    <span className="text-zinc-500">4.2 NM from Datum • VHF Ch-16</span>
+                    <span className="text-zinc-500">4.2 NM from datum • VHF Ch-16</span>
                   </div>
-                  <div className="p-2.5 bg-white flex items-center justify-between">
+                  <div className="flex flex-col gap-0.5 bg-white p-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                     <span className="font-semibold text-zinc-900">ICGS Varuna (Patrol Craft)</span>
-                    <span className="text-zinc-500">8.9 NM from Datum • SOG 18.5 kts</span>
+                    <span className="text-zinc-500">8.9 NM from datum • SOG 18.5 kts</span>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap">
                 <Button
                   size="sm"
-                  className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
-                  onClick={() => alert(`SAR Operations Briefing PDF compiled for Incident ${incidentId}`)}
+                  className="h-9 w-full gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800 sm:h-8 sm:w-auto"
+                  onClick={() =>
+                    alert(`SAR Operations Briefing PDF compiled for Incident ${incidentId}`)
+                  }
                 >
                   <Download className="h-3.5 w-3.5 text-zinc-300" />
-                  <span>Export IAMSAR Tactical Packet</span>
+                  <span>Export IAMSAR tactical packet</span>
                 </Button>
 
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleShowOnMap}
-                  className="text-xs h-8 border-zinc-200 gap-1.5"
+                  className="h-9 w-full gap-1.5 border-zinc-200 text-xs sm:h-8 sm:w-auto"
                 >
                   <Compass className="h-3.5 w-3.5 text-zinc-600" />
                   <span>Show drift &amp; search area on map</span>

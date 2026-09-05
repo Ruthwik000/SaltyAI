@@ -3,6 +3,8 @@
 import { Sparkles, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
+import { useMarine } from "@/lib/marine-context";
 
 interface AiConsultCardProps {
   locationName: string;
@@ -15,11 +17,19 @@ export function AiConsultCard({
   nearbyPfzName,
   onOpenAiDrawer,
 }: AiConsultCardProps) {
-  const suggestedQueries = [
-    `Is it safe to sail tomorrow off ${locationName}?`,
-    `What is the SST gradient at ${nearbyPfzName.slice(0, 18)}?`,
-    `Calculate drift for a disabled craft lost 3 hours ago.`,
-  ];
+  const { t } = useT();
+  const { role } = useMarine();
+
+  // A skipper gets the three questions they actually ask, in their language;
+  // the other consoles keep the technical prompts.
+  const suggestedQueries =
+    role === "fisherman"
+      ? [t("agent.q1"), t("agent.q2"), t("agent.q3")]
+      : [
+          `Is it safe to sail tomorrow off ${locationName}?`,
+          `What is the SST gradient at ${nearbyPfzName.slice(0, 18)}?`,
+          `Calculate drift for a disabled craft lost 3 hours ago.`,
+        ];
 
   return (
     <Card className="border-zinc-200 bg-gradient-to-b from-zinc-50/50 to-white">
@@ -27,11 +37,11 @@ export function AiConsultCard({
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-zinc-800" />
           <CardTitle className="text-sm font-semibold text-zinc-950">
-            Ask Salty Marine Agent
+            {t("ag.askSalty")}
           </CardTitle>
         </div>
         <p className="text-[11px] text-zinc-500 mt-1">
-          Grounded on real oceanographic telemetry and IMD/INCOIS bulletins.
+          {t("ag.grounded")}
         </p>
       </CardHeader>
       <CardContent className="pt-4 space-y-2">
@@ -50,7 +60,7 @@ export function AiConsultCard({
           onClick={onOpenAiDrawer}
           className="w-full text-xs h-8 mt-2 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
         >
-          <span>Launch Interactive Query</span>
+          <span>{t("dash.launchQuery")}</span>
           <Sparkles className="h-3 w-3 text-zinc-300" />
         </Button>
       </CardContent>

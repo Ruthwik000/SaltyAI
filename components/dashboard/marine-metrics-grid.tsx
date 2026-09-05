@@ -32,6 +32,8 @@ import {
   marineAlerts,
 } from "@/lib/marine-data";
 import { useMarine, type UserRole } from "@/lib/marine-context";
+import { useT } from "@/lib/i18n";
+import { riskLevelLabel } from "@/components/fisherman/speech-text";
 
 interface MarineMetricsGridProps {
   location: MarineLocation;
@@ -39,6 +41,7 @@ interface MarineMetricsGridProps {
 }
 
 export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGridProps) {
+  const { t } = useT();
   const marineContext = useMarine();
   const role = propRole || marineContext?.role;
   const isFisherman = role === "fisherman";
@@ -79,7 +82,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             {/* Card 1: Popular Fish currently in the market (Replaces SST on Fisherman Dashboard) */}
             <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
               <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wide leading-tight">Popular Market Fish</span>
+                <span className="font-medium uppercase leading-tight tracking-wide">{t("m.popularFish")}</span>
                 <Fish className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-emerald-600" />
               </div>
               <div className="my-2">
@@ -104,7 +107,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                   onClick={() => setMarketModalOpen(true)}
                   className="text-zinc-900 font-semibold underline hover:text-emerald-700 cursor-pointer shrink-0"
                 >
-                  All Species ({marketData.items.length}) →
+                  {t("m.allSpecies", { count: marketData.items.length })}
                 </button>
               </div>
             </Card>
@@ -112,13 +115,13 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             {/* Card 2: Market Updates & Price Modifications (Replaces Surface Wind on Fisherman Dashboard) */}
             <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
               <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wide leading-tight">Market & Price Updates</span>
+                <span className="font-medium uppercase leading-tight tracking-wide">{t("m.marketPrices")}</span>
                 <IndianRupee className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-sky-600" />
               </div>
               <div className="my-2">
                 <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1">
                   ₹{marketData.benchmarkPrice}
-                  <span className="text-xs font-sans font-normal text-zinc-500">/kg avg</span>
+                  <span className="font-sans text-xs font-normal text-zinc-500">{t("m.perKgAvg")}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] mt-1 font-sans">
                   <span
@@ -133,7 +136,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     )}
                     {marketData.priceChangeText}
                   </span>
-                  <span className="text-zinc-500">vs yesterday</span>
+                  <span className="text-zinc-500">{t("m.vsYesterday")}</span>
                 </div>
               </div>
               <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
@@ -145,7 +148,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                   onClick={() => setMarketModalOpen(true)}
                   className="text-zinc-900 font-semibold underline hover:text-sky-700 cursor-pointer shrink-0"
                 >
-                  View Rates →
+                  {t("m.viewRates")}
                 </button>
               </div>
             </Card>
@@ -153,14 +156,14 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
             {/* Card 3: Nearby Fishzone Updates & Rapid School Growth (Replaces Wave SWH on Fisherman Dashboard) */}
             <Card className="p-3 sm:p-4 flex flex-col justify-between hover:border-zinc-300 transition-colors">
               <div className="flex items-center justify-between text-[10px] sm:text-xs font-sans text-zinc-500">
-                <span className="uppercase font-medium tracking-wide leading-tight">Nearby Fishzone Update</span>
+                <span className="font-medium uppercase leading-tight tracking-wide">{t("m.nearbyZoneUpdate")}</span>
                 <Radar className="h-4 w-4 text-indigo-500" />
               </div>
               <div className="my-2">
                 <div className="text-lg sm:text-3xl font-bold font-sans tracking-tight text-zinc-950 flex items-baseline gap-1.5">
                   {schoolData.biomassSurge}
                   <span className="text-[10px] uppercase tracking-wide font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Rapid Growth
+                    {t("m.rapidGrowth")}
                   </span>
                 </div>
                 <div
@@ -171,7 +174,9 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     {schoolData.zoneSector}
                   </span>
                   <span>•</span>
-                  <span className="text-zinc-500 truncate">{schoolData.schoolType.split(" ")[0]} school</span>
+                  <span className="truncate text-zinc-500">
+                    {schoolData.schoolType.split(" ")[0]} {t("m.schoolWord")}
+                  </span>
                 </div>
               </div>
               <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
@@ -189,7 +194,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     href="/app/fishing-zones"
                     className="text-zinc-900 font-semibold underline hover:text-indigo-600"
                   >
-                    Track School →
+                    {t("m.trackSchool")}
                   </Link>
                 </div>
               </div>
@@ -241,7 +246,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                       onClick={() => setDisasterModalOpen(true)}
                       className="text-zinc-500 hover:text-zinc-900 underline cursor-pointer"
                     >
-                      Details
+                      {t("m.details")}
                     </button>
                     <span>•</span>
                     <Link
@@ -326,7 +331,7 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
         {/* Card 4: Marine Risk Index - Always Retained */}
         <Card className="p-3 sm:p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-sans text-zinc-500">
-            <span className="uppercase font-medium tracking-wide leading-tight">Marine Risk Rating</span>
+            <span className="font-medium uppercase leading-tight tracking-wide">{t("m.riskRating")}</span>
             <ShieldAlert
               className={`h-4 w-4 ${
                 location.riskLevel === "Low"
@@ -352,19 +357,19 @@ export function MarineMetricsGrid({ location, role: propRole }: MarineMetricsGri
                     : "text-rose-600"
                 }
               >
-                {location.riskLevel} risk today
+                {riskLevelLabel(t, location.riskLevel)}
               </span>
             </div>
           </div>
           <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-[10px] font-sans text-zinc-400">
-            <span>Waves, wind &amp; swell</span>
+            <span>{t("m.wavesWindSwell")}</span>
             {/* Researchers have no Risk & Safety section; send them to the
                 sea-state detail they do have. */}
             <Link
               href={role === "researcher" ? "/app/weather" : "/app/risk"}
               className="text-zinc-900 underline"
             >
-              {role === "researcher" ? "Sea state →" : "Check my trip →"}
+              {role === "researcher" ? "Sea state →" : t("dash.checkMyTrip")}
             </Link>
           </div>
         </Card>

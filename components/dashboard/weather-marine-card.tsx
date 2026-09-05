@@ -19,15 +19,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { MarineLocation } from "@/lib/marine-data";
+import { useT } from "@/lib/i18n";
+import { conditionLabel, riskLevelLabel } from "@/components/fisherman/speech-text";
 
 interface WeatherMarineCardProps {
   location: MarineLocation;
 }
 
 export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
+  const { t } = useT();
+
   const threeDayOutlook = [
     {
-      day: "Today",
+      day: t("w.today"),
       condition: location.weather.condition,
       temp: `${location.weather.temp}°C`,
       wind: `${location.windSpeed} kts`,
@@ -36,7 +40,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
       safe: location.riskLevel === "Low" || location.riskLevel === "Moderate",
     },
     {
-      day: "Tomorrow",
+      day: t("w.tomorrow"),
       condition: "Fair",
       temp: "29°C",
       wind: "12 kts NE",
@@ -46,7 +50,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
       window: "04:30 - 13:30 IST",
     },
     {
-      day: "Day 3 (Wed)",
+      day: t("w.day3"),
       condition: "Cloudy",
       temp: "28°C",
       wind: "18 kts ENE",
@@ -66,7 +70,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           </div>
           <div>
             <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
-              Weather & Marine Conditions
+              {t("w.title")}
             </CardTitle>
             <p className="text-[11px] text-zinc-500">
               {location.name} • {location.sea}
@@ -81,7 +85,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
             size="sm"
             className="text-xs h-7.5 px-3 border-zinc-200 hover:bg-zinc-100 text-zinc-800 font-medium gap-1 cursor-pointer"
           >
-            <span>Know More</span>
+            <span>{t("dash.knowMore")}</span>
             <ArrowRight className="h-3 w-3 text-zinc-500" />
           </Button>
         </Link>
@@ -93,14 +97,16 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           {/* Temperature & Condition */}
           <div className="p-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 space-y-1">
             <div className="flex items-center justify-between text-zinc-500 text-[10px]">
-              <span className="uppercase font-semibold tracking-wider">Air & Sky</span>
+              <span className="font-semibold uppercase tracking-wider">{t("w.airSky")}</span>
               <Thermometer className="h-3.5 w-3.5 text-amber-500" />
             </div>
             <div className="text-base font-bold text-zinc-950">
               {location.weather.temp}°C
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-zinc-600">
-              <span className="font-medium text-zinc-900">{location.weather.condition}</span>
+              <span className="font-medium text-zinc-900">
+                {conditionLabel(t, location.weather.condition)}
+              </span>
               <span>•</span>
               <span>{location.weather.humidity}% hum</span>
             </div>
@@ -109,7 +115,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           {/* Wind Vector */}
           <div className="p-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 space-y-1">
             <div className="flex items-center justify-between text-zinc-500 text-[10px]">
-              <span className="uppercase font-semibold tracking-wider">Surface Wind</span>
+              <span className="font-semibold uppercase tracking-wider">{t("w.surfaceWind")}</span>
               <Wind className="h-3.5 w-3.5 text-sky-500" />
             </div>
             <div className="text-base font-bold text-zinc-950">
@@ -123,7 +129,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           {/* Waves & Swell */}
           <div className="p-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 space-y-1">
             <div className="flex items-center justify-between text-zinc-500 text-[10px]">
-              <span className="uppercase font-semibold tracking-wider">Wave & Swell</span>
+              <span className="font-semibold uppercase tracking-wider">{t("w.waveSwell")}</span>
               <Waves className="h-3.5 w-3.5 text-blue-500" />
             </div>
             <div className="text-base font-bold text-zinc-950">
@@ -137,7 +143,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           {/* Tide & Current Drift */}
           <div className="p-3 rounded-xl border border-zinc-200/80 bg-zinc-50/60 space-y-1">
             <div className="flex items-center justify-between text-zinc-500 text-[10px]">
-              <span className="uppercase font-semibold tracking-wider">Tide & Drift</span>
+              <span className="font-semibold uppercase tracking-wider">{t("w.tideDrift")}</span>
               <Compass className="h-3.5 w-3.5 text-indigo-500" />
             </div>
             <div className="text-base font-bold text-zinc-950">
@@ -154,7 +160,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
           <div className="flex items-center justify-between text-[11px] text-zinc-500 font-sans">
             <span className="font-semibold text-zinc-700 flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-              3-Day Voyage Sea State Outlook
+              {t("w.outlook")}
             </span>
             <span className="text-[10px] text-zinc-400">INCOIS WaveWatch III</span>
           </div>
@@ -175,16 +181,16 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
                         : "bg-amber-50 text-amber-700 border-amber-200 font-medium"
                     }`}
                   >
-                    {item.risk} Risk
+                    {riskLevelLabel(t, item.risk)}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-zinc-600 pt-0.5">
-                  <span>{item.condition}</span>
+                  <span>{conditionLabel(t, item.condition)}</span>
                   <span className="font-medium text-zinc-900">{item.temp}</span>
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-0.5 border-t border-zinc-100">
-                  <span>Wave: {item.wave}</span>
-                  <span>Wind: {item.wind}</span>
+                  <span>{t("cond.waves")}: {item.wave}</span>
+                  <span>{t("cond.wind")}: {item.wind}</span>
                 </div>
               </div>
             ))}
@@ -195,8 +201,9 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
         <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs text-emerald-950">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
           <div className="flex-1 text-[11px] leading-snug">
-            <span className="font-semibold text-emerald-900">Recommended Safe Departure:</span>{" "}
-            Tomorrow morning between <strong>04:30 AM and 01:30 PM IST</strong> offers calm seas ({location.waveHeight}m) and optimal sailing conditions. Return before mid-afternoon as coastal wind freshening is expected.
+            <span className="font-semibold text-emerald-900">{t("w.safeDeparture")}:</span>{" "}
+            <strong>04:30 – 13:30 IST</strong> ({location.waveHeight} m).{" "}
+            {t("w.safeDepartureBody")}
           </div>
         </div>
 
@@ -207,7 +214,7 @@ export function WeatherMarineCard({ location }: WeatherMarineCardProps) {
             size="sm"
             className="w-full text-xs h-8 border-zinc-200 hover:bg-zinc-100 text-zinc-800 font-medium flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <span>Know More — Detailed 7-Day Forecast, Hourly Sea State & Radar</span>
+            <span>{t("dash.knowMore")}</span>
             <ArrowRight className="h-3.5 w-3.5 text-zinc-600" />
           </Button>
         </Link>

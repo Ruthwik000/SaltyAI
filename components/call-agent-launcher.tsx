@@ -15,21 +15,31 @@ export function CallAgentLauncher() {
   const [callMessage, setCallMessage] = React.useState("");
   const [calling, setCalling] = React.useState(false);
 
-  const checkConnection = React.useCallback(async () => {
-    setConnection("checking");
-    setError("");
-    try {
-      await checkCallAgent();
-      setConnection("online");
-    } catch (checkError) {
-      setConnection("offline");
-      setError(checkError instanceof Error ? checkError.message : "Call Agent is unavailable");
-    }
-  }, []);
-
   React.useEffect(() => {
-    if (isOpen) void checkConnection();
-  }, [isOpen, checkConnection]);
+    if (!isOpen) return;
+    let cancelled = false;
+
+    // State is set only from the promise callbacks. "Checking" is applied when
+    // the dialog is opened, so nothing is written synchronously in the effect
+    // body — that would queue a cascading render.
+    checkCallAgent()
+      .then(() => {
+        if (cancelled) return;
+        setConnection("online");
+        setError("");
+      })
+      .catch((checkError: unknown) => {
+        if (cancelled) return;
+        setConnection("offline");
+        setError(
+          checkError instanceof Error ? checkError.message : "Call Agent is unavailable"
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   const startCall = async () => {
     if (!phoneNumber.trim() || connection !== "online" || calling) return;
@@ -50,7 +60,11 @@ export function CallAgentLauncher() {
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setConnection("checking");
+          setError("");
+          setIsOpen(true);
+        }}
         className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 shadow-xs transition-colors hover:bg-emerald-100"
         title="Open the SALTY voice call agent"
       >

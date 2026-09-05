@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { UserRole } from "@/lib/marine-context";
+import { useT } from "@/lib/i18n";
 
 interface DashboardHeaderProps {
   role: UserRole;
@@ -11,8 +12,10 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ role, onOpenAiDrawer }: DashboardHeaderProps) {
+  const { t } = useT();
   const titles: Record<UserRole, string> = {
-    fisherman: "Marine Conditions & Catch Intelligence",
+    // The fisherman console runs in the language the skipper chose.
+    fisherman: t("dash.fishermanTitle"),
     researcher: "Ocean Observation & Dataset Telemetry",
     operator: "Coastal Domain Awareness & Fleet Control",
   };
@@ -25,20 +28,20 @@ export function DashboardHeader({ role, onOpenAiDrawer }: DashboardHeaderProps) 
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
         <Button
           size="sm"
           onClick={onOpenAiDrawer}
-          className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
+          className="h-9 w-full gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800 sm:h-8 sm:w-auto"
         >
           <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
-          <span>Consult AI Agent</span>
+          <span>{role === "fisherman" ? t("dash.consultAgent") : "Consult AI Agent"}</span>
         </Button>
 
-        <Link href="/app/map">
-          <Button variant="outline" size="sm" className="text-xs h-8 gap-1.5 border-zinc-200">
+        <Link href="/app/map" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="h-9 w-full gap-1.5 border-zinc-200 text-xs sm:h-8 sm:w-auto">
             <Compass className="h-3.5 w-3.5 text-zinc-600" />
-            <span>Open Marine Map</span>
+            <span>{role === "fisherman" ? t("dash.openMap") : "Open Marine Map"}</span>
           </Button>
         </Link>
       </div>

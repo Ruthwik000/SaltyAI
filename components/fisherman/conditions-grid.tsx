@@ -9,6 +9,7 @@ import {
   Wind,
 } from "lucide-react";
 import type { PointConditions } from "@/lib/fisherman-api";
+import { useT } from "@/lib/i18n";
 
 interface Cell {
   label: string;
@@ -40,23 +41,25 @@ export function ConditionsGrid({
   conditions: PointConditions;
   columns?: 2 | 3 | 4;
 }) {
+  const { t } = useT();
+
   const cells: Cell[] = [
     {
-      label: "Sea temp",
+      label: t("cond.seaTemp"),
       value: show(conditions.sst, "°C"),
       icon: Thermometer,
     },
     {
-      label: "Waves",
+      label: t("cond.waves"),
       value: show(conditions.waveHeight, " m"),
       hint:
         conditions.wavePeriod != null
-          ? `Period ${conditions.wavePeriod}s`
+          ? `${t("cond.period")} ${conditions.wavePeriod}s`
           : undefined,
       icon: Waves,
     },
     {
-      label: "Wind",
+      label: t("cond.wind"),
       value:
         conditions.windSpeed != null
           ? `${Math.round(conditions.windSpeed)} kts`
@@ -65,18 +68,18 @@ export function ConditionsGrid({
       icon: Wind,
     },
     {
-      label: "Swell",
+      label: t("cond.swell"),
       value: show(conditions.swellHeight, " m"),
       icon: Navigation,
     },
     {
-      label: "Current",
+      label: t("cond.current"),
       value: show(conditions.currentSpeed, " m/s", 2),
       hint: conditions.currentDirection || undefined,
       icon: Droplets,
     },
     {
-      label: "Visibility",
+      label: t("cond.visibility"),
       value: show(conditions.visibility, " km", 0),
       icon: Eye,
     },

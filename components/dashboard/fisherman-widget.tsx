@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type MarineLocation, type PFZZone, getFishSchoolUpdate } from "@/lib/marine-data";
 import { useMarine } from "@/lib/marine-context";
+import { useT } from "@/lib/i18n";
+import { SpeakButton } from "@/components/fisherman/speak-button";
 
 interface FishermanWidgetProps {
   location: MarineLocation;
@@ -20,22 +22,38 @@ export function FishermanWidget({
   totalZonesCount,
 }: FishermanWidgetProps) {
   const { startJourney, activeJourney } = useMarine();
+  const { t } = useT();
   const schoolUpdate = getFishSchoolUpdate(location.id || location.name);
+
+  /* What the speaker reads: the zone, how far and which way, and why it is
+     worth the run — the same three facts the card shows. */
+  const spoken = [
+    nearbyPFZ.name,
+    t("dash.located", {
+      distance: nearbyPFZ.distanceNM,
+      bearing: nearbyPFZ.bearing,
+      deg: nearbyPFZ.bearingDeg,
+      depth: nearbyPFZ.depthMeters,
+    }),
+    t("dash.school", { type: schoolUpdate.schoolType }),
+    t("dash.hoursOut", { hours: nearbyPFZ.transitHours }),
+  ].join(". ");
 
   return (
     <Card className="border-zinc-200">
-      <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-sm sm:text-base font-semibold text-zinc-950">
-            Highest Suitability Fishing Zone Today
-          </CardTitle>
+      <CardHeader className="flex flex-col items-start gap-2 border-b border-zinc-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle className="min-w-0 text-sm font-semibold text-zinc-950 sm:text-base">
+          {t("dash.topZone")}
+        </CardTitle>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <SpeakButton size="sm" text={spoken} />
+          <Link href="/app/fishing-zones">
+            <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+              <span>{t("dash.allZones", { count: totalZonesCount })}</span>
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          </Link>
         </div>
-        <Link href="/app/fishing-zones">
-          <Button variant="outline" size="sm" className="text-xs h-7 gap-1">
-            <span>All Zones ({totalZonesCount})</span>
-            <ArrowRight className="h-3 w-3" />
-          </Button>
-        </Link>
       </CardHeader>
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-zinc-50 border border-zinc-200/80">
@@ -44,35 +62,36 @@ export function FishermanWidget({
               <span className="font-semibold text-[13px] sm:text-sm text-zinc-950 leading-snug">
                 {nearbyPFZ.name}
               </span>
-              <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">
-                {nearbyPFZ.suitabilityScore}% Match
+              <Badge className="bg-emerald-600 px-1.5 py-0 text-[10px] text-white">
+                {t("dash.match", { score: nearbyPFZ.suitabilityScore })}
               </Badge>
               <Badge
                 variant="outline"
                 className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] px-1.5 py-0 font-medium flex items-center gap-1"
               >
                 <Activity className="h-3 w-3 inline text-emerald-600" />
-                School Surge: {schoolUpdate.biomassSurge}
+                {t("dash.schoolSurge", { level: schoolUpdate.biomassSurge })}
               </Badge>
             </div>
-            <p className="text-xs text-zinc-600">
-              Located <strong>{nearbyPFZ.distanceNM} NM</strong> bearing{" "}
-              <strong>
-                {nearbyPFZ.bearing} ({nearbyPFZ.bearingDeg}°)
-              </strong>
-              . Depth: {nearbyPFZ.depthMeters}m.
+            <p className="text-xs leading-relaxed text-zinc-600">
+              {t("dash.located", {
+                distance: nearbyPFZ.distanceNM,
+                bearing: nearbyPFZ.bearing,
+                deg: nearbyPFZ.bearingDeg,
+                depth: nearbyPFZ.depthMeters,
+              })}
             </p>
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-sans text-zinc-500 pt-1">
               <span className="text-emerald-700 font-semibold">
-                School: {schoolUpdate.schoolType}
+                {t("dash.school", { type: schoolUpdate.schoolType })}
               </span>
               <span>•</span>
-              <span>About {nearbyPFZ.transitHours} h out</span>
+              <span>{t("dash.hoursOut", { hours: nearbyPFZ.transitHours })}</span>
               <span>•</span>
-              <span>Fuel ~{nearbyPFZ.fuelEstimatedLiters} L</span>
+              <span>{t("dash.fuel", { litres: nearbyPFZ.fuelEstimatedLiters })}</span>
             </div>
             <p className="text-[11px] text-emerald-900 bg-emerald-50/70 border border-emerald-100 rounded px-2 py-1 font-medium mt-1">
-              ⚡ Fish are gathering here: {schoolUpdate.schoolAlert}
+              ⚡ {t("dash.fishGathering", { note: schoolUpdate.schoolAlert })}
             </p>
           </div>
 
@@ -80,7 +99,7 @@ export function FishermanWidget({
             {activeJourney?.active ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold">
                 <span className="h-2 w-2 rounded-full bg-emerald-600 animate-ping" />
-                <span>Voyage Active • Fleet Notified</span>
+                <span>{t("dash.voyageActive")}</span>
               </div>
             ) : (
               <Button
@@ -91,7 +110,7 @@ export function FishermanWidget({
                 className="w-full text-xs h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5 cursor-pointer shadow-xs"
               >
                 <Navigation className="h-3.5 w-3.5" />
-                <span>Start Journey (Notify Operator)</span>
+                <span>{t("dash.startJourney")}</span>
               </Button>
             )}
 
@@ -101,7 +120,7 @@ export function FishermanWidget({
                 variant="outline"
                 className="w-full text-xs h-7.5 border-zinc-200 text-zinc-700 hover:bg-zinc-100 gap-1"
               >
-                <span>Navigate to Zone</span>
+                <span>{t("dash.navigateToZone")}</span>
               </Button>
             </Link>
           </div>
@@ -109,19 +128,19 @@ export function FishermanWidget({
 
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs font-sans">
           <div className="p-2 rounded border border-zinc-100 bg-white">
-            <span className="text-zinc-400 block text-[10px]">Tide Status</span>
+            <span className="block text-[10px] text-zinc-400">{t("dash.tide")}</span>
             <span className="font-semibold text-zinc-900">{location.tideStatus}</span>
           </div>
           <div className="p-2 rounded border border-zinc-100 bg-white">
-            <span className="text-zinc-400 block text-[10px]">High Tide</span>
+            <span className="block text-[10px] text-zinc-400">{t("dash.highTide")}</span>
             <span className="font-semibold text-zinc-900">{location.nextHighTide.split(" ")[0]}</span>
           </div>
           <div className="p-2 rounded border border-zinc-100 bg-white">
-            <span className="text-zinc-400 block text-[10px]">Visibility</span>
+            <span className="block text-[10px] text-zinc-400">{t("cond.visibility")}</span>
             <span className="font-semibold text-zinc-900">{location.weather.visibility} km</span>
           </div>
           <div className="p-2 rounded border border-zinc-100 bg-white">
-            <span className="text-zinc-400 block text-[10px]">Current Drift</span>
+            <span className="block text-[10px] text-zinc-400">{t("dash.currentDrift")}</span>
             <span className="font-semibold text-zinc-900">
               {location.currentSpeed} m/s {location.currentDirection}
             </span>

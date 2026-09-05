@@ -39,12 +39,15 @@ import {
   type TripRiskResult,
 } from "@/lib/fisherman-api";
 import { formatCoord } from "@/lib/geo";
+import { useT, type TranslationKey } from "@/lib/i18n";
+import { SpeakButton } from "@/components/fisherman/speak-button";
+import { conditionsSpeech } from "@/components/fisherman/speech-text";
 
-const BOAT_TYPES: { id: BoatType; label: string }[] = [
-  { id: "craft", label: "Country craft, non-motorised (under 24 ft)" },
-  { id: "motorized", label: "Motorised FRP craft (28–34 ft)" },
-  { id: "trawler", label: "Mechanised trawler (48 ft)" },
-  { id: "longliner", label: "Deep-sea longliner (65 ft and above)" },
+const BOAT_TYPES: { id: BoatType; labelKey: TranslationKey }[] = [
+  { id: "craft", labelKey: "boat.craft" },
+  { id: "motorized", labelKey: "boat.motorized" },
+  { id: "trawler", labelKey: "boat.trawler" },
+  { id: "longliner", labelKey: "boat.longliner" },
 ];
 
 /** `datetime-local` wants a local-time string, not an ISO/UTC one. */
@@ -63,6 +66,7 @@ const LABEL =
 
 export function TripSafetyView() {
   const { location, setLocationId } = useMarine();
+  const { t } = useT();
   const searchParams = useSearchParams();
   const presetZone = searchParams.get("zone");
 
@@ -175,7 +179,15 @@ export function TripSafetyView() {
               </p>
             </div>
           </div>
-          <DataBadge source={conditionsSource} reason={conditionsReason} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            {conditions && (
+              <SpeakButton
+                size="sm"
+                text={conditionsSpeech(t, location.name, conditions)}
+              />
+            )}
+            <DataBadge source={conditionsSource} reason={conditionsReason} />
+          </div>
         </div>
 
         <div className="p-3">
@@ -184,14 +196,14 @@ export function TripSafetyView() {
           ) : (
             <div className="flex items-center gap-2 py-6 text-xs text-zinc-500">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Loading conditions at your coast…</span>
+              <span>{t("risk.loadingConditions")}</span>
             </div>
           )}
         </div>
 
         <div className="border-t border-zinc-100 px-4 py-2.5">
           <label className="flex items-center justify-between gap-3 text-[11px] text-zinc-500">
-            <span>Not your coast?</span>
+            <span>{t("risk.notYourCoast")}</span>
             <select
               value={location.id}
               onChange={(event) => setLocationId(event.target.value)}
@@ -210,17 +222,15 @@ export function TripSafetyView() {
       {/* 2 — the trip */}
       <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <div className="border-b border-zinc-100 px-4 py-3">
-          <h2 className="text-sm font-bold text-zinc-950">Plan your trip</h2>
-          <p className="mt-0.5 text-[11px] text-zinc-500">
-            SALTY checks these against the forecast for the water you will cross.
-          </p>
+          <h2 className="text-sm font-bold text-zinc-950">{t("risk.planTrip")}</h2>
+          <p className="mt-0.5 text-[11px] text-zinc-500">{t("risk.planTripHint")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-4">
           <div>
             <label htmlFor="port" className={LABEL}>
               <Anchor className="h-3 w-3" />
-              <span>Port you are leaving from</span>
+              <span>{t("risk.port")}</span>
             </label>
             <select
               id="port"
@@ -239,7 +249,7 @@ export function TripSafetyView() {
           <div>
             <label htmlFor="destination" className={LABEL}>
               <Compass className="h-3 w-3" />
-              <span>Fishing zone or sector you are heading to</span>
+              <span>{t("risk.destination")}</span>
             </label>
             <select
               id="destination"
@@ -248,7 +258,7 @@ export function TripSafetyView() {
               className={FIELD}
               disabled={zones.length === 0}
             >
-              {zones.length === 0 && <option value="">Loading zones…</option>}
+              {zones.length === 0 && <option value="">{t("risk.loadingZones")}</option>}
               {zones.map((zone) => (
                 <option key={zone.id} value={zone.id}>
                   {zone.name}
@@ -257,8 +267,9 @@ export function TripSafetyView() {
             </select>
             {destination && (
               <p className="mt-1.5 font-sans text-[11px] text-zinc-500">
-                {destination.distanceNM} NM · bearing {destination.bearing} (
-                {destination.bearingDeg}°) · depth {destination.depthMeters} m
+                {destination.distanceNM} {t("common.unit.nm")} · {t("zones.bearing")}{" "}
+                {destination.bearing} ({destination.bearingDeg}°) · {t("zones.depth")}{" "}
+                {destination.depthMeters} {t("common.unit.m")}
               </p>
             )}
           </div>
@@ -266,7 +277,7 @@ export function TripSafetyView() {
           <div>
             <label htmlFor="boat" className={LABEL}>
               <Sailboat className="h-3 w-3" />
-              <span>Type of boat</span>
+              <span>{t("risk.boatType")}</span>
             </label>
             <select
               id="boat"
@@ -276,7 +287,7 @@ export function TripSafetyView() {
             >
               {BOAT_TYPES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </option>
               ))}
             </select>
@@ -286,7 +297,7 @@ export function TripSafetyView() {
             <div>
               <label htmlFor="departure" className={LABEL}>
                 <Clock className="h-3 w-3" />
-                <span>Departure</span>
+                <span>{t("risk.departure")}</span>
               </label>
               <input
                 id="departure"
@@ -300,7 +311,7 @@ export function TripSafetyView() {
             <div>
               <label htmlFor="return" className={LABEL}>
                 <CalendarClock className="h-3 w-3" />
-                <span>Expected return</span>
+                <span>{t("risk.return")}</span>
               </label>
               <input
                 id="return"
@@ -314,7 +325,7 @@ export function TripSafetyView() {
 
           {invalidWindow && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
-              Your return time is before your departure time.
+              {t("risk.invalidWindow")}
             </p>
           )}
 
@@ -328,12 +339,11 @@ export function TripSafetyView() {
             ) : (
               <ShieldCheck className="h-4 w-4" />
             )}
-            <span>{assessing ? "Checking…" : "Check this trip"}</span>
+            <span>{assessing ? t("risk.checking") : t("risk.check")}</span>
           </Button>
 
           <p className="text-center text-[10px] leading-relaxed text-zinc-400">
-            SALTY supports your judgement, it does not replace official IMD and
-            INCOIS warnings.
+            {t("risk.disclaimer")}
           </p>
         </form>
       </section>
@@ -344,7 +354,7 @@ export function TripSafetyView() {
         result={result}
         source={resultSource}
         reason={resultReason}
-        destinationName={destination?.name || "your destination"}
+        destinationName={destination?.name || t("risk.destinationFallback")}
         added={added}
         onAddToTrips={
           assessed

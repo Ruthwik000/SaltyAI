@@ -3,6 +3,8 @@ import { AlertTriangle, ArrowRight, ShieldCheck } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
+import { SpeakButton } from "@/components/fisherman/speak-button";
 import type { MarineAlert } from "@/lib/marine-data";
 
 interface HazardAlertsCardProps {
@@ -11,6 +13,17 @@ interface HazardAlertsCardProps {
 }
 
 export function HazardAlertsCard({ alerts, totalAlertsCount }: HazardAlertsCardProps) {
+  const { t } = useT();
+
+  /* A warning is the one thing on this screen that must reach someone who
+     cannot read it — so it can be heard, title and action together. */
+  const spoken = alerts.length
+    ? alerts
+        .slice(0, 3)
+        .map((alert) => `${alert.title}. ${alert.operationalAction}`)
+        .join(" ")
+    : t("a.normal");
+
   return (
     <Card className="border-zinc-200 bg-white">
       <CardHeader className="pb-3 border-b border-zinc-100 flex flex-row items-center justify-between">
@@ -20,25 +33,27 @@ export function HazardAlertsCard({ alerts, totalAlertsCount }: HazardAlertsCardP
           </div>
           <div>
             <CardTitle className="text-sm font-semibold text-zinc-950">
-              Alerts & Disasters
+              {t("a.title")}
             </CardTitle>
             <span className="text-[10px] text-zinc-500 font-sans">
-              {alerts.length} Active in Sector
+              {t("a.activeInSector", { count: alerts.length })}
             </span>
           </div>
         </div>
 
-        {/* Know More button in header */}
-        <Link href="/app/alerts">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <SpeakButton size="sm" text={spoken} />
+          <Link href="/app/alerts">
           <Button
             variant="outline"
             size="sm"
             className="text-xs h-7.5 px-2.5 border-zinc-200 hover:bg-zinc-100 text-zinc-800 font-medium gap-1 cursor-pointer"
           >
-            <span>Know More</span>
-            <ArrowRight className="h-3 w-3 text-zinc-500" />
-          </Button>
-        </Link>
+            <span>{t("dash.knowMore")}</span>
+              <ArrowRight className="h-3 w-3 text-zinc-500" />
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
 
       <CardContent className="pt-4 space-y-3">
@@ -72,10 +87,10 @@ export function HazardAlertsCard({ alerts, totalAlertsCount }: HazardAlertsCardP
           <div className="p-4 rounded-xl border border-zinc-200 bg-emerald-50/50 text-center space-y-1">
             <div className="flex items-center justify-center gap-1.5 text-emerald-800 font-semibold text-xs">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>No Critical Warnings Active</span>
+              <span>{t("dash.noWarnings")}</span>
             </div>
             <p className="text-[11px] text-emerald-700">
-              Coastal waters are currently within normal statutory safety parameters.
+              {t("a.normal")}
             </p>
           </div>
         )}
