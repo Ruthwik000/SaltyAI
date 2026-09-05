@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Database, Fish, Radio, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { UserRole } from "@/lib/marine-context";
 
@@ -40,18 +39,10 @@ function LoginForm() {
   const nextParam = searchParams.get("next");
   const nextPath = nextParam?.startsWith("/app") ? nextParam : "/app";
   const [selected, setSelected] = React.useState<UserRole>("fisherman");
-  const [phoneNumber, setPhoneNumber] = React.useState("");
-  const [phoneError, setPhoneError] = React.useState("");
 
   const enterConsole = () => {
-    const normalizedPhone = phoneNumber.replace(/[\s()-]/g, "");
-    if (!/^\+?[1-9]\d{7,14}$/.test(normalizedPhone)) {
-      setPhoneError("Enter a valid phone number with country code, for example +91 98765 43210.");
-      return;
-    }
     if (typeof window !== "undefined") {
       window.localStorage.setItem("salty_role", selected);
-      window.localStorage.setItem("salty_phone_number", normalizedPhone);
     }
     router.push(nextPath);
   };
@@ -120,30 +111,7 @@ function LoginForm() {
             })}
           </div>
 
-          <div className="mx-auto mt-6 w-full max-w-xl rounded-lg border border-zinc-200 bg-zinc-50/70 p-4">
-            <label htmlFor="phone-number" className="block text-sm font-semibold text-zinc-950">
-              Phone number for the SALTY Call Agent
-            </label>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-600">
-              We’ll use this number when you choose Call Agent for a voice conversation.
-            </p>
-            <input
-              id="phone-number"
-              type="tel"
-              value={phoneNumber}
-              onChange={(event) => {
-                setPhoneNumber(event.target.value);
-                if (phoneError) setPhoneError("");
-              }}
-              placeholder="+91 98765 43210"
-              autoComplete="tel"
-              required
-              className="mt-3 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-600/15"
-            />
-            {phoneError && <p className="mt-2 text-xs text-rose-600">{phoneError}</p>}
-          </div>
-
-          <div className="mt-6 flex flex-col items-center gap-3">
+          <div className="mt-8 flex flex-col items-center gap-3">
             <Button
               onClick={enterConsole}
               className="h-11 w-full bg-zinc-950 text-sm text-white hover:bg-zinc-800 sm:w-auto sm:px-8"
