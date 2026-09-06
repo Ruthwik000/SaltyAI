@@ -392,7 +392,12 @@ export async function fetchResearchSeries(
     responded = true;
     downUntil = 0;
     if (!response.ok) throw new Error(`SALTY API ${response.status}`);
-    return { data: (await response.json()) as ResearchSeries, source: "live" };
+    const data = (await response.json()) as ResearchSeries & { synthetic?: boolean };
+    return {
+      data,
+      source: data.synthetic ? "demo" : "live",
+      reason: data.synthetic ? "SALTY backend returned labelled synthetic data" : undefined,
+    };
   } catch (error) {
     if (!responded) downUntil = Date.now() + COOLDOWN_MS;
     return {

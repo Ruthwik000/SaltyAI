@@ -90,6 +90,7 @@ export async function askMarineAgent(
   options: {
     mode?: "normal" | "research";
     location?: AgentLocationContext;
+    language?: string;
     signal?: AbortSignal;
   } = {}
 ): Promise<AgentResponse> {
@@ -100,6 +101,7 @@ export async function askMarineAgent(
       query,
       mode: options.mode || "normal",
       location: options.location,
+      language: options.language,
     }),
     signal: options.signal,
     cache: "no-store",

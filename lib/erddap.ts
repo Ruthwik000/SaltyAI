@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * INCOIS ERDDAP catalogue.
+ * NOAA CoastWatch ERDDAP catalogue.
  *
  * Datasets come from the real server rather than a bundled list. Requests go
  * through /api/erddap (ERDDAP sends no CORS header). If the catalogue cannot be
- * read, the console falls back to the known INCOIS griddap dataset ids so the
+ * read, the console falls back to the known NOAA griddap dataset ids so the
  * researcher still has something to work with, and says which it is using.
  *
  * Endpoint shapes (standard ERDDAP):
@@ -14,7 +14,7 @@
  *   slice     : /erddap/griddap/<datasetID>.<format>?<variable>[time][lat][lon]
  */
 
-export const ERDDAP_BASE = "https://erddap.incois.gov.in/erddap";
+export const ERDDAP_BASE = "https://coastwatch.pfeg.noaa.gov/erddap";
 const PROXY = "/api/erddap";
 
 export interface ErddapDataset {
@@ -28,26 +28,23 @@ export interface ErddapDataset {
 }
 
 /**
- * Griddap datasets published by INCOIS, as listed on their server. Used as the
+ * Griddap datasets published by NOAA, as listed on their server. Used as the
  * fallback catalogue and to seed the list before the live one arrives.
  */
 export const KNOWN_INCOIS_DATASETS: string[] = [
-  "AMSRE_MONTHLY_GLOBAL",
-  "ascat_daily_datasets",
-  "ascat_mnt_datasets",
-  "NOAA_AVHRR_AMSR_datasets",
-  "incois_argo_10day_McCreary",
-  "incois_argo_10d_VAM",
-  "incois_argo_mnt_McCreary",
-  "incois_argo_mnt_VAM",
-  "incois_argo_sst_weekly",
-  "incois_oceansat2_datasets",
-  "incois_quickscat_daily_datasets",
-  "incois_quickscat_mnt_datasets",
-  "incois_tmi_3day_datasets",
-  "incois_valueadded_products_datasets",
-  "IRS_chlorophyll_datasets",
+  "erdHadISST",
+  "jplMURSST41",
+  "ncdcOisst21NrtAgg",
 ];
+
+// The catalogue and info endpoints are occasionally unavailable while the
+// public ERDDAP graph pages remain usable. Keep the known variable names here
+// so the UI remains selectable instead of asking researchers to guess names.
+export const KNOWN_INCOIS_VARIABLES: Record<string, string[]> = {
+  erdHadISST: ["sst", "sst_trend", "sst_cycle", "sst_seasonal"],
+  jplMURSST41: ["analysed_sst", "analysis_error", "mask", "sea_ice_fraction"],
+  ncdcOisst21NrtAgg: ["sst"],
+};
 
 /** Turn `incois_argo_mnt_VAM` into `Incois argo mnt VAM`. */
 function humanise(id: string): string {
@@ -63,7 +60,7 @@ function fallbackCatalogue(): ErddapDataset[] {
   return KNOWN_INCOIS_DATASETS.map((id) => ({
     id,
     title: humanise(id),
-    institution: "INCOIS",
+    institution: "NOAA CoastWatch",
     summary: "",
     variables: [],
     griddapUrl: datasetJsonUrl(id),
@@ -114,7 +111,7 @@ export async function fetchErddapCatalogue(
       .map((row) => ({
         id: String(row[idAt] ?? ""),
         title: String(row[titleAt] ?? "") || humanise(String(row[idAt] ?? "")),
-        institution: String(row[instAt] ?? "INCOIS"),
+        institution: String(row[instAt] ?? "NOAA CoastWatch"),
         summary: String(row[summaryAt] ?? ""),
         variables: [],
         griddapUrl: String(row[gridAt] ?? "") || datasetJsonUrl(String(row[idAt] ?? "")),
@@ -129,7 +126,7 @@ export async function fetchErddapCatalogue(
       datasets: fallbackCatalogue(),
       live: false,
       reason:
-        error instanceof Error ? error.message : "Unable to reach INCOIS ERDDAP",
+        error instanceof Error ? error.message : "Unable to reach NOAA ERDDAP",
     };
   }
 }
@@ -163,12 +160,16 @@ export async function fetchDatasetVariables(
 
     return { variables, axes, live: true };
   } catch {
-    return { variables: [], axes: [], live: false };
+    return {
+      variables: KNOWN_INCOIS_VARIABLES[id] || [],
+      axes: [],
+      live: false,
+    };
   }
 }
 
 /**
- * Griddap request for a slice. Axis order follows the usual INCOIS griddap
+ * Griddap request for a slice. Axis order follows the usual NOAA griddap
  * layout (time, latitude, longitude); a dataset with different axes needs its
  * own order, which `fetchDatasetVariables` reports.
  */
@@ -189,6 +190,36 @@ export function griddapUrl(options: {
     `[(${options.minLat}):1:(${options.maxLat})]` +
     `[(${options.minLon}):1:(${options.maxLon})]`;
   return `${ERDDAP_BASE}/griddap/${options.datasetId}.${format}?${options.variable}${slice}`;
+}
+
+/**
+ * Build the same graph request produced by ERDDAP's Make A Graph form.
+ * Keeping the request in the URL means the embedded ERDDAP view renders the
+ * selected slice, rather than opening an unrelated dataset default.
+ */
+export function graphWorkspaceUrl(options: {
+  datasetId: string;
+  variable: string;
+  start: string;
+  end: string;
+  minLat: number;
+  maxLat: number;
+  minLon: number;
+  maxLon: number;
+  depth?: number;
+  latDescending?: boolean;
+}): string {
+  const start = `(${options.start}T00:00:00Z)`;
+  const end = `(${options.end}T23:59:59Z)`;
+  const timeConstraint = options.start === options.end ? `[${start}]` : `[${start}:${end}]`;
+  const expression =
+    `${options.variable}${timeConstraint}` +
+    (options.depth === undefined ? "" : `[(${options.depth})]`) +
+    `[(${options.latDescending ? options.maxLat : options.minLat}):(${options.latDescending ? options.minLat : options.maxLat})]` +
+    `[(${options.minLon}):(${options.maxLon})]`;
+  return `${ERDDAP_BASE}/griddap/${encodeURIComponent(options.datasetId)}.graph?${encodeURIComponent(expression)}` +
+    `&.draw=surface&.vars=longitude%7Clatitude%7C${encodeURIComponent(options.variable)}` +
+    `&.colorBar=%7C%7C%7C%7C%7C&.bgColor=0xffccccff`;
 }
 
 /* ------------------------------------------------------------------ */

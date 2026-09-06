@@ -2681,6 +2681,7 @@ export interface SpeechControls {
 export function useSpeech(): SpeechControls {
   const { language } = useT();
   const [speaking, setSpeaking] = React.useState(false);
+  const pendingSpeakRef = React.useRef<number | null>(null);
   const supported = React.useSyncExternalStore(
     () => () => {},
     () => speechSupported(),
@@ -2689,11 +2690,16 @@ export function useSpeech(): SpeechControls {
 
   React.useEffect(() => {
     return () => {
+      if (pendingSpeakRef.current !== null) window.clearTimeout(pendingSpeakRef.current);
       if (speechSupported()) window.speechSynthesis.cancel();
     };
   }, []);
 
   const stop = React.useCallback(() => {
+    if (pendingSpeakRef.current !== null) {
+      window.clearTimeout(pendingSpeakRef.current);
+      pendingSpeakRef.current = null;
+    }
     if (!speechSupported()) return;
     window.speechSynthesis.cancel();
     setSpeaking(false);
@@ -2702,7 +2708,11 @@ export function useSpeech(): SpeechControls {
   const speak = React.useCallback(
     (text: string) => {
       if (!speechSupported() || !text.trim()) return;
-      window.speechSynthesis.cancel();
+      const synthesiser = window.speechSynthesis;
+      synthesiser.cancel();
+      // Some mobile browsers leave the synthesiser paused after canceling a
+      // previous utterance. Resuming here makes repeated reads reliable.
+      synthesiser.resume();
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language.speech;
@@ -2710,11 +2720,17 @@ export function useSpeech(): SpeechControls {
       if (voice) utterance.voice = voice;
       // Slightly slower than default: this is read over engine noise.
       utterance.rate = 0.95;
+      utterance.onstart = () => setSpeaking(true);
       utterance.onend = () => setSpeaking(false);
       utterance.onerror = () => setSpeaking(false);
 
       setSpeaking(true);
-      window.speechSynthesis.speak(utterance);
+      // Yield one turn after cancel so Chrome/Safari do not discard the new
+      // utterance while the old queue is being flushed.
+      pendingSpeakRef.current = window.setTimeout(() => {
+        pendingSpeakRef.current = null;
+        synthesiser.speak(utterance);
+      }, 0);
     },
     [language.speech]
   );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Database } from "lucide-react";
 import { useMarine } from "@/lib/marine-context";
 import { Button } from "@/components/ui/button";
-import { ResearchConsole } from "@/components/research/research-console";
+import { ResearchCatalog } from "@/components/research/research-catalog";
 
 export default function ResearchPage() {
   const { role } = useMarine();
@@ -32,5 +32,5 @@ export default function ResearchPage() {
     );
   }
 
-  return <ResearchConsole />;
+  return <ResearchCatalog />;
 }

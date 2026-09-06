@@ -6,6 +6,7 @@ import { useMarine } from "@/lib/marine-context";
 import { generateMessageId } from "@/lib/id";
 import { askMarineAgent } from "@/lib/api";
 import { CallAgentLauncher } from "@/components/call-agent-launcher";
+import { SpeakButton } from "@/components/fisherman/speak-button";
 import {
   clearAgentContext,
   describeAgentContext,
@@ -30,8 +31,10 @@ import {
   ChevronUp,
   CloudSun,
   Navigation,
+  Mic,
+  MicOff,
 } from "lucide-react";
-import { useT } from "@/lib/i18n";
+import { LANGUAGES, setLanguage, useT, type LangCode } from "@/lib/i18n";
 
 type AgentMode = "normal" | "research";
 
@@ -54,9 +57,77 @@ interface SuggestionItem {
   query: string;
 }
 
+type RecognitionResultEvent = Event & {
+  results: { length: number; [index: number]: { [index: number]: { transcript: string } } };
+};
+type RecognitionErrorEvent = Event & { error?: string };
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: RecognitionResultEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: RecognitionErrorEvent) => void) | null;
+};
+
+function speechRecognitionSupported(): boolean {
+  if (typeof window === "undefined") return false;
+  const browser = window as Window & {
+    SpeechRecognition?: unknown;
+    webkitSpeechRecognition?: unknown;
+  };
+  return Boolean(browser.SpeechRecognition || browser.webkitSpeechRecognition);
+}
+
+function LanguageControl({ language }: { language: ReturnType<typeof useT>["language"] }) {
+  return (
+    <label className="inline-flex items-center gap-1.5 text-[10px] text-zinc-500">
+      <span className="hidden sm:inline">Reply in</span>
+      <select
+        value={language.code}
+        onChange={(event) => setLanguage(event.target.value as LangCode)}
+        aria-label="Reply language"
+        className="h-7 max-w-28 rounded-md border border-zinc-200 bg-white px-1.5 text-[10px] font-medium text-zinc-700 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-900/10"
+      >
+        {LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.native}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function VoiceControl({
+  supported,
+  listening,
+  language,
+  onToggle,
+}: {
+  supported: boolean;
+  listening: boolean;
+  language: ReturnType<typeof useT>["language"];
+  onToggle: () => void;
+}) {
+  if (!supported) return null;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={listening ? "Stop voice input" : `Speak in ${language.native}`}
+      title={listening ? "Stop voice input" : `Speak in ${language.native}`}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 ${
+        listening ? "border-rose-300 bg-rose-50 text-rose-700" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+      }`}
+    >
+      {listening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+      <span className="hidden sm:inline">{listening ? "Listening…" : "Voice"}</span>
+    </button>
+  );
+}
+
 export default function AiAgentPage() {
   const { location, role } = useMarine();
-  const { t } = useT();
+  const { t, language } = useT();
   const isFisherman = role === "fisherman";
   const dataContext = useAgentContext();
   const [mode, setMode] = React.useState<AgentMode>("normal");
@@ -66,6 +137,13 @@ export default function AiAgentPage() {
   const [researchStage, setResearchStage] = React.useState<string>("");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = React.useState<Record<string, boolean>>({});
+  const [isListening, setIsListening] = React.useState(false);
+  const [voiceError, setVoiceError] = React.useState("");
+  const voiceSupported = React.useSyncExternalStore(
+    () => () => {},
+    speechRecognitionSupported,
+    () => false
+  );
 
   // Arriving with a dataset attached means the researcher came here to analyse
   // it. Adjusted during render rather than in an effect, which would queue a
@@ -78,6 +156,11 @@ export default function AiAgentPage() {
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null);
+
+  React.useEffect(() => {
+    return () => recognitionRef.current?.stop();
+  }, []);
 
   // Auto-scroll to bottom as messages arrive
   React.useEffect(() => {
@@ -126,6 +209,53 @@ export default function AiAgentPage() {
     setResearchStage("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+    }
+  };
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const browser = window as Window & {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    };
+    const Recognition = browser.SpeechRecognition || browser.webkitSpeechRecognition;
+    if (!Recognition) return;
+    setVoiceError("");
+    const recognition = new Recognition();
+    recognition.lang = language.speech;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = Array.from({ length: event.results.length }, (_, index) =>
+        event.results[index]?.[0]?.transcript || ""
+      ).join(" ");
+      setInputQuery(transcript);
+      requestAnimationFrame(adjustTextareaHeight);
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
+    recognition.onerror = (event) => {
+      recognitionRef.current = null;
+      setIsListening(false);
+      setVoiceError(
+        event.error === "not-allowed"
+          ? "Microphone permission is blocked. Allow microphone access and try again."
+          : "Voice input stopped. Check the microphone and try again."
+      );
+    };
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setIsListening(false);
+      setVoiceError("Voice input could not start. Try again.");
     }
   };
 
@@ -217,6 +347,7 @@ export default function AiAgentPage() {
 
     void askMarineAgent(grounded, {
       mode,
+      language: language.native,
       location: {
         name: location.name,
         lat: location.lat,
@@ -406,6 +537,8 @@ export default function AiAgentPage() {
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                   <span>{location.name}</span>
                 </span>
+                <VoiceControl supported={voiceSupported} listening={isListening} language={language} onToggle={toggleVoiceInput} />
+                <LanguageControl language={language} />
               </div>
 
               {/* Submit Button */}
@@ -656,6 +789,7 @@ export default function AiAgentPage() {
                             </>
                           )}
                         </button>
+                        <SpeakButton text={m.text} size="sm" label />
                         <span>•</span>
                         <span>{m.time}</span>
                       </div>
@@ -718,6 +852,11 @@ export default function AiAgentPage() {
               }
               className="w-full text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none bg-transparent min-h-[38px] max-h-[120px] px-1 py-1"
             />
+            {voiceError && (
+              <p role="status" className="px-1 pt-1 text-[11px] text-rose-600">
+                {voiceError}
+              </p>
+            )}
 
             {/* Bottom Bar inside Input */}
             <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-zinc-100 gap-2">
@@ -753,6 +892,8 @@ export default function AiAgentPage() {
                 <span className="text-[10px] text-zinc-400 hidden sm:inline">
                   {location.name}
                 </span>
+                <VoiceControl supported={voiceSupported} listening={isListening} language={language} onToggle={toggleVoiceInput} />
+                <LanguageControl language={language} />
               </div>
 
               {/* Submit Button */}
