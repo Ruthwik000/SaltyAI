@@ -2716,7 +2716,7 @@ function pickVoice(tag) {
 export function useSpeech() {
   const { language } = useT();
   const [speaking, setSpeaking] = React.useState(false);
-  const pendingSpeakRef = React.useRef<number | null>(null);
+  const pendingSpeakRef = React.useRef(null);
   const supported = React.useSyncExternalStore(
     () => () => {},
     () => speechSupported(),
