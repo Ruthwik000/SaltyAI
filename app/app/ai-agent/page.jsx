@@ -30,15 +30,13 @@ import {
   ChevronUp,
   CloudSun,
   Navigation,
-  Mic,
-  MicOff,
+  Radio,
+  ExternalLink,
 } from "lucide-react";
 import { LANGUAGES, setLanguage, useT } from "@/lib/i18n";
-
-function speechRecognitionSupported() {
-  if (typeof window === "undefined") return false;
-  return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
+import { useVoiceReply } from "@/lib/use-voice-reply";
+import { VoiceMicButton } from "@/components/voice-mic-button";
+import { MarkdownAnswer } from "@/components/research/markdown-answer";
 
 function LanguageControl({ language }) {
   return (
@@ -56,24 +54,6 @@ function LanguageControl({ language }) {
   );
 }
 
-function VoiceControl({ supported, listening, language, onToggle }) {
-  if (!supported) return null;
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-label={listening ? "Stop voice input" : `Speak in ${language.native}`}
-      title={listening ? "Stop voice input" : `Speak in ${language.native}`}
-      className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950 ${
-        listening ? "border-rose-300 bg-rose-50 text-rose-700" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-      }`}
-    >
-      {listening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-      <span className="hidden sm:inline">{listening ? "Listening…" : "Voice"}</span>
-    </button>
-  );
-}
-
 export default function AiAgentPage() {
   const { location, role } = useMarine();
   const { t, language } = useT();
@@ -86,13 +66,39 @@ export default function AiAgentPage() {
   const [researchStage, setResearchStage] = React.useState("");
   const [copiedId, setCopiedId] = React.useState(null);
   const [expandedSteps, setExpandedSteps] = React.useState({});
-  const [isListening, setIsListening] = React.useState(false);
-  const [voiceError, setVoiceError] = React.useState("");
-  const voiceSupported = React.useSyncExternalStore(
-    () => () => {},
-    speechRecognitionSupported,
-    () => false
-  );
+  const {
+    speak,
+    stop: stopSpeaking,
+    speaking,
+    prime: primeSpeech,
+    substituteVoice,
+  } = useVoiceReply();
+
+  // Hands-free conversation. While this is on the microphone reopens after
+  // every spoken reply, so a fisherman never has to touch the screen. It ends
+  // only when the person ends it.
+  const [liveVoice, setLiveVoice] = React.useState(false);
+
+  const endLiveVoice = React.useCallback(() => {
+    setLiveVoice(false);
+    stopSpeaking();
+  }, [stopSpeaking]);
+
+  // Chrome and Safari refuse to speak until the page has had a real user
+  // gesture, and they refuse silently. Unlocking the synthesiser inside the
+  // click that starts a voice turn is what makes the first reply audible.
+  const beginLiveVoice = React.useCallback(() => {
+    primeSpeech();
+    setLiveVoice(true);
+  }, [primeSpeech]);
+
+  const handleMicStart = React.useCallback(() => {
+    primeSpeech();
+    stopSpeaking();
+  }, [primeSpeech, stopSpeaking]);
+  // Set when a question arrived by microphone, so the answer is spoken back
+  // in the same language. A typed question stays silent.
+  const speakReplyRef = React.useRef(false);
 
   // Arriving with a dataset attached means the researcher came here to analyse
   // it. Adjusted during render rather than in an effect, which would queue a
@@ -105,11 +111,6 @@ export default function AiAgentPage() {
 
   const messagesEndRef = React.useRef(null);
   const textareaRef = React.useRef(null);
-  const recognitionRef = React.useRef(null);
-
-  React.useEffect(() => {
-    return () => recognitionRef.current?.stop();
-  }, []);
 
   // Auto-scroll to bottom as messages arrive
   React.useEffect(() => {
@@ -158,49 +159,6 @@ export default function AiAgentPage() {
     setResearchStage("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-    }
-  };
-
-  const toggleVoiceInput = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      return;
-    }
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) return;
-    setVoiceError("");
-    const recognition = new Recognition();
-    recognition.lang = language.speech;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event) => {
-      const transcript = Array.from({ length: event.results.length }, (_, index) =>
-        event.results[index]?.[0]?.transcript || ""
-      ).join(" ");
-      setInputQuery(transcript);
-      requestAnimationFrame(adjustTextareaHeight);
-    };
-    recognition.onend = () => {
-      recognitionRef.current = null;
-      setIsListening(false);
-    };
-    recognition.onerror = (event) => {
-      recognitionRef.current = null;
-      setIsListening(false);
-      setVoiceError(
-        event.error === "not-allowed"
-          ? "Microphone permission is blocked. Allow microphone access and try again."
-          : "Voice input stopped. Check the microphone and try again."
-      );
-    };
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    try {
-      recognition.start();
-    } catch {
-      recognitionRef.current = null;
-      setIsListening(false);
-      setVoiceError("Voice input could not start. Try again.");
     }
   };
 
@@ -262,9 +220,10 @@ export default function AiAgentPage() {
   const currentSuggestions =
     mode === "research" ? researchSuggestions : normalSuggestions;
 
-  const handleSend = (text) => {
+  const handleSend = (text, viaVoice = false) => {
     const query = (text || inputQuery).trim();
     if (!query) return;
+    speakReplyRef.current = viaVoice;
 
     const userMessage = {
       id: generateMessageId("u"),
@@ -290,8 +249,17 @@ export default function AiAgentPage() {
       ? `${describeAgentContext(dataContext)}\n\nQuestion: ${query}`
       : query;
 
+    const history = messages
+      .filter((item) => item.text)
+      .slice(-8)
+      .map((item) => ({
+        role: item.sender === "user" ? "user" : "assistant",
+        content: item.text,
+      }));
+
     void askMarineAgent(grounded, {
       mode,
+      history,
       language: language.native,
       location: {
         name: location.name,
@@ -312,13 +280,28 @@ export default function AiAgentPage() {
             sender: "agent",
             mode,
             text: result.response || "NOT AVAILABLE",
-            sources: result.synthetic
-              ? ["marine forecast context"]
-              : result.tool_calls.map((call) => call.tool),
+            // Only tools that actually returned something are sources. A call
+            // that came back empty was listed here too, which made an
+            // unanswered question look like it had consulted a dataset.
+            sources: (result.returned_data || [])
+              .filter((item) => item.usable)
+              .map((item) => item.tool),
+            // Openable pages for the data behind the answer. A tool name tells
+            // a researcher which function ran; it does not let them check the
+            // figures, which is the entire point of citing a source.
+            references: result.references || [],
+            truncated: Boolean(result.truncated),
+            emptyTools: (result.returned_data || [])
+              .filter((item) => !item.usable)
+              .map((item) => item.tool),
             researchSteps: trace,
             time: "Just now",
           },
         ]);
+        if (speakReplyRef.current || liveVoice) {
+          speakReplyRef.current = false;
+          speak(result.response || "");
+        }
       })
       .catch((error) => {
         setMessages((prev) => [
@@ -479,7 +462,44 @@ export default function AiAgentPage() {
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                   <span>{location.name}</span>
                 </span>
-                <VoiceControl supported={voiceSupported} listening={isListening} language={language} onToggle={toggleVoiceInput} />
+                <VoiceMicButton
+                  variant="pill"
+                  onInterim={(text) => {
+                    setInputQuery(text);
+                    requestAnimationFrame(adjustTextareaHeight);
+                  }}
+                  onTranscript={(text) => {
+                    setInputQuery("");
+                    handleSend(text, true);
+                  }}
+                  onStart={handleMicStart}
+                  autoListen={liveVoice && !speaking && !isTyping}
+                />
+                {/* Hands-free conversation. Once on, speak and it answers,
+                    then listens again - no tapping between turns. */}
+                <button
+                  type="button"
+                  onClick={() => (liveVoice ? endLiveVoice() : beginLiveVoice())}
+                  aria-pressed={liveVoice}
+                  title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
+                  className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors ${
+                    liveVoice
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+                  }`}
+                >
+                  {liveVoice ? (
+                    <span className="relative inline-flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/70" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                    </span>
+                  ) : (
+                    <Radio className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {liveVoice ? t("voice.liveOn") : t("voice.startLive")}
+                  </span>
+                </button>
                 <LanguageControl language={language} />
               </div>
 
@@ -608,79 +628,13 @@ export default function AiAgentPage() {
                         </div>
                       )}
 
-                      {/* Message Body */}
-                      <div className="text-xs sm:text-sm text-zinc-900 leading-relaxed font-sans prose-sm prose-zinc">
-                        {m.text.split("\n\n").map((para, pIdx) => {
-                          if (para.startsWith("### ")) {
-                            return (
-                              <h3
-                                key={pIdx}
-                                className="text-sm sm:text-base font-semibold text-zinc-950 mb-2 mt-1"
-                              >
-                                {para.replace("### ", "")}
-                              </h3>
-                            );
-                          }
-                          if (para.startsWith("• ") || para.startsWith("- ")) {
-                            return (
-                              <ul
-                                key={pIdx}
-                                className="space-y-1 my-2 list-disc list-inside"
-                              >
-                                {para.split("\n").map((line, lIdx) => (
-                                  <li key={lIdx} className="text-zinc-800">
-                                    <span
-                                      dangerouslySetInnerHTML={{
-                                        __html: line
-                                          .replace(/^[-•]\s*/, "")
-                                          .replace(
-                                            /\*\*(.*?)\*\*/g,
-                                            "<strong>$1</strong>"
-                                          ),
-                                      }}
-                                    />
-                                  </li>
-                                ))}
-                              </ul>
-                            );
-                          }
-                          if (para.match(/^\d+\.\s/)) {
-                            return (
-                              <ol
-                                key={pIdx}
-                                className="space-y-1 my-2 list-decimal list-inside"
-                              >
-                                {para.split("\n").map((line, lIdx) => (
-                                  <li key={lIdx} className="text-zinc-800">
-                                    <span
-                                      dangerouslySetInnerHTML={{
-                                        __html: line
-                                          .replace(/^\d+\.\s*/, "")
-                                          .replace(
-                                            /\*\*(.*?)\*\*/g,
-                                            "<strong>$1</strong>"
-                                          ),
-                                      }}
-                                    />
-                                  </li>
-                                ))}
-                              </ol>
-                            );
-                          }
-                          return (
-                            <p
-                              key={pIdx}
-                              className="mb-2.5"
-                              dangerouslySetInnerHTML={{
-                                __html: para.replace(
-                                  /\*\*(.*?)\*\*/g,
-                                  "<strong>$1</strong>"
-                                ),
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
+                      {/* Message Body. Rendered by a real markdown pass: research answers
+                          carry comparison tables, and the hand-rolled renderer that used to
+                          live here knew about bullets and bold and nothing about tables, so
+                          a table arrived on screen as a row of pipe characters. Charts are
+                          offered only in research mode - a fisherman gets two sentences, and
+                          there is nothing there to plot. */}
+                      <MarkdownAnswer text={m.text} allowCharts={m.mode === "research"} />
 
                       {/* Metrics Pill Grid */}
                       {m.metrics && m.metrics.length > 0 && (
@@ -714,6 +668,62 @@ export default function AiAgentPage() {
                               className="bg-zinc-100/90 hover:bg-zinc-200/70 border border-zinc-200 text-zinc-700 px-2 py-0.5 rounded-md text-[10px] transition-colors"
                             >
                               [{srcIdx + 1}] {src}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* The datasets themselves, as links. A researcher has to be
+                          able to open the thing the number came from and check it;
+                          that is what separates a cited answer from a confident one. */}
+                      {m.references && m.references.length > 0 && (
+                        <div className="pt-2">
+                          <span className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-zinc-600">
+                            <Database className="h-3 w-3 text-zinc-400" />
+                            Open the data
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {m.references.map((reference) => (
+                              <a
+                                key={reference.url}
+                                href={reference.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={reference.url}
+                                className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] text-blue-800 transition-colors hover:bg-blue-100"
+                              >
+                                <ExternalLink className="h-2.5 w-2.5" />
+                                {reference.title}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* The agent ran out of tool rounds and answered from what it
+                          had. Saying so is the difference between a partial answer
+                          and a wrong one. */}
+                      {m.truncated && (
+                        <p className="pt-1.5 text-[10px] text-amber-800">
+                          Answered from the data gathered so far — the agent reached its
+                          tool-call limit. Ask a narrower question for the rest.
+                        </p>
+                      )}
+
+                      {/* Tools that were called but came back with nothing. Naming
+                          them is more useful than hiding them: it says the agent
+                          did look, and where. */}
+                      {m.emptyTools && m.emptyTools.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                          <span className="text-[10px] font-medium text-zinc-400">
+                            Returned no data:
+                          </span>
+                          {m.emptyTools.map((tool, toolIdx) => (
+                            <span
+                              key={toolIdx}
+                              className="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800"
+                            >
+                              {tool}
                             </span>
                           ))}
                         </div>
@@ -761,6 +771,33 @@ export default function AiAgentPage() {
               )}
             </div>
           ))}
+
+          {/* The device may simply have no voice installed for this language.
+              Saying so is better than reading Malayalam with an English voice,
+              which produces noise, or staying silent with no explanation. */}
+          {substituteVoice && (speaking || liveVoice) && (
+            <div className="flex justify-center pb-1">
+              <p className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-900">
+                {t("voice.noVoiceForLanguage")}
+              </p>
+            </div>
+          )}
+
+          {(speaking || liveVoice) && (
+            <div className="sticky bottom-0 z-10 flex justify-center pb-1">
+              <button
+                type="button"
+                onClick={endLiveVoice}
+                className="inline-flex items-center gap-2 rounded-full border border-rose-300 bg-white px-3.5 py-1.5 text-xs font-medium text-rose-700 shadow-sm hover:bg-rose-50"
+              >
+                <span className="relative inline-flex h-2.5 w-2.5">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
+                </span>
+                {liveVoice ? t("voice.stopLive") : t("voice.stopReading")}
+              </button>
+            </div>
+          )}
 
           {/* Typing / Researching Progress Indicator */}
           {isTyping && (
@@ -814,11 +851,6 @@ export default function AiAgentPage() {
               }
               className="w-full text-xs sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none bg-transparent min-h-[38px] max-h-[120px] px-1 py-1"
             />
-            {voiceError && (
-              <p role="status" className="px-1 pt-1 text-[11px] text-rose-600">
-                {voiceError}
-              </p>
-            )}
 
             {/* Bottom Bar inside Input */}
             <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-zinc-100 gap-2">
@@ -854,7 +886,44 @@ export default function AiAgentPage() {
                 <span className="text-[10px] text-zinc-400 hidden sm:inline">
                   {location.name}
                 </span>
-                <VoiceControl supported={voiceSupported} listening={isListening} language={language} onToggle={toggleVoiceInput} />
+                <VoiceMicButton
+                  variant="pill"
+                  onInterim={(text) => {
+                    setInputQuery(text);
+                    requestAnimationFrame(adjustTextareaHeight);
+                  }}
+                  onTranscript={(text) => {
+                    setInputQuery("");
+                    handleSend(text, true);
+                  }}
+                  onStart={handleMicStart}
+                  autoListen={liveVoice && !speaking && !isTyping}
+                />
+                {/* Hands-free conversation. Once on, speak and it answers,
+                    then listens again - no tapping between turns. */}
+                <button
+                  type="button"
+                  onClick={() => (liveVoice ? endLiveVoice() : beginLiveVoice())}
+                  aria-pressed={liveVoice}
+                  title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
+                  className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors ${
+                    liveVoice
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+                  }`}
+                >
+                  {liveVoice ? (
+                    <span className="relative inline-flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/70" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                    </span>
+                  ) : (
+                    <Radio className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {liveVoice ? t("voice.liveOn") : t("voice.startLive")}
+                  </span>
+                </button>
                 <LanguageControl language={language} />
               </div>
 

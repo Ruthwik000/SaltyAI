@@ -7,11 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateMessageId } from "@/lib/id";
 import { askMarineAgent } from "@/lib/api";
-import { X, Send, ArrowRight, Database } from "lucide-react";
+import { X, Send, ArrowRight, Database, Square, Radio } from "lucide-react";
+import { useT } from "@/lib/i18n";
+import { useVoiceReply } from "@/lib/use-voice-reply";
+import { VoiceMicButton } from "@/components/voice-mic-button";
 
 export function AiDrawer() {
   const { isAiDrawerOpen, setIsAiDrawerOpen, location } = useMarine();
   const [inputQuery, setInputQuery] = React.useState("");
+  const { language } = useT();
+  const { speak, stop: stopSpeaking, speaking } = useVoiceReply();
+
+  // Hands-free conversation, ended only by the stop button.
+  const [liveVoice, setLiveVoice] = React.useState(false);
+  const endLiveVoice = React.useCallback(() => {
+    setLiveVoice(false);
+    stopSpeaking();
+  }, [stopSpeaking]);
+  // Set when a question arrived by microphone, so the answer is spoken back
+  // in the same language. A typed question stays silent.
+  const speakReplyRef = React.useRef(false);
   const [messages, setMessages] = React.useState([
     {
       id: "m-welcome",
@@ -43,9 +58,10 @@ export function AiDrawer() {
     `Are there any active cyclone or swell warnings?`,
   ];
 
-  const handleSend = (textToSend) => {
+  const handleSend = (textToSend, viaVoice = false) => {
     const query = textToSend || inputQuery;
     if (!query.trim()) return;
+    speakReplyRef.current = viaVoice;
 
     const userMsg = {
       id: generateMessageId("u"),
@@ -58,8 +74,18 @@ export function AiDrawer() {
     if (!textToSend) setInputQuery("");
     setIsTyping(true);
 
+    const history = messages
+      .filter((item) => item.text)
+      .slice(-8)
+      .map((item) => ({
+        role: item.sender === "user" ? "user" : "assistant",
+        content: item.text,
+      }));
+
     void askMarineAgent(query, {
       mode: "normal",
+      history,
+      language: language.native,
       location: {
         name: location.name,
         lat: location.lat,
@@ -74,12 +100,16 @@ export function AiDrawer() {
             id: generateMessageId("a"),
             sender: "agent",
             text: result.response || "NOT AVAILABLE",
-            sources: result.synthetic
-              ? ["mock_marine_forecast"]
-              : result.tool_calls.map((call) => call.tool),
+            sources: (result.returned_data || [])
+              .filter((item) => item.usable)
+              .map((item) => item.tool),
             time: "Just now",
           },
         ]);
+        if (speakReplyRef.current || liveVoice) {
+          speakReplyRef.current = false;
+          speak(result.response || "");
+        }
       })
       .catch((error) => {
         setMessages((prev) => [
@@ -237,6 +267,38 @@ export function AiDrawer() {
               placeholder={`Ask anything about ${location.name} ocean conditions...`}
               className="h-9 text-xs"
             />
+            {(speaking || liveVoice) && (
+              <button
+                type="button"
+                onClick={endLiveVoice}
+                aria-label={liveVoice ? t("voice.stopLive") : t("voice.stopReading")}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-50 text-rose-700"
+              >
+                <Square className="h-3.5 w-3.5 fill-current" />
+              </button>
+            )}
+            <VoiceMicButton
+              onInterim={setInputQuery}
+              onTranscript={(text) => {
+                setInputQuery("");
+                handleSend(text, true);
+              }}
+              onStart={stopSpeaking}
+              autoListen={liveVoice && !speaking && !isTyping}
+            />
+            <button
+              type="button"
+              onClick={() => (liveVoice ? endLiveVoice() : setLiveVoice(true))}
+              aria-pressed={liveVoice}
+              title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
+              className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                liveVoice
+                  ? "border-rose-300 bg-rose-50 text-rose-700"
+                  : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+              }`}
+            >
+              <Radio className="h-4 w-4" />
+            </button>
             <Button
               type="submit"
               size="sm"

@@ -4,6 +4,27 @@ import * as React from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+/**
+ * Point MapLibre at a worker the app actually serves.
+ *
+ * Left alone, MapLibre resolves its worker with
+ * `new URL("./maplibre-gl-worker.mjs", import.meta.url)`. Under this bundler
+ * that URL is not served, so the request falls through to the 404 page and
+ * the browser reports:
+ *
+ *   Failed to load module script: The server responded with a non-JavaScript
+ *   MIME type of "text/html".
+ *
+ * With no worker MapLibre cannot tile GeoJSON, so every vector source stays
+ * empty and silently draws nothing — which is why zones were built as DOM
+ * markers and why the EEZ line did not appear. Both worker files are copied
+ * into public/ (the worker imports the shared chunk beside it), so this
+ * points at a URL that resolves.
+ */
+if (typeof window !== "undefined" && typeof maplibregl.setWorkerUrl === "function") {
+  maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+}
+
 import { Crosshair, Fish, Layers, Map, Satellite, Waves } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useMarine } from "@/lib/marine-context";
@@ -11,6 +32,8 @@ import { circleRing, formatCoord } from "@/lib/geo";
 import {
   basicOsfLayers,
   boundaryTileUrl,
+  eezGeoJsonUrl,
+  EEZ_LINE_COLOUR,
   osfFeatureInfoUrl,
   osfLayers,
   osfLegendUrl,
@@ -40,7 +63,9 @@ const HAZARD_COLOR = {
 function zonesToGeoJson(zones, selectedZoneId) {
   return {
     type: "FeatureCollection",
-    features: zones.map((zone) => ({
+    // A real INCOIS advisory has no radius: it is a line, drawn by the
+    // advisory-line layer. Only zones that genuinely are circles get a ring.
+    features: zones.filter((zone) => zone.radiusNM > 0).map((zone) => ({
       type: "Feature",
       geometry: {
         type: "Polygon",
@@ -96,6 +121,9 @@ function trackToGeoJson(track) {
   };
 }
 
+/** The EEZ is a fixed national boundary, so one fetch serves every map. */
+let eezCache = null;
+
 function setGeoJson(map, id, data) {
   const source = map.getSource(id);
   source?.setData(data);
@@ -123,6 +151,7 @@ const ENGLISH_MAP_LABELS = {
   "map.satellite": "Satellite",
   "map.fishingZones": "Fishing zones",
   "map.noLayer": "No layer",
+  "map.eez": "India EEZ limit",
 };
 
 export function OceanMap({
@@ -149,6 +178,7 @@ export function OceanMap({
   showZones = true,
   onToggleZones,
   showBoundary = true,
+  showEez = true,
   onFollowVessel,
   autoFitKey = null,
   autoFitBottomPadding = 0,
@@ -301,6 +331,8 @@ export function OceanMap({
           hazards: { type: "geojson", data: EMPTY_POLYGONS },
           track: { type: "geojson", data: EMPTY_LINES },
           paths: { type: "geojson", data: EMPTY_LINES },
+          eez: { type: "geojson", data: EMPTY_LINES },
+          advisories: { type: "geojson", data: EMPTY_LINES },
         },
         layers: [
           // Self-contained sea backdrop. Everything above it is either
@@ -335,6 +367,35 @@ export function OceanMap({
             type: "raster",
             source: "boundary",
             paint: { "raster-opacity": 0.85 },
+          },
+          // The EEZ line sits directly on the coastline raster and under
+          // everything else: crossing it is what gets a boat detained, so it
+          // must stay legible whichever overlay is on.
+          // INCOIS publishes a PFZ as a line along a thermal front, roughly
+          // 20 km long. Drawing it as a circle would be inventing a shape the
+          // advisory does not have, so the real geometry is drawn instead and
+          // the marker just carries the tap target and the label.
+          {
+            id: "advisory-line",
+            type: "line",
+            source: "advisories",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": ["case", ["get", "selected"], "#0f9b6c", "#2ec4a0"],
+              "line-width": ["case", ["get", "selected"], 5, 3],
+              "line-opacity": 0.95,
+            },
+          },
+          {
+            id: "eez-line",
+            type: "line",
+            source: "eez",
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": EEZ_LINE_COLOUR,
+              "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1.2, 7, 2, 11, 3],
+              "line-opacity": 0.95,
+            },
           },
           {
             id: "hazards-fill",
@@ -524,6 +585,7 @@ export function OceanMap({
       basemap === "satellite" ? "visible" : "none"
     );
     map.setLayoutProperty("boundary", "visibility", showBoundary ? "visible" : "none");
+    map.setLayoutProperty("eez-line", "visibility", showEez ? "visible" : "none");
     map.setLayoutProperty("zones-fill", "visibility", showZones ? "visible" : "none");
     Object.keys(osfLayers).forEach((key) => {
       map.setLayoutProperty(
@@ -532,7 +594,50 @@ export function OceanMap({
         overlay === key ? "visible" : "none"
       );
     });
-  }, [basemap, showBoundary, overlay, showZones, ready]);
+  }, [basemap, showBoundary, showEez, overlay, showZones, ready]);
+
+  /* ---- India EEZ boundary ---- */
+  // Fetched once per mount and cached on the module, because it is a fixed
+  // national boundary: it does not change between renders, ports or roles.
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !ready || !showEez) return undefined;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const draw = (data) => {
+      if (cancelled || !mapRef.current) return;
+      try {
+        setGeoJson(mapRef.current, "eez", data);
+      } catch {
+        // The style was torn down between the fetch and the paint.
+      }
+    };
+
+    if (eezCache) {
+      draw(eezCache);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    fetch(eezGeoJsonUrl, { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!data || !data.features) return;
+        eezCache = data;
+        draw(data);
+      })
+      .catch(() => {
+        // No EEZ line rather than a wrong one. The coastline raster still draws.
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [ready, showEez]);
 
   /* ---- point the overlay sources at the live forecast files ---- */
   React.useEffect(() => {
@@ -558,6 +663,20 @@ export function OceanMap({
     if (!map || !ready) return;
 
     setGeoJson(map, "zones", zonesToGeoJson(zones, selectedZoneId));
+    setGeoJson(map, "advisories", {
+      type: "FeatureCollection",
+      features: (showZones ? zones : [])
+        .filter((zone) => Array.isArray(zone.geometry) && zone.geometry.length > 1)
+        .map((zone) => ({
+          type: "Feature",
+          properties: { id: zone.id, selected: zone.id === selectedZoneId },
+          geometry: {
+            type: "LineString",
+            // Stored latitude-first; GeoJSON wants longitude-first.
+            coordinates: zone.geometry.map(([lat, lon]) => [lon, lat]),
+          },
+        })),
+    });
 
     zoneMarkers.current.forEach((marker) => marker.remove());
     zoneMarkers.current = [];
@@ -568,7 +687,7 @@ export function OceanMap({
       const metresPerPixel =
         (156543.03392 * Math.cos((zone.lat * Math.PI) / 180)) /
         Math.pow(2, map.getZoom());
-      return (2 * zone.radiusNM * 1852) / metresPerPixel;
+      return (2 * (zone.radiusNM || 0) * 1852) / metresPerPixel;
     };
 
     const elements = zones.map((zone) => {
@@ -581,6 +700,9 @@ export function OceanMap({
       const label = document.createElement("span");
       label.className = "salty-zone-label";
       label.textContent = zone.score != null ? `${Math.round(zone.score)}%` : "PFZ";
+      // An advisory with no radius is drawn as its real line by the
+      // advisory-line layer, so the marker is only a tap target. The
+      // sizing pass already floors it at 26px, which is the right size.
       element.appendChild(label);
 
       element.addEventListener("click", (event) => {
@@ -952,6 +1074,21 @@ export function OceanMap({
                 {overlayLabel(key)}
               </button>
             ))}
+        </div>
+      )}
+
+      {/* A red line on a sea chart means one thing, but only if it is named.
+          Crossing the EEZ is what gets a boat detained, so the key says so. */}
+      {showEez && (
+        <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-md bg-white/95 px-2 py-1 shadow-sm">
+          <span
+            aria-hidden
+            className="h-0.5 w-4 rounded-full"
+            style={{ backgroundColor: EEZ_LINE_COLOUR }}
+          />
+          <span className="text-[10px] font-medium text-zinc-700">
+            {t("map.eez")}
+          </span>
         </div>
       )}
 

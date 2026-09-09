@@ -58,14 +58,15 @@ export function ZonesMapView() {
   React.useEffect(() => {
     if (!selectedZoneId) return;
     const controller = new AbortController();
-    fetchZoneDetail(selectedZoneId, controller.signal).then((result) => {
+    const selected = zones.find((zone) => zone.id === selectedZoneId);
+    fetchZoneDetail(selectedZoneId, selected, controller.signal).then((result) => {
       if (controller.signal.aborted) return;
       setDetail(result.data);
       setDetailSource(result.source);
       setLoadedZoneId(selectedZoneId);
     });
     return () => controller.abort();
-  }, [selectedZoneId]);
+  }, [selectedZoneId, zones]);
 
   const mapZones = React.useMemo(
     () =>
@@ -76,6 +77,8 @@ export function ZonesMapView() {
         lon: zone.lon,
         radiusNM: zone.radiusNM,
         score: zone.suitabilityScore,
+        // The real advisory line, so the map draws it instead of a circle.
+        geometry: zone.geometry,
       })),
     [zones]
   );

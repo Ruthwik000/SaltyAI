@@ -103,7 +103,7 @@ export function RiskResultSheet({
           </div>
           <div className="flex items-center gap-2">
             {result && <SpeakButton size="sm" text={riskSpeech(t, result)} />}
-            {result && <DataBadge source={source} reason={reason} />}
+            {result && <DataBadge source={source} reason={reason} compact />}
             <button
               type="button"
               onClick={onClose}
@@ -146,18 +146,10 @@ export function RiskResultSheet({
 
         {!loading && result && styles && (
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
-            {source === "demo" && (
-              <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
-                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" />
-                <p className="text-[11px] leading-relaxed text-amber-900">
-                  <strong>Demo estimate.</strong> The SALTY risk model is not reachable,
-                  so this score was worked out on this device from the bundled sample
-                  conditions. Do not sail on it — check the official IMD and INCOIS
-                  bulletins.
-                </p>
-              </div>
-            )}
-
+            {/* The demo banner that used to sit here has been reduced to the
+                amber dot in the header, which keeps the full wording in its
+                tooltip and its accessible name. The summary below still opens
+                with "Demo estimate", so the score is never presented bare. */}
             {/* Score */}
             <div
               className={`flex items-center gap-4 rounded-xl border p-4 ${styles.ring}`}

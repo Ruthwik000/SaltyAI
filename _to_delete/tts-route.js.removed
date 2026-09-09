@@ -1,0 +1,129 @@
+import { NextResponse } from "next/server";
+
+/**
+ * Natural-sounding speech for the assistant's replies.
+ *
+ * The browser's own SpeechSynthesis is the fallback, not the goal. Chrome ships
+ * poor or missing voices for Indian languages — on desktop there is often no
+ * Telugu or Malayalam voice at all, so it reads the text in whatever voice it
+ * has and the result is unusable for the person it is meant to serve.
+ *
+ * Sarvam Bulbul is already the voice of the SALTY call agent
+ * (SaltyAI-CallAgent/app/speech/tts.py), so a fisherman on the phone and a
+ * fisherman in the app now hear the same voice. The request shape below is
+ * taken from that working client, not guessed:
+ *
+ *   POST https://api.sarvam.ai/text-to-speech
+ *   api-subscription-key: <key>
+ *   { inputs: [text], target_language_code, speaker, speech_sample_rate, model }
+ *   -> { audios: ["<base64 wav>"] }
+ *
+ * The key stays here. It is read from SARVAM_API_KEY (no NEXT_PUBLIC_ prefix),
+ * so it is never shipped to the browser.
+ */
+
+const SARVAM = "https://api.sarvam.ai/text-to-speech";
+const TIMEOUT_MS = 20000;
+
+/** Bulbul speaker used across the SALTY voice surfaces. */
+const DEFAULT_SPEAKER = "shubh";
+
+/** 22.05 kHz rather than the call agent's 8 kHz: this is a speaker, not a phone line. */
+const SAMPLE_RATE = 22050;
+
+const SUPPORTED = new Set([
+  "en-IN", "hi-IN", "te-IN", "ta-IN", "ml-IN",
+  "kn-IN", "or-IN", "bn-IN", "mr-IN", "gu-IN",
+]);
+
+export async function POST(request) {
+  const key = process.env.SARVAM_API_KEY;
+  if (!key) {
+    // Not an error: the caller falls back to the browser voice.
+    return NextResponse.json(
+      { error: "SARVAM_API_KEY is not configured", fallback: "browser" },
+      { status: 503 }
+    );
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Body must be JSON" }, { status: 400 });
+  }
+
+  const text = String(payload?.text || "").trim();
+  const language = SUPPORTED.has(payload?.language) ? payload.language : "en-IN";
+  if (!text) {
+    return NextResponse.json({ error: "text is required" }, { status: 400 });
+  }
+  if (text.length > 1500) {
+    return NextResponse.json({ error: "text is too long" }, { status: 413 });
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const upstream = await fetch(SARVAM, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "api-subscription-key": key,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: [text],
+        target_language_code: language,
+        speaker: payload?.speaker || DEFAULT_SPEAKER,
+        speech_sample_rate: SAMPLE_RATE,
+        model: process.env.SARVAM_TTS_MODEL || "bulbul:v3",
+      }),
+    });
+
+    if (!upstream.ok) {
+      const detail = await upstream.text().catch(() => "");
+      return NextResponse.json(
+        {
+          error: `Sarvam returned HTTP ${upstream.status}`,
+          detail: detail.slice(0, 300),
+          fallback: "browser",
+        },
+        { status: 502 }
+      );
+    }
+
+    const result = await upstream.json();
+    const encoded = (result?.audios || [])[0];
+    if (!encoded) {
+      return NextResponse.json(
+        { error: "Sarvam returned no audio", fallback: "browser" },
+        { status: 502 }
+      );
+    }
+
+    const wav = Buffer.from(encoded, "base64");
+    return new NextResponse(wav, {
+      status: 200,
+      headers: {
+        "Content-Type": "audio/wav",
+        "Content-Length": String(wav.length),
+        // Same sentence is often re-read (a retry, a second listen).
+        "Cache-Control": "private, max-age=300",
+      },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error?.name === "AbortError"
+            ? "Sarvam did not answer in time"
+            : "Unable to reach Sarvam",
+        fallback: "browser",
+      },
+      { status: 502 }
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}

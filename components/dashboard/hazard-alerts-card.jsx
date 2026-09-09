@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
+import { DataBadge } from "@/components/fisherman/data-badge";
 
-export function HazardAlertsCard({ alerts, totalAlertsCount }) {
+export function HazardAlertsCard({ alerts, totalAlertsCount, source, reason, issuedFor }) {
   const { t } = useT();
 
   /* A warning is the one thing on this screen that must reach someone who
@@ -29,8 +30,10 @@ export function HazardAlertsCard({ alerts, totalAlertsCount }) {
             <CardTitle className="text-sm font-semibold text-zinc-950">
               {t("a.title")}
             </CardTitle>
-            <span className="text-[10px] text-zinc-500 font-sans">
+            <span className="flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-500 font-sans">
               {t("a.activeInSector", { count: alerts.length })}
+              {source && <DataBadge source={source} reason={reason} />}
+              {issuedFor && <span className="text-zinc-400">issued {issuedFor}</span>}
             </span>
           </div>
         </div>

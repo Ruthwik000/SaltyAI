@@ -28,7 +28,7 @@ import { DataBadge } from "@/components/fisherman/data-badge";
 import { RiskResultSheet } from "@/components/fisherman/risk-result-sheet";
 import { addPlannedTrip } from "@/lib/trip-store";
 import { assessTripRisk, fetchPfzZones, fetchPointConditions } from "@/lib/fisherman-api";
-import { formatCoord } from "@/lib/geo";
+import { formatCoord, nmToKm } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { conditionsSpeech } from "@/components/fisherman/speech-text";
@@ -176,7 +176,11 @@ export function TripSafetyView() {
                 text={conditionsSpeech(t, location.name, conditions)}
               />
             )}
-            <DataBadge source={conditionsSource} reason={conditionsReason} />
+            {/* Dot only: the panel is already headed with the port name and
+                the reading is the point of it, so the word "Demo"/"Live" beside
+                it was noise. The tooltip and the accessible name still say
+                which, so nothing is hidden — it is just not shouted. */}
+            <DataBadge source={conditionsSource} reason={conditionsReason} compact />
           </div>
         </div>
 
@@ -257,7 +261,7 @@ export function TripSafetyView() {
             </select>
             {destination && (
               <p className="mt-1.5 font-sans text-[11px] text-zinc-500">
-                {destination.distanceNM} {t("common.unit.nm")} · {t("zones.bearing")}{" "}
+                {nmToKm(destination.distanceNM)} {t("common.unit.km")} · {t("zones.bearing")}{" "}
                 {destination.bearing} ({destination.bearingDeg}°) · {t("zones.depth")}{" "}
                 {destination.depthMeters} {t("common.unit.m")}
               </p>
