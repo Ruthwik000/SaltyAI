@@ -13,16 +13,9 @@ import { useVoiceReply } from "@/lib/use-voice-reply";
 import { VoiceMicButton } from "@/components/voice-mic-button";
 
 export function AiDrawer() {
-  const {
-    isAiDrawerOpen,
-    setIsAiDrawerOpen,
-    location,
-    role,
-    pendingAiRequest,
-    consumeAiRequest,
-  } = useMarine();
+  const { isAiDrawerOpen, setIsAiDrawerOpen, location } = useMarine();
   const [inputQuery, setInputQuery] = React.useState("");
-  const { t, language } = useT();
+  const { language } = useT();
   const { speak, stop: stopSpeaking, speaking } = useVoiceReply();
 
   // Hands-free conversation, ended only by the stop button.
@@ -38,7 +31,21 @@ export function AiDrawer() {
     {
       id: "m-welcome",
       sender: "agent",
-      text: `SALTY marine agent for ${location.name} (${location.sea}). Answers come from live INCOIS sea state, PFZ advisories and warnings, Open-Meteo tides and storms, NOAA satellite data, trip risk, fleet and search-and-rescue tools.`,
+      text: `Welcome to Salty AI Marine Assistant. I'm actively monitoring oceanographic feeds for ${location.name} (${location.sea}). How can I assist your operations today?`,
+      sources: [
+        "INCOIS Moored Buoy Array",
+        "INSAT-3DR Satellite SST",
+        "IMD Coastal Radar",
+      ],
+      metrics: [
+        { label: "SST", value: `${location.sst}°C` },
+        { label: "Wave SWH", value: `${location.waveHeight}m` },
+        { label: "Wind", value: `${location.windSpeed} kts ${location.windDirection}` },
+        {
+          label: "Risk Index",
+          value: `${location.riskScore}/100 (${location.riskLevel})`,
+        },
+      ],
       time: "Just now",
     },
   ]);
@@ -51,7 +58,7 @@ export function AiDrawer() {
     `Are there any active cyclone or swell warnings?`,
   ];
 
-  const handleSend = (textToSend, viaVoice = false, mode = "normal") => {
+  const handleSend = (textToSend, viaVoice = false) => {
     const query = textToSend || inputQuery;
     if (!query.trim()) return;
     speakReplyRef.current = viaVoice;
@@ -63,19 +70,20 @@ export function AiDrawer() {
       time: "Just now",
     };
 
-    // Prior turns, so follow-up questions keep their context.
-    const history = messages
-      .filter((m) => m.id !== "m-welcome")
-      .slice(-8)
-      .map((m) => ({ role: m.sender === "user" ? "user" : "assistant", content: m.text }));
-
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputQuery("");
     setIsTyping(true);
 
+    const history = messages
+      .filter((item) => item.text)
+      .slice(-8)
+      .map((item) => ({
+        role: item.sender === "user" ? "user" : "assistant",
+        content: item.text,
+      }));
+
     void askMarineAgent(query, {
-      mode,
-      role,
+      mode: "normal",
       history,
       language: language.native,
       location: {
@@ -109,25 +117,13 @@ export function AiDrawer() {
           {
             id: generateMessageId("a"),
             sender: "agent",
-            text: `The marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and set NVIDIA_API_KEY, then try again."}`,
+            text: `The marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and Ollama, then try again."}`,
             time: "Just now",
           },
         ]);
       })
       .finally(() => setIsTyping(false));
   };
-
-  // A page asked the agent something specific: send it once the drawer is open.
-  React.useEffect(() => {
-    if (!isAiDrawerOpen || !pendingAiRequest) return;
-    const timer = setTimeout(() => {
-      consumeAiRequest();
-      handleSend(pendingAiRequest.query, false, pendingAiRequest.mode);
-    }, 0);
-    return () => clearTimeout(timer);
-    // handleSend is recreated every render; the request id is what matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAiDrawerOpen, pendingAiRequest?.id]);
 
   if (!isAiDrawerOpen) return null;
 
@@ -235,6 +231,9 @@ export function AiDrawer() {
 
           {isTyping && (
             <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-sans p-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-pulse delay-75" />
+              <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-pulse delay-150" />
               <span>Synthesizing marine telemetry...</span>
             </div>
           )}

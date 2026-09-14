@@ -21,12 +21,12 @@ import {
   Radio,
   Navigation,
   Crosshair,
+  Sparkles,
   MapPin,
   Bell,
   CheckCircle2,
   Lock,
 } from "lucide-react";
-import { KnowMore } from "@/components/ui/know-more";
 
 export default function GeofencingPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function GeofencingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="sw-page-title">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
             Geofencing & Boundary Compliance
           </h1>
         </div>
@@ -54,6 +54,7 @@ export default function GeofencingPage() {
             onClick={() => setIsAiDrawerOpen(true)}
             className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
           >
+            <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
             <span>Boundary Advisor</span>
           </Button>
         </div>
@@ -76,9 +77,10 @@ export default function GeofencingPage() {
                   4.8 NM from IMBL
                 </Badge>
               </div>
-              <KnowMore>
-                <p>Vessel has crossed into the 5.0 Nautical Mile caution buffer zone of the India-Sri Lanka International Maritime Boundary Line.</p>
-              </KnowMore>
+              <p className="text-xs text-zinc-600 mt-0.5">
+                Vessel has crossed into the 5.0 Nautical Mile caution buffer zone of the
+                India-Sri Lanka International Maritime Boundary Line.
+              </p>
             </div>
           </div>
 
@@ -231,9 +233,9 @@ export default function GeofencingPage() {
               <CardTitle className="text-sm font-bold text-zinc-950">
                 Vessel Proximity to Boundaries
               </CardTitle>
-              <KnowMore>
-                <p>Distance calculation to nearest restricted maritime boundary</p>
-              </KnowMore>
+              <p className="text-xs text-zinc-500">
+                Distance calculation to nearest restricted maritime boundary
+              </p>
             </CardHeader>
 
             <CardContent className="pt-4 space-y-3">

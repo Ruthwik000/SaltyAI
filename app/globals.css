@@ -1,42 +1,26 @@
 @import "tailwindcss";
 
-/* Swiss style: grid, grotesk type, hairline rules, one blue accent. */
-
 :root {
-  --sw-paper: #f6f5f1;
-  --sw-surface: #ffffff;
-  --sw-ink: #0b0b0c;
-  --sw-ink-2: #2a2a2e;
-  --sw-muted: #6d6c70;
-  --sw-rule: #dcd9d1;
-  --sw-rule-strong: #0b0b0c;
-  --sw-accent: #0b0b0c;
-  --sw-accent-dark: #3a393e;
-  --sw-accent-tint: #efede7;
-  --sw-go: #0e7a4b;
-  --sw-care: #c26a00;
-  --sw-stop: #d0182a;
-
-  --background: var(--sw-paper);
-  --foreground: var(--sw-ink);
-  --card: var(--sw-surface);
-  --card-foreground: var(--sw-ink);
-  --popover: var(--sw-surface);
-  --popover-foreground: var(--sw-ink);
-  --primary: var(--sw-ink);
-  --primary-foreground: #ffffff;
-  --secondary: #efede7;
-  --secondary-foreground: var(--sw-ink);
-  --muted: #efede7;
-  --muted-foreground: var(--sw-muted);
-  --accent: var(--sw-accent-tint);
-  --accent-foreground: var(--sw-accent-dark);
-  --destructive: var(--sw-stop);
-  --destructive-foreground: #ffffff;
-  --border: var(--sw-rule);
-  --input: var(--sw-rule);
-  --ring: var(--sw-accent);
-  --radius: 0.125rem;
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
+  --radius: 0.5rem;
 }
 
 @theme inline {
@@ -59,453 +43,37 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-sans: var(--font-inter-tight), "Helvetica Neue", Helvetica, "Noto Sans", Arial, sans-serif;
-  --font-serif: var(--font-plex-serif), Georgia, "Noto Serif", serif;
-}
-
-/* Near-square corners; warm neutral greys; blue family pulled to the accent. */
-@theme {
-  --radius-xs: 0.125rem;
-  --radius-sm: 0.125rem;
-  --radius-md: 0.125rem;
-  --radius-lg: 0.1875rem;
-  --radius-xl: 0.25rem;
-  --radius-2xl: 0.25rem;
-  --radius-3xl: 0.25rem;
-  --color-zinc-50: #faf9f6;
-  --color-zinc-100: #efede7;
-  --color-zinc-200: #dcd9d1;
-  --color-zinc-300: #c4c0b6;
-  --color-zinc-400: #99968e;
-  --color-zinc-500: #6d6c70;
-  --color-zinc-600: #55545a;
-  --color-zinc-700: #3a393e;
-  --color-zinc-800: #242328;
-  --color-zinc-900: #151417;
-  --color-zinc-950: #0b0b0c;
-  --color-blue-50: #efede7;
-  --color-blue-100: #efede7;
-  --color-sky-50: #efede7;
-  --color-sky-100: #efede7;
-  --color-indigo-50: #efede7;
-  --color-indigo-100: #efede7;
-  --color-purple-50: #efede7;
-  --color-purple-100: #efede7;
-  --color-violet-50: #efede7;
-  --color-violet-100: #efede7;
-  --color-cyan-50: #efede7;
-  --color-cyan-100: #efede7;
-  --color-teal-50: #efede7;
-  --color-teal-100: #efede7;
-  --color-slate-50: #efede7;
-  --color-slate-100: #efede7;
-  --color-gray-50: #efede7;
-  --color-gray-100: #efede7;
-  --color-neutral-50: #efede7;
-  --color-neutral-100: #efede7;
-  --color-stone-50: #efede7;
-  --color-stone-100: #efede7;
-  --color-blue-200: #dcd9d1;
-  --color-blue-300: #dcd9d1;
-  --color-sky-200: #dcd9d1;
-  --color-sky-300: #dcd9d1;
-  --color-indigo-200: #dcd9d1;
-  --color-indigo-300: #dcd9d1;
-  --color-purple-200: #dcd9d1;
-  --color-purple-300: #dcd9d1;
-  --color-violet-200: #dcd9d1;
-  --color-violet-300: #dcd9d1;
-  --color-cyan-200: #dcd9d1;
-  --color-cyan-300: #dcd9d1;
-  --color-teal-200: #dcd9d1;
-  --color-teal-300: #dcd9d1;
-  --color-slate-200: #dcd9d1;
-  --color-slate-300: #dcd9d1;
-  --color-gray-200: #dcd9d1;
-  --color-gray-300: #dcd9d1;
-  --color-neutral-200: #dcd9d1;
-  --color-neutral-300: #dcd9d1;
-  --color-stone-200: #dcd9d1;
-  --color-stone-300: #dcd9d1;
-  --color-blue-400: #6d6c70;
-  --color-blue-500: #6d6c70;
-  --color-sky-400: #6d6c70;
-  --color-sky-500: #6d6c70;
-  --color-indigo-400: #6d6c70;
-  --color-indigo-500: #6d6c70;
-  --color-purple-400: #6d6c70;
-  --color-purple-500: #6d6c70;
-  --color-violet-400: #6d6c70;
-  --color-violet-500: #6d6c70;
-  --color-cyan-400: #6d6c70;
-  --color-cyan-500: #6d6c70;
-  --color-teal-400: #6d6c70;
-  --color-teal-500: #6d6c70;
-  --color-slate-400: #6d6c70;
-  --color-slate-500: #6d6c70;
-  --color-gray-400: #6d6c70;
-  --color-gray-500: #6d6c70;
-  --color-neutral-400: #6d6c70;
-  --color-neutral-500: #6d6c70;
-  --color-stone-400: #6d6c70;
-  --color-stone-500: #6d6c70;
-  --color-blue-600: #0b0b0c;
-  --color-blue-700: #0b0b0c;
-  --color-blue-800: #0b0b0c;
-  --color-blue-900: #0b0b0c;
-  --color-blue-950: #0b0b0c;
-  --color-sky-600: #0b0b0c;
-  --color-sky-700: #0b0b0c;
-  --color-sky-800: #0b0b0c;
-  --color-sky-900: #0b0b0c;
-  --color-sky-950: #0b0b0c;
-  --color-indigo-600: #0b0b0c;
-  --color-indigo-700: #0b0b0c;
-  --color-indigo-800: #0b0b0c;
-  --color-indigo-900: #0b0b0c;
-  --color-indigo-950: #0b0b0c;
-  --color-purple-600: #0b0b0c;
-  --color-purple-700: #0b0b0c;
-  --color-purple-800: #0b0b0c;
-  --color-purple-900: #0b0b0c;
-  --color-purple-950: #0b0b0c;
-  --color-violet-600: #0b0b0c;
-  --color-violet-700: #0b0b0c;
-  --color-violet-800: #0b0b0c;
-  --color-violet-900: #0b0b0c;
-  --color-violet-950: #0b0b0c;
-  --color-cyan-600: #0b0b0c;
-  --color-cyan-700: #0b0b0c;
-  --color-cyan-800: #0b0b0c;
-  --color-cyan-900: #0b0b0c;
-  --color-cyan-950: #0b0b0c;
-  --color-teal-600: #0b0b0c;
-  --color-teal-700: #0b0b0c;
-  --color-teal-800: #0b0b0c;
-  --color-teal-900: #0b0b0c;
-  --color-teal-950: #0b0b0c;
-  --color-slate-600: #0b0b0c;
-  --color-slate-700: #0b0b0c;
-  --color-slate-800: #0b0b0c;
-  --color-slate-900: #0b0b0c;
-  --color-slate-950: #0b0b0c;
-  --color-gray-600: #0b0b0c;
-  --color-gray-700: #0b0b0c;
-  --color-gray-800: #0b0b0c;
-  --color-gray-900: #0b0b0c;
-  --color-gray-950: #0b0b0c;
-  --color-neutral-600: #0b0b0c;
-  --color-neutral-700: #0b0b0c;
-  --color-neutral-800: #0b0b0c;
-  --color-neutral-900: #0b0b0c;
-  --color-neutral-950: #0b0b0c;
-  --color-stone-600: #0b0b0c;
-  --color-stone-700: #0b0b0c;
-  --color-stone-800: #0b0b0c;
-  --color-stone-900: #0b0b0c;
-  --color-stone-950: #0b0b0c;
-  --color-emerald-50: #efede7;
-  --color-emerald-100: #efede7;
-  --color-green-50: #efede7;
-  --color-green-100: #efede7;
-  --color-lime-50: #efede7;
-  --color-lime-100: #efede7;
-  --color-emerald-200: #dcd9d1;
-  --color-emerald-300: #dcd9d1;
-  --color-green-200: #dcd9d1;
-  --color-green-300: #dcd9d1;
-  --color-lime-200: #dcd9d1;
-  --color-lime-300: #dcd9d1;
-  --color-emerald-400: #0e7a4b;
-  --color-emerald-500: #0e7a4b;
-  --color-emerald-600: #0e7a4b;
-  --color-emerald-700: #0e7a4b;
-  --color-emerald-800: #0e7a4b;
-  --color-emerald-900: #0e7a4b;
-  --color-emerald-950: #0e7a4b;
-  --color-green-400: #0e7a4b;
-  --color-green-500: #0e7a4b;
-  --color-green-600: #0e7a4b;
-  --color-green-700: #0e7a4b;
-  --color-green-800: #0e7a4b;
-  --color-green-900: #0e7a4b;
-  --color-green-950: #0e7a4b;
-  --color-lime-400: #0e7a4b;
-  --color-lime-500: #0e7a4b;
-  --color-lime-600: #0e7a4b;
-  --color-lime-700: #0e7a4b;
-  --color-lime-800: #0e7a4b;
-  --color-lime-900: #0e7a4b;
-  --color-lime-950: #0e7a4b;
-  --color-amber-50: #efede7;
-  --color-amber-100: #efede7;
-  --color-orange-50: #efede7;
-  --color-orange-100: #efede7;
-  --color-yellow-50: #efede7;
-  --color-yellow-100: #efede7;
-  --color-amber-200: #dcd9d1;
-  --color-amber-300: #dcd9d1;
-  --color-orange-200: #dcd9d1;
-  --color-orange-300: #dcd9d1;
-  --color-yellow-200: #dcd9d1;
-  --color-yellow-300: #dcd9d1;
-  --color-amber-400: #c26a00;
-  --color-amber-500: #c26a00;
-  --color-amber-600: #c26a00;
-  --color-amber-700: #c26a00;
-  --color-amber-800: #c26a00;
-  --color-amber-900: #c26a00;
-  --color-amber-950: #c26a00;
-  --color-orange-400: #c26a00;
-  --color-orange-500: #c26a00;
-  --color-orange-600: #c26a00;
-  --color-orange-700: #c26a00;
-  --color-orange-800: #c26a00;
-  --color-orange-900: #c26a00;
-  --color-orange-950: #c26a00;
-  --color-yellow-400: #c26a00;
-  --color-yellow-500: #c26a00;
-  --color-yellow-600: #c26a00;
-  --color-yellow-700: #c26a00;
-  --color-yellow-800: #c26a00;
-  --color-yellow-900: #c26a00;
-  --color-yellow-950: #c26a00;
-  --color-rose-50: #efede7;
-  --color-rose-100: #efede7;
-  --color-red-50: #efede7;
-  --color-red-100: #efede7;
-  --color-pink-50: #efede7;
-  --color-pink-100: #efede7;
-  --color-fuchsia-50: #efede7;
-  --color-fuchsia-100: #efede7;
-  --color-rose-200: #dcd9d1;
-  --color-rose-300: #dcd9d1;
-  --color-red-200: #dcd9d1;
-  --color-red-300: #dcd9d1;
-  --color-pink-200: #dcd9d1;
-  --color-pink-300: #dcd9d1;
-  --color-fuchsia-200: #dcd9d1;
-  --color-fuchsia-300: #dcd9d1;
-  --color-rose-400: #d0182a;
-  --color-rose-500: #d0182a;
-  --color-rose-600: #d0182a;
-  --color-rose-700: #d0182a;
-  --color-rose-800: #d0182a;
-  --color-rose-900: #d0182a;
-  --color-rose-950: #d0182a;
-  --color-red-400: #d0182a;
-  --color-red-500: #d0182a;
-  --color-red-600: #d0182a;
-  --color-red-700: #d0182a;
-  --color-red-800: #d0182a;
-  --color-red-900: #d0182a;
-  --color-red-950: #d0182a;
-  --color-pink-400: #d0182a;
-  --color-pink-500: #d0182a;
-  --color-pink-600: #d0182a;
-  --color-pink-700: #d0182a;
-  --color-pink-800: #d0182a;
-  --color-pink-900: #d0182a;
-  --color-pink-950: #d0182a;
-  --color-fuchsia-400: #d0182a;
-  --color-fuchsia-500: #d0182a;
-  --color-fuchsia-600: #d0182a;
-  --color-fuchsia-700: #d0182a;
-  --color-fuchsia-800: #d0182a;
-  --color-fuchsia-900: #d0182a;
-  --color-fuchsia-950: #d0182a;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
   border-color: var(--border);
 }
 
-/* Clip sideways overflow on body only: hiding it on html as well stops some
-   mobile browsers scrolling vertically, which hid the role screen's button. */
 body {
-  overflow-x: clip;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  background-color: var(--sw-paper);
-  color: var(--sw-ink);
+  background-color: #ffffff;
+  color: #09090b;
   font-family: var(--font-sans);
-  font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4 {
-  letter-spacing: -0.03em;
-}
-
-/* Stylized elements: IBM Plex Serif for titles, Inter Tight for everything
-   read at a glance (labels, numbers, body). */
-.sw-serif,
-main h1,
-main h2 {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.sw-page-title {
-  font-family: var(--font-serif);
-  font-size: clamp(2rem, 5.5vw, 3.75rem);
-  font-weight: 500;
-  line-height: 1.02;
-  letter-spacing: -0.025em;
-  color: var(--sw-ink);
-}
-
-/* Every page header block reads as one level: title over a firm rule. */
-main :is(div, header):has(> div > .sw-page-title, > .sw-page-title) {
-  border-bottom-color: var(--sw-ink) !important;
-}
-
-/* Dark chrome */
-.sw-dark {
-  background-color: #0b0b0c;
-  color: #f6f5f1;
-}
-.sw-dark .sw-label {
-  color: #99968e;
-}
-
 ::selection {
-  background-color: var(--sw-accent);
-  color: #ffffff;
+  background-color: #18181b;
+  color: #fafafa;
 }
 
-:focus-visible {
-  outline: 2px solid var(--sw-accent);
-  outline-offset: 2px;
+/* Minimalist dot grid background */
+.bg-grid-subtle {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
 }
 
-/* Premium, flat: depth comes from rules and type, not shadows or glow. */
-[class*="shadow"] {
-  box-shadow: none !important;
-}
-[class*="backdrop-blur"] {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-[class*="bg-gradient"] {
-  background-image: none !important;
-}
-
-.text-\[9px\],
-.text-\[10px\] {
-  font-size: 11px !important;
-}
-.text-\[11px\] {
-  font-size: 12.5px !important;
-}
-
-.tabular-nums,
-.sw-num {
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------------------------------------------------------------- */
-/* Swiss primitives                                                  */
-/* ---------------------------------------------------------------- */
-
-.sw-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sw-muted);
-}
-
-.sw-index {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  color: var(--sw-accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.sw-panel {
-  background: var(--sw-surface);
-  border: 1px solid var(--sw-rule);
-}
-
-.sw-rule-top {
-  border-top: 1px solid var(--sw-rule-strong);
-}
-
-.sw-link {
-  color: var(--sw-accent);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
-.sw-link:hover {
-  color: var(--sw-accent-dark);
-  text-decoration-thickness: 2px;
-}
-
-.sw-press {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-/* Existing bordered boxes across the app become hairline panels. */
-:is(.rounded-lg, .rounded-xl, .rounded-2xl).border.bg-white,
-:is(.rounded-lg, .rounded-xl, .rounded-2xl).border.bg-zinc-50,
-:is(.rounded-lg, .rounded-xl, .rounded-2xl).border[class*="bg-zinc-50/"] {
-  background-color: var(--sw-surface) !important;
-  border-color: var(--sw-rule) !important;
-}
-
-/* Dark filled buttons are ink; hover picks up the accent. */
-:is(button, a).bg-zinc-900,
-:is(button, a).bg-zinc-950 {
-  background-color: var(--sw-ink);
-  color: #ffffff;
-}
-:is(button, a).bg-zinc-900:hover,
-:is(button, a).bg-zinc-950:hover {
-  background-color: var(--sw-accent) !important;
-}
-
-/* Know more */
-.sw-details > summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  list-style: none;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sw-accent);
-  padding: 0.35rem 0;
-  border-bottom: 1px solid currentColor;
-}
-.sw-details > summary::-webkit-details-marker {
-  display: none;
-}
-.sw-details > summary::after {
-  content: "+";
-  font-size: 14px;
-  letter-spacing: 0;
-}
-.sw-details[open] > summary::after {
-  content: "−";
-}
-.sw-details__text {
-  margin-top: 1rem;
-  padding: 1rem 0 0;
-  border-top: 1px solid var(--sw-rule);
-  line-height: 1.6;
-  color: var(--sw-ink-2);
+.bg-dot-subtle {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* ------------------------------------------------------------------ */

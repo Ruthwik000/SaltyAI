@@ -3,7 +3,6 @@ import { Compass, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { KnowMore } from "@/components/ui/know-more";
 
 export function GeospatialSnapshot({ location, nearbyPFZ }) {
   return (
@@ -14,9 +13,9 @@ export function GeospatialSnapshot({ location, nearbyPFZ }) {
             <Compass className="h-4 w-4 text-zinc-700" />
             <span>Geospatial Intelligence Snapshot</span>
           </CardTitle>
-          <KnowMore>
-            <p>Real-time thermal fronts, chlorophyll blooms, and boundary perimeters</p>
-          </KnowMore>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Real-time thermal fronts, chlorophyll blooms, and boundary perimeters
+          </p>
         </div>
         <Link href="/app/map">
           <Button size="sm" variant="outline" className="text-xs h-7 border-zinc-200">
@@ -27,8 +26,8 @@ export function GeospatialSnapshot({ location, nearbyPFZ }) {
       <CardContent className="pt-4">
         <div className="relative h-48 w-full rounded-lg bg-slate-50 text-zinc-700 overflow-hidden border border-zinc-200 p-4 flex flex-col justify-between">
           <div className="absolute inset-0 bg-grid-subtle opacity-20 pointer-events-none" />
-          <div className="absolute top-8 right-12 h-24 w-40 rounded-[2px] bg-blue-500/10 blur-xl pointer-events-none" />
-          <div className="absolute bottom-6 left-24 h-20 w-32 rounded-[2px] bg-sky-500/10 blur-lg pointer-events-none" />
+          <div className="absolute top-8 right-12 h-24 w-40 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
+          <div className="absolute bottom-6 left-24 h-20 w-32 rounded-full bg-sky-500/10 blur-lg pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between text-xs font-sans">
             <span className="text-zinc-500">

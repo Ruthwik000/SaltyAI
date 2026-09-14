@@ -13,6 +13,7 @@ import {
 } from "@/lib/research-context";
 import { AgentContextChip } from "@/components/research/agent-context-chip";
 import {
+  Sparkles,
   ArrowUp,
   Database,
   ArrowRight,
@@ -36,7 +37,6 @@ import { LANGUAGES, setLanguage, useT } from "@/lib/i18n";
 import { useVoiceReply } from "@/lib/use-voice-reply";
 import { VoiceMicButton } from "@/components/voice-mic-button";
 import { MarkdownAnswer } from "@/components/research/markdown-answer";
-import { KnowMore } from "@/components/ui/know-more";
 
 function LanguageControl({ language }) {
   return (
@@ -330,14 +330,15 @@ export default function AiAgentPage() {
         <header className="shrink-0 flex items-center justify-between pb-3 mb-2 border-b border-zinc-200/80">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-950">
+              <Sparkles className="h-4 w-4 text-zinc-900 shrink-0" />
               <span className="hidden xs:inline truncate">Salty Marine Agent</span>
             </div>
 
             {/* Mode Switcher Pill in Top Bar */}
-            <div className="inline-flex items-center rounded-[2px] bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
+            <div className="inline-flex items-center rounded-full bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
               <button
                 onClick={() => setMode("normal")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
                   mode === "normal"
                     ? "bg-white text-zinc-950 shadow-xs"
                     : "text-zinc-500 hover:text-zinc-800"
@@ -348,7 +349,7 @@ export default function AiAgentPage() {
               </button>
               <button
                 onClick={() => setMode("research")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
                   mode === "research"
                     ? "bg-zinc-950 text-white shadow-xs"
                     : "text-zinc-500 hover:text-zinc-800"
@@ -379,8 +380,9 @@ export default function AiAgentPage() {
           {/* Minimalist Hero Header */}
           <div className="text-center mb-6 sm:mb-8 space-y-2">
             <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-zinc-950 text-white shadow-md mb-2">
+              <Sparkles className="h-6 w-6 text-zinc-100" />
             </div>
-            <h1 className="sw-page-title">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">
               {isFisherman ? t("agent.hero") : "Where should we navigate today?"}
             </h1>
             <p className="mx-auto max-w-lg text-xs text-zinc-500 sm:text-sm">
@@ -428,11 +430,11 @@ export default function AiAgentPage() {
             <div className="flex items-center justify-between pt-2 mt-1 border-t border-zinc-100/90 gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Mode Switcher Pill */}
-                <div className="inline-flex items-center rounded-[2px] bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
+                <div className="inline-flex items-center rounded-full bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
                   <button
                     type="button"
                     onClick={() => setMode("normal")}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-medium transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       mode === "normal"
                         ? "bg-white text-zinc-950 shadow-xs"
                         : "text-zinc-500 hover:text-zinc-800"
@@ -444,7 +446,7 @@ export default function AiAgentPage() {
                   <button
                     type="button"
                     onClick={() => setMode("research")}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-[2px] text-xs font-medium transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       mode === "research"
                         ? "bg-zinc-950 text-white shadow-xs"
                         : "text-zinc-500 hover:text-zinc-800"
@@ -456,7 +458,8 @@ export default function AiAgentPage() {
                 </div>
 
                 {/* Grounding Context Chip */}
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded-[2px]">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                   <span>{location.name}</span>
                 </span>
                 <VoiceMicButton
@@ -505,7 +508,7 @@ export default function AiAgentPage() {
                 type="button"
                 onClick={() => handleSend()}
                 disabled={!inputQuery.trim() || isTyping}
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
                 title="Send message"
               >
                 <ArrowUp className="h-4 w-4" />
@@ -576,13 +579,14 @@ export default function AiAgentPage() {
                 <div className="w-full space-y-3">
                   <div className="flex items-start gap-3">
                     {/* Agent Avatar */}
-                    <div className="h-7 w-7 rounded-[2px] bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-900 shrink-0 mt-0.5">
+                    <div className="h-7 w-7 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-900 shrink-0 mt-0.5">
+                      <Sparkles className="h-3.5 w-3.5 text-zinc-800" />
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-3">
                       {/* Mode Badge if Research */}
                       {m.mode === "research" && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] bg-indigo-50 border border-indigo-200/80 text-[11px] font-medium text-indigo-900">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-200/80 text-[11px] font-medium text-indigo-900">
                           <FlaskConical className="h-3 w-3 text-indigo-600" />
                           <span>Oceanographic Research Synthesis</span>
                           <span className="text-indigo-400">•</span>
@@ -798,7 +802,8 @@ export default function AiAgentPage() {
           {/* Typing / Researching Progress Indicator */}
           {isTyping && (
             <div className="flex items-start gap-3 w-full">
-              <div className="h-7 w-7 rounded-[2px] bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-900 shrink-0">
+              <div className="h-7 w-7 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-900 shrink-0">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse text-zinc-800" />
               </div>
               <div className="space-y-2 py-1">
                 {mode === "research" ? (
@@ -811,6 +816,9 @@ export default function AiAgentPage() {
                 ) : (
                   <div className="flex items-center gap-2 text-xs text-zinc-500">
                     <span className="flex gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-600 animate-pulse" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-600 animate-pulse delay-75" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-600 animate-pulse delay-150" />
                     </span>
                     <span>Synthesizing real-time marine telemetry...</span>
                   </div>
@@ -848,11 +856,11 @@ export default function AiAgentPage() {
             <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-zinc-100 gap-2">
               <div className="flex items-center gap-1.5">
                 {/* Mode Switcher Pill */}
-                <div className="inline-flex items-center rounded-[2px] bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
+                <div className="inline-flex items-center rounded-full bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
                   <button
                     type="button"
                     onClick={() => setMode("normal")}
-                    className={`flex items-center gap-1 px-2 py-0.5 rounded-[2px] text-[11px] font-medium transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
                       mode === "normal"
                         ? "bg-white text-zinc-950 shadow-xs"
                         : "text-zinc-500 hover:text-zinc-800"
@@ -864,7 +872,7 @@ export default function AiAgentPage() {
                   <button
                     type="button"
                     onClick={() => setMode("research")}
-                    className={`flex items-center gap-1 px-2 py-0.5 rounded-[2px] text-[11px] font-medium transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer ${
                       mode === "research"
                         ? "bg-zinc-950 text-white shadow-xs"
                         : "text-zinc-500 hover:text-zinc-800"
@@ -924,7 +932,7 @@ export default function AiAgentPage() {
                 type="button"
                 onClick={() => handleSend()}
                 disabled={!inputQuery.trim() || isTyping}
-                className="h-7 w-7 sm:h-8 sm:w-8 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
                 title="Send message"
               >
                 <ArrowUp className="h-3.5 w-3.5" />
@@ -932,9 +940,9 @@ export default function AiAgentPage() {
             </div>
           </div>
 
-          <KnowMore>
-            <p>Salty AI is grounded in INCOIS, IMD, and Earth Observation satellites.</p>
-          </KnowMore>
+          <p className="text-center text-[10px] text-zinc-400 mt-1.5 hidden sm:block">
+            Salty AI is grounded in INCOIS, IMD, and Earth Observation satellites.
+          </p>
         </div>
       )}
     </div>

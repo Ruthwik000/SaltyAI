@@ -24,13 +24,13 @@ import {
   useResearchAlerts,
   withdrawResearchAlert,
 } from "@/lib/research-alerts";
-import { KnowMore } from "@/components/ui/know-more";
 
 const FIELD =
-  "h-11 w-full rounded-[2px] border border-[#c4c0b6] bg-white px-3 text-[15px] text-[#0b0b0c] outline-none focus:border-[#0b0b0c]";
+  "h-10 w-full rounded-lg border border-zinc-200 bg-white px-2.5 text-xs text-zinc-900 outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10";
 const AREA =
-  "w-full rounded-[2px] border border-[#c4c0b6] bg-white px-3 py-2.5 text-[15px] text-[#0b0b0c] outline-none focus:border-[#0b0b0c]";
-const LABEL = "sw-label mb-1.5 block";
+  "w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10";
+const LABEL =
+  "mb-1 block text-[10px] font-semibold uppercase tracking-wide text-zinc-500";
 
 export function ReportFindingCard() {
   const { location, addOperatorNotification } = useMarine();
@@ -108,9 +108,10 @@ export function ReportFindingCard() {
             <Radio className="h-4 w-4 text-amber-600" />
             <span>Report a finding to coastal operations</span>
           </h2>
-          <KnowMore>
-            <p>Species decline, a disease or mortality event, a developing weather threat — send it with the evidence behind it.</p>
-          </KnowMore>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+            Species decline, a disease or mortality event, a developing weather threat —
+            send it with the evidence behind it.
+          </p>
         </div>
         <button
           type="button"
@@ -267,9 +268,10 @@ export function ReportFindingCard() {
             <span>Send to coastal operations</span>
           </Button>
           {!canSubmit && (
-            <KnowMore>
-              <p>A headline, a summary and the evidence are all needed before this can be sent.</p>
-            </KnowMore>
+            <p className="text-center text-[10px] text-zinc-400">
+              A headline, a summary and the evidence are all needed before this can be
+              sent.
+            </p>
           )}
         </form>
       )}
@@ -303,7 +305,7 @@ export function ReportFindingCard() {
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <span
-                      className={`rounded-[2px] border px-1.5 py-0.5 text-[10px] font-medium ${severityTone(
+                      className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${severityTone(
                         alert.severity
                       )}`}
                     >

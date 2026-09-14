@@ -6,8 +6,8 @@
  * Hand-rolled SVG rather than a charting dependency, so the console works with
  * no network install and stays in the app's own visual language.
  *
- * Palette: ink for the series, red for warm departures, warm grey for grid
- * and baseline, against a white chart surface. One y-axis per chart, one hue
+ * Palette: validated categorical/diverging steps (blue #2a78d6, red #e34948,
+ * neutral #d4d4d8) against a white chart surface. One y-axis per chart, one hue
  * per sequential encoding, a warm/cool pair with a neutral midpoint for
  * anomalies, recessive axes, and a hover readout on every plot. Each chart also
  * offers a table view — exact values matter for research, and it is the relief
@@ -17,13 +17,13 @@
 import * as React from "react";
 import { Table2, LineChart as LineIcon } from "lucide-react";
 
-const INK = "#0b0b0c";
-const MUTED = "#6d6c70";
-const GRID = "#dcd9d1";
-const SERIES = "#0b0b0c";
-const BASELINE = "#99968e";
-const WARM = "#d0182a";
-const COOL = "#0b0b0c";
+const INK = "#18181b";
+const MUTED = "#71717a";
+const GRID = "#e4e4e7";
+const SERIES = "#2a78d6";
+const BASELINE = "#a1a1aa";
+const WARM = "#e34948";
+const COOL = "#2a78d6";
 
 const M = { top: 14, right: 14, bottom: 26, left: 46 };
 
@@ -79,19 +79,19 @@ export function ChartCard({ title, caption, children, table }) {
   const [showTable, setShowTable] = React.useState(false);
 
   return (
-    <section className="sw-panel p-4 sm:p-5">
+    <section className="rounded-xl border border-zinc-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="sw-label text-[#0b0b0c]">{title}</h3>
+          <h3 className="text-xs font-semibold text-zinc-950">{title}</h3>
           {caption && (
-            <p className="mt-1 text-sm text-[#6d6c70]">{caption}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-zinc-500">{caption}</p>
           )}
         </div>
         {table && (
           <button
             type="button"
             onClick={() => setShowTable((open) => !open)}
-            className="sw-press flex shrink-0 items-center gap-1.5 rounded-[2px] border border-[#0b0b0c] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] hover:bg-[#0b0b0c] hover:text-white"
+            className="flex shrink-0 items-center gap-1 rounded-md border border-zinc-200 px-2 py-1 text-[10px] font-medium text-zinc-600 hover:bg-zinc-50"
           >
             {showTable ? (
               <>
@@ -115,22 +115,22 @@ export function ChartCard({ title, caption, children, table }) {
 
 export function ValueTable({ columns, rows }) {
   return (
-    <div className="max-h-64 overflow-auto border-y border-[#0b0b0c]">
-      <table className="w-full text-left text-sm tabular-nums">
-        <thead className="sticky top-0 bg-[#f6f5f1] text-[11px] uppercase tracking-[0.12em] text-[#6d6c70]">
+    <div className="max-h-64 overflow-auto rounded-lg border border-zinc-200">
+      <table className="w-full text-left font-sans text-[11px]">
+        <thead className="sticky top-0 bg-zinc-50 text-zinc-500">
           <tr>
             {columns.map((column) => (
-              <th key={column} className="px-3 py-2 font-semibold">
+              <th key={column} className="px-2.5 py-1.5 font-medium">
                 {column}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#dcd9d1] text-[#0b0b0c]">
+        <tbody className="divide-y divide-zinc-100 text-zinc-800">
           {rows.map((row, index) => (
             <tr key={index}>
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} className="px-3 py-2">
+                <td key={cellIndex} className="px-2.5 py-1.5">
                   {cell}
                 </td>
               ))}
@@ -275,12 +275,12 @@ export function TimeSeriesChart({ points, baseline, unit, height = 230 }) {
 
       <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-zinc-500">
         <span className="flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded-[2px]" style={{ background: SERIES }} />
+          <span className="h-0.5 w-4 rounded-full" style={{ background: SERIES }} />
           <span>Observed</span>
         </span>
         {baseline && (
           <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 rounded-[2px]" style={{ background: BASELINE }} />
+            <span className="h-0.5 w-4 rounded-full" style={{ background: BASELINE }} />
             <span>Monthly climatology</span>
           </span>
         )}
@@ -549,15 +549,17 @@ export function BarChart({ bars, unit, height = 170, valueLabel }) {
 export function StatTile({ label, value, hint, tone = "neutral" }) {
   const colour =
     tone === "warm"
-      ? "text-[#d0182a]"
-      : "text-[#0b0b0c]";
+      ? "text-rose-700"
+      : tone === "cool"
+        ? "text-sky-700"
+        : "text-zinc-950";
   return (
-    <div className="bg-white p-4">
-      <div className="sw-label">{label}</div>
-      <div className={`sw-num mt-2 text-2xl font-semibold tracking-[-0.03em] ${colour}`}>
+    <div className="rounded-lg border border-zinc-200 bg-white p-3">
+      <div className="text-[10px] uppercase tracking-wide text-zinc-400">{label}</div>
+      <div className={`mt-1 font-sans text-base font-bold sm:text-lg ${colour}`}>
         {value}
       </div>
-      {hint && <div className="mt-1 text-xs text-[#6d6c70]">{hint}</div>}
+      {hint && <div className="text-[10px] leading-snug text-zinc-500">{hint}</div>}
     </div>
   );
 }

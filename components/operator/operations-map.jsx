@@ -40,7 +40,6 @@ import {
   useSearchCases,
 } from "@/lib/sar-store";
 import { formatCoord } from "@/lib/geo";
-import { KnowMore } from "@/components/ui/know-more";
 
 const STATUS_TONE = {
   underway: { label: "Underway", chip: "bg-emerald-50 text-emerald-700", pin: "normal" },
@@ -407,7 +406,7 @@ export function OperationsMap() {
             <Timer className="h-3 w-3 shrink-0" />
             <span className="truncate">Drift projection</span>
           </h4>
-          <span className="shrink-0 rounded-[2px] bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-white">
+          <span className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-white">
             {formatHours(hours)}
           </span>
         </div>
@@ -576,7 +575,7 @@ export function OperationsMap() {
         <div className="border-b border-zinc-100 p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-1 rounded-[2px] bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
                 <LifeBuoy className="h-3 w-3" />
                 {selectedCase.incidentId}
               </span>
@@ -609,9 +608,10 @@ export function OperationsMap() {
           </div>
 
           {selectedCase.source === "demo" && (
-            <KnowMore>
-              <p>This datum is an on-device estimate. Do not task units on it alone — confirm against INCOIS SARAT before committing a search.</p>
-            </KnowMore>
+            <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10px] leading-relaxed text-amber-900">
+              This datum is an on-device estimate. Do not task units on it alone — confirm
+              against INCOIS SARAT before committing a search.
+            </p>
           )}
 
           <dl className="mt-3 space-y-2 text-[11px]">
@@ -681,7 +681,7 @@ export function OperationsMap() {
           </div>
 
           <span
-            className={`mt-2 inline-block rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
+            className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
               STATUS_TONE[selectedUnit.status].chip
             }`}
           >
@@ -843,7 +843,7 @@ export function OperationsMap() {
                       </div>
                     </div>
                     <span
-                      className={`shrink-0 rounded-[2px] px-1.5 py-0.5 text-[10px] font-semibold ${
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                         STATUS_TONE[unit.status].chip
                       }`}
                     >
@@ -899,13 +899,13 @@ export function OperationsMap() {
           {(distressCount > 0 || watchCount > 0) && (
             <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-col gap-1">
               {distressCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-[2px] bg-rose-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow">
                   <Radio className="h-3 w-3" />
                   {distressCount} in distress
                 </span>
               )}
               {watchCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-[2px] bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow">
                   <AlertTriangle className="h-3 w-3" />
                   {watchCount} overdue
                 </span>

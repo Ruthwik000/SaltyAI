@@ -33,11 +33,11 @@ import {
   Waves,
   Wind,
   Thermometer,
+  Sparkles,
   LifeBuoy,
   MapPin,
   CheckCircle2,
 } from "lucide-react";
-import { KnowMore } from "@/components/ui/know-more";
 
 export function VesselTelemetryView() {
   const { role, location, setIsAiDrawerOpen } = useMarine();
@@ -94,7 +94,7 @@ export function VesselTelemetryView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="sw-page-title">
+          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
             Vessel GPS Tracking & Telemetry
           </h1>
         </div>
@@ -281,9 +281,9 @@ export function VesselTelemetryView() {
               <CardTitle className="text-sm font-bold text-zinc-950">
                 Ocean Conditions at Vessel Position
               </CardTitle>
-              <KnowMore>
-                <p>Derived from nearest ocean buoy and WRF model cell</p>
-              </KnowMore>
+              <p className="text-xs text-zinc-500">
+                Derived from nearest ocean buoy and WRF model cell
+              </p>
             </CardHeader>
 
             <CardContent className="pt-4 space-y-3 font-sans text-xs">
@@ -362,9 +362,9 @@ export function VesselTelemetryView() {
                 <CardTitle className="text-sm font-bold text-zinc-950">
                   Location & Voyage History
                 </CardTitle>
-                <KnowMore>
-                  <p>GPS position trail logged at 15-minute intervals</p>
-                </KnowMore>
+                <p className="text-xs text-zinc-500">
+                  GPS position trail logged at 15-minute intervals
+                </p>
               </div>
 
               <span className="font-sans text-xs text-zinc-400">

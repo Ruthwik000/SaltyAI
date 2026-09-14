@@ -112,7 +112,7 @@ export function ZonesMapView() {
   );
 
   return (
-    <div className="sw-panel h-[calc(100dvh-12rem)] overflow-hidden lg:h-[calc(100dvh-11rem)]">
+    <div className="-mx-4 -mt-4 h-[calc(100dvh-8.5rem)] sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-8 lg:h-[calc(100dvh-4.5rem)]">
       <div className="flex h-full lg:gap-0">
         {/* Map */}
         <div className="relative h-full flex-1">
@@ -137,7 +137,7 @@ export function ZonesMapView() {
             showBoundary
           >
             {/* Location chip */}
-            <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-2 bg-[#0b0b0c] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white lg:bottom-3">
+            <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 shadow-sm backdrop-blur lg:bottom-3">
               <MapPin className="h-3 w-3 text-sky-600" />
               <span>{location.name}</span>
               {zonesLoading && (

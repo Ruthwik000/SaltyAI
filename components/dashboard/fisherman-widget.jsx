@@ -88,6 +88,7 @@ export function FishermanWidget({ location, nearbyPFZ, totalZonesCount }) {
           <div className="shrink-0 flex flex-col gap-2">
             {activeJourney?.active ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-semibold">
+                <span className="h-2 w-2 rounded-full bg-emerald-600 animate-ping" />
                 <span>{t("dash.voyageActive")}</span>
               </div>
             ) : (

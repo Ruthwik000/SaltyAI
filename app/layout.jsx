@@ -1,22 +1,21 @@
-import { IBM_Plex_Serif, Inter_Tight } from "next/font/google";
+import { Geist, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const plexSerif = IBM_Plex_Serif({
-  variable: "--font-plex-serif",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
 });
 
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata = {
   title: "SALTY — Marine Intelligence Platform",
-  description: "Sea conditions, fishing zones, warnings and search and rescue for India's coast.",
+  description:
+    "Grounded marine and coastal intelligence layer. Unified oceanographic telemetry, PFZ advisories, satellite SST/chlorophyll layers, geofencing, and safety forecasting for coastal operators.",
   keywords: [
     "marine intelligence",
     "oceanography",
@@ -29,15 +28,18 @@ export const metadata = {
     "maritime safety",
     "SALTY Marine",
   ],
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${interTight.variable} ${plexSerif.variable} h-full`}
+      className={`${geistSans.variable} ${playfair.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50">
         {children}
       </body>
     </html>

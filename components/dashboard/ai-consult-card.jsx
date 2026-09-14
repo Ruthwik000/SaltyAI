@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
@@ -8,7 +8,7 @@ import { useMarine } from "@/lib/marine-context";
 
 export function AiConsultCard({ locationName, nearbyPfzName, onOpenAiDrawer }) {
   const { t } = useT();
-  const { role, openAiDrawer } = useMarine();
+  const { role } = useMarine();
 
   // A skipper gets the three questions they actually ask, in their language;
   // the other consoles keep the technical prompts.
@@ -17,16 +17,15 @@ export function AiConsultCard({ locationName, nearbyPfzName, onOpenAiDrawer }) {
       ? [t("agent.q1"), t("agent.q2"), t("agent.q3")]
       : [
           `Is it safe to sail tomorrow off ${locationName}?`,
-          role === "operator"
-            ? `Which boats registered in the SALTY fleet are at sea or overdue near ${locationName}?`
-            : `How have chlorophyll and sea temperature changed near ${locationName} in recent weeks?`,
-          `Where are today's INCOIS fishing zone advisories nearest ${locationName}?`,
+          `What is the SST gradient at ${nearbyPfzName.slice(0, 18)}?`,
+          `Calculate drift for a disabled craft lost 3 hours ago.`,
         ];
 
   return (
     <Card className="border-zinc-200 bg-gradient-to-b from-zinc-50/50 to-white">
       <CardHeader className="pb-3 border-b border-zinc-100">
         <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-zinc-800" />
           <CardTitle className="text-sm font-semibold text-zinc-950">
             {t("ag.askSalty")}
           </CardTitle>
@@ -37,7 +36,7 @@ export function AiConsultCard({ locationName, nearbyPfzName, onOpenAiDrawer }) {
         {suggestedQueries.map((query, idx) => (
           <button
             key={idx}
-            onClick={() => openAiDrawer(query)}
+            onClick={onOpenAiDrawer}
             className="w-full text-left p-2.5 rounded-lg border border-zinc-200/80 bg-white hover:bg-zinc-100 text-xs text-zinc-700 transition-colors flex items-center justify-between group cursor-pointer"
           >
             <span className="truncate pr-2">{query}</span>
@@ -50,6 +49,7 @@ export function AiConsultCard({ locationName, nearbyPfzName, onOpenAiDrawer }) {
           className="w-full text-xs h-8 mt-2 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
         >
           <span>{t("dash.launchQuery")}</span>
+          <Sparkles className="h-3 w-3 text-zinc-300" />
         </Button>
       </CardContent>
     </Card>

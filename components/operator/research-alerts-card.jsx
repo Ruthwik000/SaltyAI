@@ -16,7 +16,6 @@ import {
   severityTone,
   useResearchAlerts,
 } from "@/lib/research-alerts";
-import { KnowMore } from "@/components/ui/know-more";
 
 function categoryLabel(id) {
   return ALERT_CATEGORIES.find((item) => item.id === id)?.label || "Finding";
@@ -36,9 +35,11 @@ export function ResearchAlertsCard({ limit }) {
           <Microscope className="h-4 w-4 text-indigo-600" />
           <span>Research findings</span>
         </h2>
-        <KnowMore>
-          <p>Nothing escalated from the research console yet. Findings raised by researchers — species decline, disease events, developing threats — land here with the evidence behind them.</p>
-        </KnowMore>
+        <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+          Nothing escalated from the research console yet. Findings raised by researchers
+          — species decline, disease events, developing threats — land here with the
+          evidence behind them.
+        </p>
       </section>
     );
   }
@@ -51,7 +52,7 @@ export function ResearchAlertsCard({ limit }) {
           <span>Research findings</span>
         </h2>
         {pending > 0 && (
-          <span className="rounded-[2px] bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
             {pending} awaiting review
           </span>
         )}
@@ -66,7 +67,7 @@ export function ResearchAlertsCard({ limit }) {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span
-                      className={`rounded-[2px] border px-1.5 py-0.5 text-[10px] font-medium ${severityTone(
+                      className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${severityTone(
                         alert.severity
                       )}`}
                     >
