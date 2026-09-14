@@ -46,6 +46,7 @@ import {
   fetchOceanAlerts,
   fetchPfzZones,
   fetchPointConditions,
+  ignoreAbort,
   pushTripPing,
   startTrip,
 } from "@/lib/fisherman-api";
@@ -129,18 +130,22 @@ export function TripTrackerView() {
   /* Zones + hazards for the coast */
   React.useEffect(() => {
     const controller = new AbortController();
-    fetchPfzZones(location.lat, location.lon, controller.signal).then((response) => {
-      if (controller.signal.aborted) return;
-      setZones(response.data);
-      setDestinationId((current) =>
-        current && response.data.some((zone) => zone.id === current)
-          ? current
-          : response.data[0]?.id || ""
-      );
-    });
-    fetchOceanAlerts(location.lat, location.lon, controller.signal).then((response) => {
-      if (!controller.signal.aborted) setAlerts(response.data);
-    });
+    fetchPfzZones(location.lat, location.lon, controller.signal)
+      .then((response) => {
+        if (controller.signal.aborted) return;
+        setZones(response.data);
+        setDestinationId((current) =>
+          current && response.data.some((zone) => zone.id === current)
+            ? current
+            : response.data[0]?.id || ""
+        );
+      })
+      .catch(ignoreAbort);
+    fetchOceanAlerts(location.lat, location.lon, controller.signal)
+      .then((response) => {
+        if (!controller.signal.aborted) setAlerts(response.data);
+      })
+      .catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon]);
 
@@ -159,11 +164,17 @@ export function TripTrackerView() {
   React.useEffect(() => {
     const [lat, lon] = positionKey.split(",").map(Number);
     const controller = new AbortController();
-    fetchPointConditions(lat, lon, controller.signal).then((response) => {
-      if (controller.signal.aborted) return;
-      setConditions(response.data);
-      setConditionsSource(response.source);
-    });
+    // This one refetches every time the boat moves a tenth of a degree, so it
+    // aborts far more often than the rest — and fetchPointConditions rethrows
+    // AbortError by design. Without the catch it is the most frequent source
+    // of the "signal is aborted without reason" overlay.
+    fetchPointConditions(lat, lon, controller.signal)
+      .then((response) => {
+        if (controller.signal.aborted) return;
+        setConditions(response.data);
+        setConditionsSource(response.source);
+      })
+      .catch(ignoreAbort);
     return () => controller.abort();
   }, [positionKey]);
 

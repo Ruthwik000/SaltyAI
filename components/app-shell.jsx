@@ -21,6 +21,7 @@ import { AiDrawer } from "@/components/ai-drawer";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { useT } from "@/lib/i18n";
 import { LanguageSwitch } from "@/components/fisherman/language-switch";
+import { AlertsBell } from "@/components/alerts-bell";
 
 /*
  * `roles` decides who may open a section; `nav` decides whose menu shows it.
@@ -50,8 +51,7 @@ function isActiveHref(pathname, href) {
 export function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { role, location, setLocationId, operatorNotifications } = useMarine();
-  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
+  const { role, location, setLocationId } = useMarine();
   const { t } = useT();
 
   const sortedNav = React.useMemo(() => {
@@ -97,40 +97,11 @@ export function AppShell({ children }) {
           ))}
         </select>
 
-        {role === "operator" && (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setNotificationsOpen((open) => !open)}
-              aria-expanded={notificationsOpen}
-              className="sw-press h-9 rounded-[2px] border border-[#3a393e] px-2 text-xs font-semibold text-white hover:border-white"
-            >
-              Notifications ({operatorNotifications.length})
-            </button>
-            {notificationsOpen && (
-              <div className="sw-panel absolute right-0 z-50 mt-2 w-80 p-4 text-[#0b0b0c]">
-                {operatorNotifications.length === 0 && <p>No notifications.</p>}
-                <ul className="divide-y divide-[#dcd9d1]">
-                  {operatorNotifications.map((notif) => (
-                    <li key={notif.id} className="py-2">
-                      <p className="font-bold">{notif.title}</p>
-                      <p className="sw-label mt-1">{notif.timestamp}</p>
-                      {notif.type === "lost_fisherman_sos" && (
-                        <Link
-                          href="/app/lost-fisherman"
-                          onClick={() => setNotificationsOpen(false)}
-                          className="sw-link mt-1 inline-block text-sm"
-                        >
-                          Open search and rescue
-                        </Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Warnings live here now, for every role: official advisories for this
+            coast, plus the operator console's own notifications. It used to be
+            an operator-only text button, and a fisherman had to scroll the
+            home screen to find out a gale warning was in force. */}
+        <AlertsBell />
       </SiteHeader>
 
       {/* Desktop: icon + word across the top */}

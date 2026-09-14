@@ -21,6 +21,7 @@
 import * as React from "react";
 import {
   chartFromTable,
+  comparisonFromTable,
   firstInline,
   isNumericColumn,
   parseBlocks,
@@ -109,7 +110,14 @@ export function MarkdownAnswer({ text, allowCharts = false }) {
           const numeric = block.header.map((_, column) =>
             isNumericColumn(block.rows, column)
           );
-          const chart = allowCharts ? chartFromTable(block.header, block.rows) : null;
+          /* A series table charts as a series; a "| Parameter | source | source |"
+              comparison charts as one panel per parameter. Neither shape
+              replaces the table — the numbers stay exactly as the agent
+              stated them, and the drawing sits underneath. */
+          const chart = allowCharts
+            ? chartFromTable(block.header, block.rows) ||
+              comparisonFromTable(block.header, block.rows)
+            : null;
           return (
             <div key={key} className="my-3">
               {/* Wide tables scroll inside their own box; the message column

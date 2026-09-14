@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { fetchStorms, localTime, localDay } from "@/lib/marine-live";
 import { useT } from "@/lib/i18n";
+import { ignoreAbort } from "@/lib/fisherman-api";
 
 const INSTABILITY_TONE = {
   extreme: "border-rose-200 bg-rose-50 text-rose-800",
@@ -45,7 +46,7 @@ export function StormCard({ location }) {
           ? { status: "ready", key, data: result.data }
           : { status: "error", key, error: result.error }
       );
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [key, location?.lat, location?.lon]);
 

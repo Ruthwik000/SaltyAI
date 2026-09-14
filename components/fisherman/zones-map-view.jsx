@@ -11,7 +11,11 @@ import { ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import { useMarine } from "@/lib/marine-context";
 import { OceanMap } from "@/components/map/ocean-map";
 import { ZonePanel } from "@/components/fisherman/zone-panel";
-import { fetchPfzZones, fetchZoneDetail } from "@/lib/fisherman-api";
+import {
+  fetchPfzZones,
+  fetchZoneDetail,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 
 import { useT } from "@/lib/i18n";
 
@@ -50,7 +54,7 @@ export function ZonesMapView() {
       setZonesSource(result.source);
       setZonesReason(result.reason);
       setLoadedCoastKey(coastKey);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon, coastKey]);
 
@@ -64,7 +68,7 @@ export function ZonesMapView() {
       setDetail(result.data);
       setDetailSource(result.source);
       setLoadedZoneId(selectedZoneId);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [selectedZoneId, zones]);
 

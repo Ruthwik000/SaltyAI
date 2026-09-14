@@ -22,6 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { fetchHazardZones } from "@/lib/marine-live";
 import { useT } from "@/lib/i18n";
+import { ignoreAbort } from "@/lib/fisherman-api";
 
 /** The API answers in English; the card must not. */
 const KIND_KEY = {
@@ -59,7 +60,7 @@ export function HazardZonesCard({ location }) {
           ? { status: "ready", key, data: result.data }
           : { status: "error", key, error: result.error }
       );
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [key, location?.lat, location?.lon, location?.name, location?.state]);
 

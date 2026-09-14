@@ -3,12 +3,11 @@
 import * as React from "react";
 import { useMarine } from "@/lib/marine-context";
 import { pfzZones, activeVessels } from "@/lib/marine-data";
-import { fetchOceanAlerts } from "@/lib/fisherman-api";
+import { fetchOceanAlerts, ignoreAbort } from "@/lib/fisherman-api";
 import {
   DashboardHeader,
   MarineMetricsGrid,
   FishermanWidget,
-  ResearcherWidget,
   OperatorWidget,
   HazardAlertsCard,
   WeatherMarineCard,
@@ -37,7 +36,7 @@ export default function DashboardPage() {
       if (controller.signal.aborted) return;
       setActiveAlertsForRegion(response.data || []);
       setAlertsLoaded(true);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon]);
 
@@ -79,7 +78,6 @@ export default function DashboardPage() {
 
           {role === "researcher" && (
             <>
-              <ResearcherWidget location={location} />
               <ReportFindingCard />
             </>
           )}

@@ -8,7 +8,11 @@
 import * as React from "react";
 import { ArrowUpRight } from "lucide-react";
 import { useMarine } from "@/lib/marine-context";
-import { fetchForecast, fetchPointConditions } from "@/lib/fisherman-api";
+import {
+  fetchForecast,
+  fetchPointConditions,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 import { MarineSciencePanel } from "@/components/research/marine-science-panel";
 import { Figure, ForecastLine, SectionHead, num } from "@/components/ui/swiss";
 
@@ -38,10 +42,10 @@ export default function WeatherMarinePage() {
     const controller = new AbortController();
     fetchPointConditions(location.lat, location.lon, controller.signal).then((response) => {
       if (!controller.signal.aborted) setConditions({ key: coastKey, data: response.data, source: response.source });
-    });
+    }).catch(ignoreAbort);
     fetchForecast(location.lat, location.lon, controller.signal).then((response) => {
       if (!controller.signal.aborted) setForecast({ key: coastKey, data: response.data });
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon, coastKey]);
 

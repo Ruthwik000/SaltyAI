@@ -94,3 +94,91 @@ export function ForecastLine({ hours, metric }) {
     </svg>
   );
 }
+
+/**
+ * A line over a dated series.
+ *
+ * Deliberately not ForecastLine. That one prints the value above every marker,
+ * which reads well over eight forecast steps and becomes an unreadable thicket
+ * over thirty daily observations. Here the numbers live on the axis, the ends
+ * of the series are labelled, and only the most recent point is marked —
+ * because "where is it now, and which way has it been going" is the whole
+ * question a trend chart answers.
+ *
+ * Gaps are real: a cloudy day has no satellite pixel. Missing values break the
+ * line rather than being interpolated across, so a week of cloud looks like a
+ * week of cloud and not like a measurement.
+ */
+export function SeriesLine({ points = [], unit, digits = 2, height = 190 }) {
+  const usable = points.filter((point) => point.value !== null && point.value !== undefined);
+  if (usable.length < 2) {
+    return <p className="py-14 text-center text-sm text-[#6d6c70]">Not enough clear days to draw a line.</p>;
+  }
+
+  const width = 720;
+  const pad = { top: 16, right: 16, bottom: 30, left: 46 };
+  const values = usable.map((point) => point.value);
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const span = high - low || Math.abs(high) || 1;
+  const floor = low - span * 0.1;
+  const ceiling = high + span * 0.1;
+  const range = ceiling - floor || 1;
+
+  const x = (index) => pad.left + (index * (width - pad.left - pad.right)) / (points.length - 1);
+  const y = (value) => pad.top + (1 - (value - floor) / range) * (height - pad.top - pad.bottom);
+
+  // Break the path wherever a day has no value.
+  const segments = [];
+  let run = [];
+  points.forEach((point, index) => {
+    if (point.value === null || point.value === undefined) {
+      if (run.length > 1) segments.push(run);
+      run = [];
+      return;
+    }
+    run.push(`${x(index)},${y(point.value)}`);
+  });
+  if (run.length > 1) segments.push(run);
+
+  const lastIndex = points.reduce(
+    (found, point, index) => (point.value === null || point.value === undefined ? found : index),
+    0
+  );
+  const last = points[lastIndex];
+  const ticks = [floor, (floor + ceiling) / 2, ceiling];
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full" role="img"
+         aria-label={`Series in ${unit || "value"}, ${usable.length} observations`}>
+      {ticks.map((tick) => (
+        <g key={tick}>
+          <line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} stroke="#dcd9d1" strokeWidth="1" />
+          <text x={pad.left - 8} y={y(tick) + 4} textAnchor="end" fontSize="11" fill="#6d6c70">
+            {num(tick, digits)}
+          </text>
+        </g>
+      ))}
+
+      {segments.map((segment, index) => (
+        <polyline key={index} points={segment.join(" ")} fill="none" stroke="#0b0b0c" strokeWidth="2" />
+      ))}
+
+      {last?.value !== null && last?.value !== undefined && (
+        <g>
+          <circle cx={x(lastIndex)} cy={y(last.value)} r="4" fill="#0b0b0c" />
+          <text x={x(lastIndex)} y={y(last.value) - 12} textAnchor="end" fontSize="12" fontWeight="600" fill="#0b0b0c">
+            {num(last.value, digits)}
+          </text>
+        </g>
+      )}
+
+      {[0, points.length - 1].map((index) => (
+        <text key={index} x={x(index)} y={height - 10}
+              textAnchor={index === 0 ? "start" : "end"} fontSize="11" fill="#6d6c70">
+          {points[index]?.date?.slice(5) || ""}
+        </text>
+      ))}
+    </svg>
+  );
+}

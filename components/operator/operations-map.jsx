@@ -31,7 +31,11 @@ import { useMarine } from "@/lib/marine-context";
 import { Button } from "@/components/ui/button";
 import { DataBadge } from "@/components/fisherman/data-badge";
 import { OceanMap } from "@/components/map/ocean-map";
-import { fetchOceanAlerts, fetchPfzZones } from "@/lib/fisherman-api";
+import {
+  fetchOceanAlerts,
+  fetchPfzZones,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 import { fetchTrackedFleet, predictSearchZone } from "@/lib/operations-api";
 import {
   closeSearchCase,
@@ -104,13 +108,13 @@ export function OperationsMap() {
       setFleetSource(response.source);
       setFleetReason(response.reason);
       setFleetLoaded(true);
-    });
+    }).catch(ignoreAbort);
     fetchPfzZones(here.lat, here.lon, controller.signal).then((response) => {
       if (!controller.signal.aborted) setZones(response.data);
-    });
+    }).catch(ignoreAbort);
     fetchOceanAlerts(here.lat, here.lon, controller.signal).then((response) => {
       if (!controller.signal.aborted) setAlerts(response.data);
-    });
+    }).catch(ignoreAbort);
 
     return () => controller.abort();
   }, [location.lat, location.lon]);

@@ -4,7 +4,10 @@ import * as React from "react";
 import { Globe2, Layers, MapPin, Radar } from "lucide-react";
 import { useMarine } from "@/lib/marine-context";
 import { OceanMap } from "@/components/map/ocean-map";
-import { fetchPfzZones } from "@/lib/fisherman-api";
+import {
+  fetchPfzZones,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 import { researchOsfLayers } from "@/lib/incois-layers";
 import { OperationsMap } from "@/components/operator/operations-map";
 import { KnowMore } from "@/components/ui/know-more";
@@ -45,7 +48,7 @@ export default function MarineMapPage() {
     const controller = new AbortController();
     fetchPfzZones(location.lat, location.lon, controller.signal).then((response) => {
       if (!controller.signal.aborted) setZones(response.data);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [isResearcher, location.lat, location.lon]);
 

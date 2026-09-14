@@ -27,7 +27,12 @@ import { ConditionsGrid } from "@/components/fisherman/conditions-grid";
 import { DataBadge } from "@/components/fisherman/data-badge";
 import { RiskResultSheet } from "@/components/fisherman/risk-result-sheet";
 import { addPlannedTrip } from "@/lib/trip-store";
-import { assessTripRisk, fetchPfzZones, fetchPointConditions } from "@/lib/fisherman-api";
+import {
+  assessTripRisk,
+  fetchPfzZones,
+  fetchPointConditions,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 import { formatCoord, nmToKm } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
@@ -87,30 +92,32 @@ export function TripSafetyView() {
   /* Conditions where the fisherman is */
   React.useEffect(() => {
     const controller = new AbortController();
-    fetchPointConditions(location.lat, location.lon, controller.signal).then(
-      (response) => {
+    fetchPointConditions(location.lat, location.lon, controller.signal)
+      .then((response) => {
         if (controller.signal.aborted) return;
         setConditions(response.data);
         setConditionsSource(response.source);
         setConditionsReason(response.reason);
-      }
-    );
+      })
+      .catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon]);
 
   /* Zones they can head for */
   React.useEffect(() => {
     const controller = new AbortController();
-    fetchPfzZones(location.lat, location.lon, controller.signal).then((response) => {
-      if (controller.signal.aborted) return;
-      setZones(response.data);
-      setDestinationId((current) => {
-        if (current && response.data.some((zone) => zone.id === current)) {
-          return current;
-        }
-        return response.data[0]?.id || "";
-      });
-    });
+    fetchPfzZones(location.lat, location.lon, controller.signal)
+      .then((response) => {
+        if (controller.signal.aborted) return;
+        setZones(response.data);
+        setDestinationId((current) => {
+          if (current && response.data.some((zone) => zone.id === current)) {
+            return current;
+          }
+          return response.data[0]?.id || "";
+        });
+      })
+      .catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon]);
 

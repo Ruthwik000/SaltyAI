@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { fetchTides, localTime, hoursUntil } from "@/lib/marine-live";
 import { useT } from "@/lib/i18n";
+import { ignoreAbort } from "@/lib/fisherman-api";
 
 function waitText(t, iso, offsetSeconds) {
   const hours = hoursUntil(iso, offsetSeconds);
@@ -62,7 +63,7 @@ export function TideCard({ location }) {
           ? { status: "ready", key, data: result.data }
           : { status: "error", key, error: result.error }
       );
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [key, location?.lat, location?.lon]);
 

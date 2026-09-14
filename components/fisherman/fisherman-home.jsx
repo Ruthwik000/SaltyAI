@@ -3,15 +3,18 @@
 /**
  * Fisherman home: the one question first, as a colour, a symbol and a word,
  * then the four figures that decide it, the nearest fishing zones, today's
- * market prices, and the actions. Every heading comes from the chosen
+ * harbour prices, and the actions. Every heading comes from the chosen
  * language, and the answer can be read out loud.
+ *
+ * Everything on this page is a figure a skipper acts on: what is landing and
+ * what it fetches, how far the nearest advisory is, and how rough it is.
+ * Chlorophyll, fronts and the rest belong on the research console.
  */
 
 import * as React from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowDownRight,
   ArrowUp,
   ArrowUpRight,
   CalendarDays,
@@ -19,20 +22,28 @@ import {
   CloudRain,
   Fish,
   HelpCircle,
+  IndianRupee,
   Loader2,
   Mic,
   Navigation,
   Phone,
+  ShieldAlert,
   ShieldCheck,
   Waves,
   Wind,
   X,
 } from "lucide-react";
 import { useMarine } from "@/lib/marine-context";
-import { fetchForecast, fetchOceanAlerts, fetchPfzZones } from "@/lib/fisherman-api";
-import { getLocationMarketProfile } from "@/lib/marine-data";
+import {
+  fetchForecast,
+  fetchOceanAlerts,
+  fetchPfzZones,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
+import { fetchHarbourMarket } from "@/lib/market-api";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
+import { riskLevelLabel } from "@/components/fisherman/speech-text";
 
 const VERDICTS = {
   go: { key: "home.go", color: "#0e7a4b", icon: Check },
@@ -41,14 +52,30 @@ const VERDICTS = {
   unknown: { key: "home.unknown", color: "#55545a", icon: HelpCircle },
 };
 
+const RISK_COLOR = {
+  Low: "#0e7a4b",
+  Moderate: "#c26a00",
+  Elevated: "#a8400c",
+  High: "#d0182a",
+};
+
 function verdictFor(forecast, alerts) {
   const severe = alerts.some((a) => a.severity === "Critical" || a.severity === "Severe");
   if (severe) return "stop";
   const risk = forecast?.daily?.[0]?.risk;
   if (!risk) return "unknown";
   if (risk === "High") return "stop";
-  if (risk === "Moderate" || alerts.length > 0) return "careful";
+  // "Elevated" is a real band in the shared model. Without this line it fell
+  // through to "go", which is the wrong way round to be wrong.
+  if (risk === "Elevated" || risk === "Moderate" || alerts.length > 0) return "careful";
   return "go";
+}
+
+function shortDate(iso) {
+  if (!iso) return null;
+  const date = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString([], { day: "numeric", month: "short" });
 }
 
 function SectionHead({ index, title, action }) {
@@ -62,6 +89,59 @@ function SectionHead({ index, title, action }) {
       </div>
       {action}
     </div>
+  );
+}
+
+/* One tile in the glance strip: a caption, one figure, one line under it. The
+   whole tile is the tap target, so a phone needs no footer link — four of
+   these sit across a 360 px screen, and the footer returns at sm. */
+function Tile({ href, icon: Icon, label, value, unit, note, footNote, valueColor, wide = false }) {
+  return (
+    <Link
+      href={href}
+      className="sw-press group flex min-w-0 flex-col justify-between gap-2.5 bg-white p-3 hover:bg-[#f4f2ec] sm:gap-4 sm:p-5"
+    >
+      <div className="flex items-start justify-between gap-1">
+        <span className="sw-label line-clamp-2 text-[10px] leading-[1.3] tracking-[0.1em] sm:text-[11px] sm:tracking-[0.14em]">
+          {label}
+        </span>
+        <Icon
+          className="hidden h-4 w-4 shrink-0 text-[#6d6c70] sm:block"
+          strokeWidth={1.75}
+          aria-hidden
+        />
+      </div>
+
+      <div className="min-w-0">
+        <span className="flex min-w-0 items-baseline gap-0.5 sm:gap-1">
+          <span
+            className={`sw-num min-w-0 truncate font-semibold leading-none tracking-[-0.04em] ${
+              wide ? "text-lg sm:text-3xl" : "text-2xl sm:text-4xl"
+            }`}
+            style={valueColor ? { color: valueColor } : undefined}
+            title={typeof value === "string" ? value : undefined}
+          >
+            {value ?? "\u2014"}
+          </span>
+          {value != null && unit && (
+            <span className="shrink-0 text-[11px] text-[#6d6c70] sm:text-sm">{unit}</span>
+          )}
+        </span>
+        <span
+          className="mt-1 block truncate text-[11px] leading-tight text-[#6d6c70] sm:mt-1.5 sm:text-sm"
+          title={note || undefined}
+        >
+          {note || "\u00a0"}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 border-t border-[#dcd9d1] pt-2 text-[10px] text-[#6d6c70] sm:pt-2.5 sm:text-[11px]">
+        <span className="min-w-0 flex-1 truncate" title={footNote || undefined}>
+          {footNote}
+        </span>
+        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" strokeWidth={1.75} aria-hidden />
+      </div>
+    </Link>
   );
 }
 
@@ -144,17 +224,29 @@ export function FishermanHome() {
       setAlerts(alertsResponse.source === "live" ? alertsResponse.data : []);
       setZones(zonesResponse.data || []);
       setLoadedKey(coastKey);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon, coastKey]);
 
-  // Market prices are bundled sample data until a live market feed exists.
-  const market = React.useMemo(
-    () => getLocationMarketProfile(location.id || location.name),
-    [location.id, location.name]
-  );
+  /* Real landings and auction prices for this harbour, read server-side from
+     CMFRI Fish Watch by /api/market. Kept separate from the sea-state fetch so
+     a slow scrape never holds up the go/no-go answer. */
+  const [market, setMarket] = React.useState(null);
+  const [marketFor, setMarketFor] = React.useState(null);
+  const marketLoading = marketFor !== location.name;
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetchHarbourMarket(location.name, controller.signal).then((result) => {
+      if (controller.signal.aborted) return;
+      setMarket(result);
+      setMarketFor(location.name);
+    }).catch(ignoreAbort);
+    return () => controller.abort();
+  }, [location.name]);
 
   const now = forecast?.hourly?.[0];
+  const todayRisk = forecast?.daily?.[0];
   const verdict = VERDICTS[verdictFor(forecast, alerts)];
   const VerdictIcon = verdict.icon;
   const highTide = forecast?.tides?.nextHigh?.time
@@ -164,6 +256,14 @@ export function FishermanHome() {
       })
     : null;
   const today = new Date().toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+
+  const board = market?.covered ? market : null;
+  // "could not reach CMFRI" and "CMFRI does not cover this coast" are different
+  // answers and the tile should not blur them into one blank.
+  const marketProblem = market && !market.covered ? (market.error ? "Source unreachable" : null) : null;
+  const topCatch = board?.top || null;
+  const landedOn = shortDate(board?.observedOn);
+  const nearestZone = zones[0] || null;
 
   const spoken = [
     t("home.canIGo"),
@@ -177,7 +277,136 @@ export function FishermanHome() {
 
   return (
     <div className="space-y-10 lg:space-y-14">
-      {/* 01 — the answer */}
+      {/* Four figures, nothing else: what is landing, what it fetches, how far
+          the nearest zone is, and how rough it is. Four across at every width —
+          this is the first thing a skipper looks at, often one-handed. */}
+      <section className="min-w-0">
+        <div className="grid grid-cols-2 gap-px border border-[#dcd9d1] bg-[#dcd9d1]">
+          <Tile
+            href="#market"
+            icon={Fish}
+            wide
+            label={t("m.popularFish")}
+            value={marketLoading ? "\u2026" : topCatch?.resource || "\u2014"}
+            note={
+              topCatch?.landingsTonnes != null
+                ? `${topCatch.landingsTonnes} t`
+                : marketLoading
+                  ? t("common.loading")
+                  : marketProblem || "Not published"
+            }
+            footNote={board?.harbourName || location.name}
+          />
+
+          <Tile
+            href="#market"
+            icon={IndianRupee}
+            label={t("m.marketPrices")}
+            value={
+              topCatch?.priceMin != null && topCatch?.priceMax != null
+                ? `\u20b9${topCatch.priceMin}\u2013${topCatch.priceMax}`
+                : topCatch?.priceMax != null
+                  ? `\u20b9${topCatch.priceMax}`
+                  : marketLoading
+                    ? "\u2026"
+                    : "\u2014"
+            }
+            unit={topCatch?.priceMax != null ? t("home.perKg") : null}
+            note={landedOn || (marketLoading ? t("common.loading") : " ")}
+            footNote={topCatch ? `${topCatch.resource}, auction` : " "}
+          />
+
+          <Tile
+            href="/app/fishing-zones"
+            icon={Navigation}
+            label={t("m.nearbyZoneUpdate")}
+            value={
+              loading
+                ? "\u2026"
+                : nearestZone?.distanceNM != null
+                  ? Math.round(nearestZone.distanceNM)
+                  : "\u2014"
+            }
+            unit={nearestZone?.distanceNM != null ? t("common.unit.nm") : null}
+            note={nearestZone?.bearing || (loading ? t("common.loading") : t("home.noZones"))}
+            footNote={nearestZone?.name || t("home.noZones")}
+          />
+
+          <Tile
+            href="/app/risk"
+            icon={ShieldAlert}
+            label={t("m.riskRating")}
+            value={loading ? "\u2026" : (todayRisk?.riskScore ?? "\u2014")}
+            unit={todayRisk?.riskScore != null ? "/100" : null}
+            valueColor={RISK_COLOR[todayRisk?.risk]}
+            note={
+              loading
+                ? t("common.loading")
+                : todayRisk?.risk
+                  ? riskLevelLabel(t, todayRisk.risk)
+                  : t("home.unknown")
+            }
+            footNote={t("m.wavesWindSwell")}
+          />
+        </div>
+      </section>
+
+      {/* 01 — harbour prices */}
+      <section id="market" className="min-w-0 scroll-mt-24">
+        <SectionHead index="01" title={t("home.market")} />
+        <p className="sw-label mb-2">
+          {board?.harbourName || location.name}
+          {landedOn ? ` · ${landedOn}` : ""}
+        </p>
+        {marketLoading ? (
+          <p className="py-6 text-[#6d6c70]">{t("common.loading")}</p>
+        ) : !board ? (
+          /* CMFRI covers a handful of harbours. A coast it does not cover says
+             so — the nearest harbour's prices under this port's name would be
+             worse than nothing. */
+          <p className="py-6 text-lg font-semibold">
+            {market?.error || "No harbour price board published for this coast."}
+            {market?.stationsPublished?.length ? (
+              <span className="mt-1 block text-sm font-normal text-[#6d6c70]">
+                CMFRI publishes: {market.stationsPublished.join(", ")}.
+              </span>
+            ) : null}
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-px border border-[#dcd9d1] bg-[#dcd9d1] sm:grid-cols-2 xl:grid-cols-5">
+            {board.items.slice(0, 5).map((item) => (
+              <li
+                key={item.resource}
+                className="grid grid-cols-[1fr_auto] items-center gap-3 bg-white p-4"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
+                    {item.resource}
+                  </span>
+                  <span className="block truncate text-sm text-[#6d6c70]">
+                    {item.landingsTonnes != null ? `${item.landingsTonnes} t landed` : "—"}
+                  </span>
+                </span>
+                <span className="text-right">
+                  <span className="sw-num block whitespace-nowrap text-2xl font-semibold leading-none tracking-[-0.04em] sm:text-3xl">
+                    {item.priceMin != null && item.priceMax != null
+                      ? `₹${item.priceMin}–${item.priceMax}`
+                      : item.priceMid != null
+                        ? `₹${item.priceMid}`
+                        : "—"}
+                  </span>
+                  <span className="sw-label">{t("home.perKg")}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {board && (
+          <p className="sw-label mt-2">Auction range · CMFRI Fish Watch</p>
+        )}
+      </section>
+
+      {/* 02 — risk today */}
       <section className="grid gap-px border border-[#dcd9d1] bg-[#dcd9d1] lg:grid-cols-12">
         <div
           className="relative flex min-h-72 min-w-0 flex-col justify-between p-5 text-white sm:min-h-80 sm:p-8 lg:col-span-7 lg:p-10"
@@ -187,7 +416,7 @@ export function FishermanHome() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
-                01 — {location.name}
+                02 — {location.name}
               </span>
               <p className="mt-2 text-base font-medium text-white/90 sm:text-xl">{t("home.canIGo")}</p>
             </div>
@@ -240,104 +469,61 @@ export function FishermanHome() {
         </Link>
       )}
 
-      <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
-        {/* 02 — fishing zones */}
-        <section className="min-w-0 lg:col-span-6">
-          <SectionHead
-            index="02"
-            title={t("home.pfz")}
-            action={
-              <Link href="/app/fishing-zones" className="sw-link whitespace-nowrap text-sm font-semibold">
-                {t("home.viewAll")}
-              </Link>
-            }
-          />
-          {loading ? (
-            <p className="py-6 text-[#6d6c70]">{t("common.loading")}</p>
-          ) : zones.length === 0 ? (
-            <p className="py-6 text-lg font-semibold">{t("home.noZones")}</p>
-          ) : (
-            <ul className="divide-y divide-[#dcd9d1] border-b border-[#dcd9d1]">
-              {zones.slice(0, 4).map((zone, index) => (
-                <li key={zone.id}>
-                  <Link
-                    href={`/app/fishing-zones?select=${encodeURIComponent(zone.id)}`}
-                    className="sw-press group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-4 hover:bg-white sm:grid-cols-[3rem_1fr_auto] sm:gap-4 sm:px-2"
-                  >
-                    <span
-                      className="flex h-10 w-10 items-center justify-center border border-[#0b0b0c] group-hover:bg-[#0b0b0c] group-hover:text-white"
-                      title={zone.bearing}
-                    >
-                      <Navigation
-                        className="h-5 w-5"
-                        strokeWidth={1.75}
-                        style={{ transform: `rotate(${(zone.bearingDeg ?? 0) - 45}deg)` }}
-                        aria-hidden
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="sw-num text-[11px] font-semibold tracking-[0.14em] text-[#6d6c70]">
-                        {String(index + 1).padStart(2, "0")} · {zone.bearing}
-                      </span>
-                      <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
-                        {zone.name}
-                      </span>
-                    </span>
-                    <span className="text-right">
-                      <span className="sw-num block text-3xl font-semibold leading-none tracking-[-0.04em] sm:text-4xl">
-                        {zone.distanceNM != null ? Math.round(zone.distanceNM) : "—"}
-                      </span>
-                      <span className="sw-label">{t("common.unit.nm")} {t("home.away")}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* 03 — market prices */}
-        <section className="min-w-0 lg:col-span-6">
-          <SectionHead
-            index="03"
-            title={t("home.market")}
-          />
-          <p className="sw-label mb-2">{market.harbourName}</p>
+      {/* 03 — fishing zones */}
+      <section className="min-w-0">
+        <SectionHead
+          index="03"
+          title={t("home.pfz")}
+          action={
+            <Link href="/app/fishing-zones" className="sw-link whitespace-nowrap text-sm font-semibold">
+              {t("home.viewAll")}
+            </Link>
+          }
+        />
+        {loading ? (
+          <p className="py-6 text-[#6d6c70]">{t("common.loading")}</p>
+        ) : zones.length === 0 ? (
+          <p className="py-6 text-lg font-semibold">{t("home.noZones")}</p>
+        ) : (
           <ul className="divide-y divide-[#dcd9d1] border-b border-[#dcd9d1]">
-            {market.items.slice(0, 5).map((item) => {
-              const up = item.priceChange24h >= 0;
-              const Trend = up ? ArrowUpRight : ArrowDownRight;
-              return (
-                <li
-                  key={item.species}
-                  className="grid grid-cols-[1fr_auto] items-center gap-3 py-4 sm:grid-cols-[1fr_auto_6rem] sm:gap-4 sm:px-2"
+            {zones.slice(0, 4).map((zone, index) => (
+              <li key={zone.id}>
+                <Link
+                  href={`/app/fishing-zones?select=${encodeURIComponent(zone.id)}`}
+                  className="sw-press group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-4 hover:bg-white sm:grid-cols-[3rem_1fr_auto] sm:gap-4 sm:px-2"
                 >
+                  <span
+                    className="flex h-10 w-10 items-center justify-center border border-[#0b0b0c] group-hover:bg-[#0b0b0c] group-hover:text-white"
+                    title={zone.bearing}
+                  >
+                    <Navigation
+                      className="h-5 w-5"
+                      strokeWidth={1.75}
+                      style={{ transform: `rotate(${(zone.bearingDeg ?? 0) - 45}deg)` }}
+                      aria-hidden
+                    />
+                  </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
-                      {item.localName}
+                    <span className="sw-num text-[11px] font-semibold tracking-[0.14em] text-[#6d6c70]">
+                      {String(index + 1).padStart(2, "0")} · {zone.bearing}
                     </span>
-                    <span className="block truncate text-sm text-[#6d6c70]">{item.species}</span>
+                    <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
+                      {zone.name}
+                    </span>
                   </span>
                   <span className="text-right">
                     <span className="sw-num block text-3xl font-semibold leading-none tracking-[-0.04em] sm:text-4xl">
-                      ₹{item.pricePerKg}
+                      {zone.distanceNM != null ? Math.round(zone.distanceNM) : "—"}
                     </span>
-                    <span className="sw-label">{t("home.perKg")}</span>
+                    <span className="sw-label">{t("common.unit.nm")} {t("home.away")}</span>
                   </span>
-                  <span
-                    className={`sw-num col-span-2 flex items-center justify-end gap-1 text-sm font-semibold sm:col-span-1 ${
-                      up ? "text-[#0e7a4b]" : "text-[#d0182a]"
-                    }`}
-                  >
-                    <Trend className="h-4 w-4" strokeWidth={2} aria-hidden />
-                    {up ? "+" : "−"}₹{Math.abs(item.priceChange24h)}
-                  </span>
-                </li>
-              );
-            })}
+                </Link>
+              </li>
+            ))}
           </ul>
-        </section>
-      </div>
+        )}
+      </section>
+
 
       {/* 04 — what to do next */}
       <section>

@@ -3,7 +3,10 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
-import { fetchOceanAlerts } from "@/lib/fisherman-api";
+import {
+  fetchOceanAlerts,
+  ignoreAbort,
+} from "@/lib/fisherman-api";
 import { DataBadge } from "@/components/fisherman/data-badge";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +39,7 @@ export default function AlertsDisastersPage() {
       setAlertsSource(response.source);
       setAlertsReason(response.reason);
       setAlertsLoaded(true);
-    });
+    }).catch(ignoreAbort);
     return () => controller.abort();
   }, [location.lat, location.lon]);
 

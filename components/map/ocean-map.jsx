@@ -906,7 +906,17 @@ export function OceanMap({
         const element = document.createElement("div");
         element.className = "salty-vessel-pin";
         element.innerHTML = '<span class="salty-vessel-dot"></span>';
-        vesselMarker.current = new maplibregl.Marker({ element }).addTo(map);
+        // setLngLat BEFORE addTo. Marker.addTo() runs _update() straight away
+        // and subscribes the marker to the map's camera events, and _update()
+        // reads _lngLat — so a marker added without a position throws inside
+        // maplibre ("cannot read properties of undefined (reading 'lng')") the
+        // moment the camera moves. That is exactly what happened here: the
+        // first GPS fix lands while the map is still easing into its auto-fit,
+        // moveend fires, and the marker has no position yet. Every other
+        // marker in this file already sets the position first.
+        vesselMarker.current = new maplibregl.Marker({ element })
+          .setLngLat([vessel.lon, vessel.lat])
+          .addTo(map);
       }
       vesselMarker.current.setLngLat([vessel.lon, vessel.lat]);
       vesselMarker.current.setRotation(vessel.headingDeg ?? 0);
