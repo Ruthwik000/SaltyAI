@@ -10,7 +10,7 @@ export function PageHeader({ title, description, badge, children }) {
             {badge}
           </Badge>
         )}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+        <h1 className="sw-page-title">
           {title}
         </h1>
         {description && (

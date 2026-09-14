@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useMarine } from "@/lib/marine-context";
-import { pfzZones, marineAlerts, activeVessels } from "@/lib/marine-data";
-import { fetchMarineAlerts } from "@/lib/fisherman-api";
+import { pfzZones, activeVessels } from "@/lib/marine-data";
+import { fetchOceanAlerts } from "@/lib/fisherman-api";
 import {
   DashboardHeader,
   MarineMetricsGrid,
@@ -18,6 +18,8 @@ import { TideCard } from "@/components/fisherman/tide-card";
 import { StormCard } from "@/components/fisherman/storm-card";
 import { HazardZonesCard } from "@/components/fisherman/hazard-zones-card";
 import { ReportFindingCard } from "@/components/research/report-finding-card";
+import { FishermanHome } from "@/components/fisherman/fisherman-home";
+import { ResearcherHome } from "@/components/research/researcher-home";
 import { ResearchAlertsCard } from "@/components/operator/research-alerts-card";
 
 export default function DashboardPage() {
@@ -25,39 +27,33 @@ export default function DashboardPage() {
 
   const nearbyPFZ =
     pfzZones.find((z) => z.referencePort === location.name) || pfzZones[0];
-  const bundledAlertsForRegion = React.useMemo(
-    () =>
-      marineAlerts.filter(
-        (a) =>
-          a.affectedRegions.some((r) =>
-            r.toLowerCase().includes(location.name.toLowerCase())
-          ) || a.affectedRegions.includes("Central Bay of Bengal")
-      ),
-    [location.name]
-  );
-
-  // Official INCOIS High Wave / Swell Surge advisories for this district. An
-  // empty list is a real answer - it means nothing is in force - so it is kept
-  // distinct from the bundled demo set, which is only used if the feed fails.
-  const [officialAlerts, setOfficialAlerts] = React.useState(null);
-
+  // Live INCOIS advisories for this coast (already filtered by the backend);
+  // the demo list only when the data API cannot answer.
+  const [activeAlertsForRegion, setActiveAlertsForRegion] = React.useState([]);
+  const [alertsLoaded, setAlertsLoaded] = React.useState(false);
   React.useEffect(() => {
     const controller = new AbortController();
-    fetchMarineAlerts(location.name, location.state, controller.signal)
-      .then((result) => setOfficialAlerts(result))
-      .catch(() => setOfficialAlerts(null));
+    fetchOceanAlerts(location.lat, location.lon, controller.signal).then((response) => {
+      if (controller.signal.aborted) return;
+      setActiveAlertsForRegion(response.data || []);
+      setAlertsLoaded(true);
+    });
     return () => controller.abort();
-  }, [location.name, location.state]);
+  }, [location.lat, location.lon]);
 
-  const alertsSource = officialAlerts?.source === "live" ? "live" : "demo";
-  const activeAlertsForRegion =
-    alertsSource === "live" ? officialAlerts.data : bundledAlertsForRegion;
+  if (role === "fisherman") return <FishermanHome />;
+  if (role === "researcher") return <ResearcherHome />;
 
   return (
     <div className="space-y-6">
       <DashboardHeader role={role} onOpenAiDrawer={() => setIsAiDrawerOpen(true)} />
 
-      <MarineMetricsGrid location={location} role={role} />
+      <MarineMetricsGrid
+        location={location}
+        role={role}
+        alerts={activeAlertsForRegion}
+        alertsLoaded={alertsLoaded}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -100,9 +96,6 @@ export default function DashboardPage() {
           <HazardAlertsCard
             alerts={activeAlertsForRegion}
             totalAlertsCount={activeAlertsForRegion.length}
-            source={alertsSource}
-            reason={officialAlerts?.reason}
-            issuedFor={officialAlerts?.issuedFor}
           />
 
           {role === "fisherman" && <HazardZonesCard location={location} />}

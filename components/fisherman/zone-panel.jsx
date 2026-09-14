@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConditionsGrid } from "@/components/fisherman/conditions-grid";
 import { DataBadge } from "@/components/fisherman/data-badge";
-import { formatCoord, nmToKm } from "@/lib/geo";
+import { formatCoord } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { zoneSpeech } from "@/components/fisherman/speech-text";
@@ -47,7 +47,7 @@ export function ZonePanel({
           <button
             type="button"
             onClick={onBack}
-            className="-ml-1 flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 active:bg-zinc-100"
+            className="-ml-1 flex h-8 w-8 items-center justify-center rounded-[2px] text-zinc-500 active:bg-zinc-100"
             aria-label={t("zones.back")}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -80,7 +80,9 @@ export function ZonePanel({
                   {detail.name}
                 </h2>
                 <Badge className="shrink-0 bg-emerald-600 text-[10px] text-white">
-                  {detail.suitabilityScore}%
+                  {detail.suitabilityScore != null
+                    ? `${detail.suitabilityScore}%`
+                    : detail.suitabilityText}
                 </Badge>
               </div>
               <p className="mt-1 font-sans text-[11px] text-zinc-500">
@@ -92,7 +94,7 @@ export function ZonePanel({
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Compass className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {nmToKm(detail.distanceNM)} {t("common.unit.km")}
+                  {detail.distanceNM} {t("common.unit.nm")}
                 </div>
                 <div className="text-[10px] text-zinc-500">
                   {detail.bearing} ({detail.bearingDeg}°)
@@ -101,64 +103,18 @@ export function ZonePanel({
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Waves className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {detail.depthMeters != null
-                    ? `${detail.depthMeters} ${t("common.unit.m")}`
-                    : detail.lengthKm != null
-                      ? `${detail.lengthKm} km`
-                      : "—"}
+                  {detail.depthMeters != null ? `${detail.depthMeters} ${t("common.unit.m")}` : "—"}
                 </div>
-                <div className="text-[10px] text-zinc-500">
-                  {detail.depthMeters != null ? t("zones.depth") : t("zones.advisoryLength")}
-                </div>
+                <div className="text-[10px] text-zinc-500">{t("zones.depth")}</div>
               </div>
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
                 <Gauge className="mx-auto h-3.5 w-3.5 text-zinc-400" />
                 <div className="mt-1 text-sm font-bold text-zinc-950">
-                  {detail.radiusNM != null
-                    ? `${nmToKm(detail.radiusNM)} ${t("common.unit.km")}`
-                    : detail.isToday
-                      ? t("zones.issuedToday")
-                      : (detail.issuedFor ?? "—")}
+                  {detail.radiusNM} {t("common.unit.nm")}
                 </div>
-                <div className="text-[10px] text-zinc-500">
-                  {detail.radiusNM != null ? t("zones.radius") : t("zones.issued")}
-                </div>
+                <div className="text-[10px] text-zinc-500">{t("zones.radius")}</div>
               </div>
             </div>
-
-            {/* Sector background. Deliberately separated from the advisory:
-                INCOIS does not publish species or depth with a PFZ line, so
-                this is what is typical for the coast, not what was measured
-                today - and it says so on the badge. */}
-            {detail.reference && (
-              <section className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Fish className="h-3 w-3 text-amber-700" />
-                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-amber-800">
-                    {t("zones.typicalFor", { sector: detail.reference.sector })}
-                  </h3>
-                  <span className="rounded-full border border-amber-300 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-amber-800">
-                    {t("zones.referenceBadge")}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {detail.reference.species.map((name) => (
-                    <span
-                      key={name}
-                      className="rounded-md border border-amber-200 bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-800"
-                    >
-                      {name}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-[11px] text-zinc-700">
-                  {t("zones.usualDepth")}: {detail.reference.depthBand}
-                </div>
-                <p className="text-[10px] leading-snug text-amber-900/80">
-                  {t("zones.referenceNote")}
-                </p>
-              </section>
-            )}
 
             {/* Species */}
             <section className="space-y-2">
@@ -278,8 +234,9 @@ export function ZonePanel({
                   {zone.name}
                 </div>
                 <div className="mt-0.5 font-sans text-[11px] text-zinc-500">
-                  {nmToKm(zone.distanceNM)} {t("common.unit.km")} · {zone.bearing} (
-                  {zone.bearingDeg}°) · {zone.depthMeters} {t("common.unit.m")}
+                  {zone.distanceNM} {t("common.unit.nm")} · {zone.bearing} (
+                  {zone.bearingDeg}°)
+                  {zone.depthMeters != null && ` · ${zone.depthMeters} ${t("common.unit.m")}`}
                 </div>
                 {zone.primarySpecies.length > 0 && (
                   <div className="mt-1 truncate text-[10px] text-zinc-400">
@@ -288,7 +245,7 @@ export function ZonePanel({
                 )}
               </div>
               <span
-                className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-bold text-white ${
+                className={`shrink-0 rounded-[2px] px-2 py-1 text-[11px] font-bold text-white ${
                   zone.suitabilityScore >= 90
                     ? "bg-emerald-600"
                     : zone.suitabilityScore >= 75
@@ -296,7 +253,7 @@ export function ZonePanel({
                       : "bg-amber-500"
                 }`}
               >
-                {zone.suitabilityScore}%
+                {zone.suitabilityScore != null ? `${zone.suitabilityScore}%` : "PFZ"}
               </span>
             </button>
           </li>

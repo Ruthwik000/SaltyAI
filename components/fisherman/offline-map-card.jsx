@@ -38,7 +38,7 @@ export function OfflineMapCard({ areaLabel }) {
           <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{areaLabel}</p>
         </div>
         <span
-          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+          className={`inline-flex shrink-0 items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] font-medium ${
             online
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-zinc-300 bg-zinc-100 text-zinc-700"

@@ -12,11 +12,9 @@ export function RoleGate({ children }) {
     () => false
   );
 
-  const hasRole = isClient ? Boolean(window.localStorage.getItem("salty_role")) : false;
-  const hasPhoneNumber = isClient
-    ? Boolean(window.localStorage.getItem("salty_phone_number"))
+  const onboardingComplete = isClient
+    ? Boolean(window.localStorage.getItem("salty_role"))
     : false;
-  const onboardingComplete = hasRole && hasPhoneNumber;
 
   React.useEffect(() => {
     if (isClient && !onboardingComplete) {

@@ -350,7 +350,7 @@ export function TripTrackerView() {
                             ? t("trip.riskDemoNote")
                             : t("trip.riskLiveNote")
                         }
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        className={`shrink-0 rounded-[2px] px-2 py-0.5 text-[10px] font-semibold ${
                           plan.risk.level === "Low"
                             ? "bg-emerald-50 text-emerald-700"
                             : plan.risk.level === "Moderate"
@@ -532,8 +532,6 @@ export function TripTrackerView() {
             <div>
               <h2 className="flex items-center gap-1.5 text-sm font-bold text-zinc-950">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
                 </span>
                 <span>{t("trip.active")}</span>
               </h2>
@@ -548,12 +546,6 @@ export function TripTrackerView() {
             </div>
             <DataBadge source={tripSource} reason={tripReason} />
           </div>
-
-          {tripSource === "demo" && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-              {t("trip.demoTrack")}
-            </p>
-          )}
 
           {status !== "tracking" && (
             <div className="flex items-start gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-[11px] leading-relaxed text-zinc-700">

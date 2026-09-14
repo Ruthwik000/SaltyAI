@@ -15,10 +15,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wind, Waves, Zap, Eye, Navigation, Sparkles, CheckCircle2 } from "lucide-react";
+import { Wind, Waves, Zap, Eye, Navigation, CheckCircle2 } from "lucide-react";
 
 export function RiskConsoleView() {
-  const { location, setIsAiDrawerOpen } = useMarine();
+  const { location, openAiDrawer } = useMarine();
 
   // Trip Risk Calculator state
   const [departurePort, setDeparturePort] = React.useState(location.name);
@@ -105,7 +105,7 @@ export function RiskConsoleView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="sw-page-title">
             Marine Risk & Safety Assessment
           </h1>
         </div>
@@ -113,10 +113,13 @@ export function RiskConsoleView() {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            onClick={() => setIsAiDrawerOpen(true)}
+            onClick={() =>
+              openAiDrawer(
+                `Is it safe to go out from ${location.name} today? Give the risk level, the conditions behind it, and warnings in force.`
+              )
+            }
             className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
           >
-            <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
             <span>Consult Safety Agent</span>
           </Button>
         </div>
@@ -207,9 +210,9 @@ export function RiskConsoleView() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0 font-sans text-xs">
-                    <div className="w-24 bg-zinc-100 rounded-full h-2 overflow-hidden">
+                    <div className="w-24 bg-zinc-100 rounded-[2px] h-2 overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
+                        className={`h-full rounded-[2px] ${
                           rf.score < 25
                             ? "bg-emerald-500"
                             : rf.score < 50

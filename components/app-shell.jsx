@@ -3,182 +3,69 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMarine, UserRole } from "@/lib/marine-context";
-import { marineLocations } from "@/lib/marine-data";
-import { Button } from "@/components/ui/button";
-import { AiDrawer } from "@/components/ai-drawer";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import {
-  LayoutDashboard,
-  Map,
-  Fish,
   CloudSun,
-  ShieldAlert,
-  AlertTriangle,
-  Compass,
   Database,
-  Navigation,
+  Fish,
+  House,
   LifeBuoy,
-  Sparkles,
-  ArrowLeft,
-  ChevronDown,
-  Menu,
-  X,
-  Bell,
-  User,
+  Map,
+  Mic,
+  Navigation,
+  ShieldCheck,
+  TriangleAlert,
 } from "lucide-react";
+import { useMarine } from "@/lib/marine-context";
+import { marineLocations } from "@/lib/marine-data";
+import { AiDrawer } from "@/components/ai-drawer";
+import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { useT } from "@/lib/i18n";
 import { LanguageSwitch } from "@/components/fisherman/language-switch";
 
+/*
+ * `roles` decides who may open a section; `nav` decides whose menu shows it.
+ * Fishermen reach Weather and Alerts from their home screen tiles, so those
+ * stay open to them without crowding a five-button phone menu.
+ */
 const navItems = [
-  {
-    href: "/app",
-    label: "Dashboard",
-    shortLabel: "Home",
-    i18nKey: "nav.home",
-    icon: LayoutDashboard,
-    roles: ["fisherman", "researcher", "operator"],
-    priority: { fisherman: 1, researcher: 1, operator: 1 },
-  },
-  {
-    href: "/app/map",
-    label: "Marine Map",
-    shortLabel: "Map",
-    icon: Map,
-    //badge: "Live Layers",
-    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-    // Fishermen get the zone map inside Fishing Zones instead of the raw
-    // INCOIS forecast view, so this stays a researcher / operator surface.
-    roles: ["researcher", "operator"],
-    priority: { fisherman: 6, researcher: 3, operator: 4 },
-  },
-  {
-    href: "/app/fishing-zones",
-    label: "Fishing Zones",
-    i18nKey: "nav.zones",
-    shortLabel: "Zones",
-    icon: Fish,
-    //badge: "PFZ 94%",
-    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    roles: ["fisherman"],
-    priority: { fisherman: 2, researcher: 5, operator: 8 },
-  },
-  {
-    href: "/app/weather",
-    label: "Weather & Marine",
-    shortLabel: "Weather",
-    icon: CloudSun,
-    roles: ["researcher", "operator"],
-    priority: { fisherman: 3, researcher: 4, operator: 5 },
-  },
-  {
-    href: "/app/risk",
-    label: "Risk & Safety",
-    i18nKey: "nav.safety",
-    shortLabel: "Safety",
-    icon: ShieldAlert,
-    //badge: "Low 28",
-    badgeColor: "bg-zinc-100 text-zinc-800 border-zinc-200",
-    roles: ["fisherman"],
-    priority: { fisherman: 3, researcher: 6, operator: 4 },
-  },
-  {
-    href: "/app/alerts",
-    label: "Alerts & Disasters",
-    shortLabel: "Alerts",
-    icon: AlertTriangle,
-    //badge: "4 Active",
-    badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-    roles: ["operator"],
-    priority: { fisherman: 5, researcher: 7, operator: 3 },
-  },
-  {
-    href: "/app/research",
-    label: "Research & Data",
-    shortLabel: "Data",
-    icon: Database,
-    //badge: "ERDDAP",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
-    roles: ["researcher"],
-    priority: { fisherman: 9, researcher: 2, operator: 7 },
-  },
-  {
-    href: "/app/vessel",
-    label: "Vessel / GPS",
-    i18nKey: "nav.trip",
-    shortLabel: "Trip",
-    icon: Navigation,
-    //badge: "Live AIS",
-    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    roles: ["fisherman"],
-    priority: { fisherman: 4, researcher: 9, operator: 2 },
-  },
-  {
-    href: "/app/lost-fisherman",
-    label: "Lost Fisherman",
-    shortLabel: "SAR",
-    icon: LifeBuoy,
-    //badge: "SAR",
-    badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
-    roles: ["operator"],
-    priority: { fisherman: 8, researcher: 10, operator: 2 },
-  },
-  {
-    href: "/app/ai-agent",
-    label: "AI Marine Agent",
-    i18nKey: "nav.assistant",
-    shortLabel: "Assistant",
-    icon: Sparkles,
-    //badge: "Grounded",
-    badgeColor: "bg-zinc-100 text-zinc-900 border-zinc-300",
-    roles: ["fisherman", "researcher", "operator"],
-    priority: { fisherman: 5, researcher: 5, operator: 6 },
-  },
+  { href: "/app", label: "Home", i18nKey: "nav.home", icon: House, roles: ["fisherman", "researcher", "operator"], priority: { fisherman: 1, researcher: 1, operator: 1 } },
+  { href: "/app/fishing-zones", label: "Zones", i18nKey: "nav.zones", icon: Fish, roles: ["fisherman"], priority: { fisherman: 2 } },
+  { href: "/app/risk", label: "Safety", i18nKey: "nav.safety", icon: ShieldCheck, roles: ["fisherman"], priority: { fisherman: 3 } },
+  { href: "/app/vessel", label: "Trip", i18nKey: "nav.trip", icon: Navigation, roles: ["fisherman"], priority: { fisherman: 4 } },
+  { href: "/app/lost-fisherman", label: "Rescue", icon: LifeBuoy, roles: ["operator"], priority: { operator: 2 } },
+  { href: "/app/alerts", label: "Alerts", icon: TriangleAlert, roles: ["operator", "fisherman"], nav: ["operator"], priority: { operator: 3 } },
+  { href: "/app/research", label: "Data", icon: Database, roles: ["researcher"], priority: { researcher: 2 } },
+  { href: "/app/map", label: "Map", icon: Map, roles: ["researcher", "operator"], priority: { researcher: 3, operator: 4 } },
+  { href: "/app/weather", label: "Weather", icon: CloudSun, roles: ["researcher", "operator", "fisherman"], nav: ["researcher", "operator"], priority: { researcher: 4, operator: 5 } },
+  { href: "/app/ai-agent", label: "Ask", i18nKey: "nav.ask", icon: Mic, roles: ["fisherman", "researcher", "operator"], priority: { fisherman: 5, researcher: 5, operator: 6 } },
 ];
+
+const headerSelect =
+  "h-9 min-w-0 max-w-[42vw] cursor-pointer truncate rounded-[2px] border border-[#3a393e] bg-[#151417] px-2 text-xs font-semibold text-white outline-none hover:border-white focus:border-white sm:max-w-none sm:px-3";
+
+function isActiveHref(pathname, href) {
+  return href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+}
 
 export function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const {
-    role,
-    setRole,
-    location,
-    setLocationId,
-    setIsAiDrawerOpen,
-    backendStatus,
-    operatorNotifications,
-  } = useMarine();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [locationDropdownOpen, setLocationDropdownOpen] = React.useState(false);
-  const [roleDropdownOpen, setRoleDropdownOpen] = React.useState(false);
-  const [notificationsDropdownOpen, setNotificationsDropdownOpen] = React.useState(false);
+  const { role, location, setLocationId, operatorNotifications } = useMarine();
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const { t } = useT();
 
-  // Filter navigation items by active role and sort based on role priority
   const sortedNav = React.useMemo(() => {
     const items = navItems
-      .filter((item) => item.roles.includes(role))
-      .sort((a, b) => a.priority[role] - b.priority[role]);
-
-    // Only the fisherman console is translated; the researcher and operator
-    // consoles stay in English, which is what those users work in.
+      .filter((item) => (item.nav || item.roles).includes(role))
+      .sort((a, b) => (a.priority[role] ?? 99) - (b.priority[role] ?? 99));
+    // Only the fisherman console is translated.
     if (role !== "fisherman") return items;
-    return items.map((item) =>
-      item.i18nKey
-        ? { ...item, label: t(item.i18nKey), shortLabel: t(item.i18nKey) }
-        : item
-    );
+    return items.map((item) => (item.i18nKey ? { ...item, label: t(item.i18nKey) } : item));
   }, [role, t]);
 
-  const isFisherman = role === "fisherman";
-  // Each console is a small, fixed set of sections, so every role gets the
-  // bottom tab bar on a phone rather than a hamburger drawer.
-  const usesBottomNav = true;
   const isAgentPage = pathname === "/app/ai-agent";
 
-  // Keep a role out of surfaces its navigation no longer offers. Without this a
-  // fisherman could still reach /app/map or /app/lost-fisherman by URL or by
-  // switching roles while sitting on one of those pages.
+  // Keep a role out of sections it may not open.
   React.useEffect(() => {
     if (pathname === "/app") return;
     const current = navItems.find(
@@ -189,426 +76,135 @@ export function AppShell({ children }) {
     }
   }, [pathname, role, router]);
 
-  const hasCriticalAlert = operatorNotifications.some((n) => n.severity === "critical");
-
   return (
-    <div className="min-h-screen bg-zinc-50/50 flex flex-col">
-      {/* Top Application Header */}
-      <header className="sticky top-0 z-30 w-full border-b border-zinc-200/90 bg-white/95 backdrop-blur-md">
-        <div className="flex h-14 items-center justify-between px-4 sm:px-6">
-          {/* Left: Brand + Back to Landing */}
-          <div className="flex items-center gap-4">
-            {!usesBottomNav && (
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-1.5 text-zinc-600 hover:text-zinc-950"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-            )}
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader>
+        {role === "fisherman" && <LanguageSwitch />}
 
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-900 bg-zinc-950 text-white shadow-xs">
-                <span className="font-sans text-xs font-bold">S*</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold tracking-tight text-zinc-950">
-                  salty<span className="text-zinc-400">.ai</span>
-                </span>
-              </div>
-            </Link>
-          </div>
+        <label className="sr-only" htmlFor="location-select">
+          Location
+        </label>
+        <select
+          id="location-select"
+          value={location.id}
+          onChange={(event) => setLocationId(event.target.value)}
+          className={headerSelect}
+        >
+          {marineLocations.map((loc) => (
+            <option key={loc.id} value={loc.id}>
+              {loc.name}
+            </option>
+          ))}
+        </select>
 
-          {/* Right: Role Switcher + Location Selector + Operator Notifications + Quick AI + SAR */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Role Switcher Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 shadow-xs cursor-pointer font-medium capitalize"
-                title="Switch Active Operational Role"
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    role === "fisherman"
-                      ? "bg-emerald-500"
-                      : role === "operator"
-                        ? "bg-amber-500"
-                        : "bg-purple-500"
-                  }`}
-                />
-                <span className="font-semibold text-zinc-950 hidden sm:inline">
-                  {role === "fisherman"
-                    ? "Fisherman"
-                    : role === "operator"
-                      ? "Coastal Operator"
-                      : "Researcher"}
-                </span>
-                <ChevronDown className="h-3 w-3 text-zinc-400" />
-              </button>
-
-              {roleDropdownOpen && (
-                <div className="absolute right-0 mt-1.5 w-48 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 z-50 text-xs font-sans">
-                  <div className="px-2.5 py-1.5 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold border-b border-zinc-100">
-                    Switch Role View
-                  </div>
-                  {["fisherman", "operator", "researcher"].map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => {
-                        setRole(r);
-                        setRoleDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-2.5 py-2 rounded-md transition-colors flex items-center justify-between cursor-pointer capitalize ${
-                        role === r
-                          ? "bg-zinc-100 font-semibold text-zinc-950"
-                          : "hover:bg-zinc-50 text-zinc-700"
-                      }`}
-                    >
-                      <span>
-                        {r === "fisherman"
-                          ? "Fisherman"
-                          : r === "operator"
-                            ? "Coastal Operator"
-                            : "Researcher"}
-                      </span>
-                      {role === r && (
-                        <span className="text-[10px] text-zinc-500">Active</span>
+        {role === "operator" && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen((open) => !open)}
+              aria-expanded={notificationsOpen}
+              className="sw-press h-9 rounded-[2px] border border-[#3a393e] px-2 text-xs font-semibold text-white hover:border-white"
+            >
+              Notifications ({operatorNotifications.length})
+            </button>
+            {notificationsOpen && (
+              <div className="sw-panel absolute right-0 z-50 mt-2 w-80 p-4 text-[#0b0b0c]">
+                {operatorNotifications.length === 0 && <p>No notifications.</p>}
+                <ul className="divide-y divide-[#dcd9d1]">
+                  {operatorNotifications.map((notif) => (
+                    <li key={notif.id} className="py-2">
+                      <p className="font-bold">{notif.title}</p>
+                      <p className="sw-label mt-1">{notif.timestamp}</p>
+                      {notif.type === "lost_fisherman_sos" && (
+                        <Link
+                          href="/app/lost-fisherman"
+                          onClick={() => setNotificationsOpen(false)}
+                          className="sw-link mt-1 inline-block text-sm"
+                        >
+                          Open search and rescue
+                        </Link>
                       )}
-                    </button>
+                    </li>
                   ))}
-                </div>
-              )}
-            </div>
-
-            {/* Language — fisherman console only */}
-            {role === "fisherman" && <LanguageSwitch />}
-
-            {/* Location Selector Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 shadow-xs cursor-pointer font-medium"
-              >
-                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                <span className="font-medium truncate max-w-[90px] sm:max-w-[130px]">
-                  {location.name}
-                </span>
-                <ChevronDown className="h-3 w-3 text-zinc-400" />
-              </button>
-
-              {locationDropdownOpen && (
-                <div className="absolute right-0 mt-1.5 w-56 rounded-lg border border-zinc-200 bg-white shadow-lg p-1 z-50 text-xs font-sans">
-                  <div className="px-2.5 py-1.5 text-[10px] font-sans uppercase tracking-wider text-zinc-400 font-semibold border-b border-zinc-100">
-                    Select Coast / Port
-                  </div>
-                  {marineLocations.map((loc) => (
-                    <button
-                      key={loc.id}
-                      onClick={() => {
-                        setLocationId(loc.id);
-                        setLocationDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-2.5 py-2 rounded-md transition-colors flex items-center justify-between cursor-pointer ${
-                        location.id === loc.id
-                          ? "bg-zinc-100 font-semibold text-zinc-950"
-                          : "hover:bg-zinc-50 text-zinc-700"
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs">{loc.name}</div>
-                        <div className="text-[10px] text-zinc-400 font-sans">
-                          {loc.sea} ({loc.lat.toFixed(1)}°N)
-                        </div>
-                      </div>
-                      <span className="font-sans text-[10px] text-zinc-500">
-                        {loc.sst}°C
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Operator Notifications Bell Dropdown */}
-            {role === "operator" && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setNotificationsDropdownOpen(!notificationsDropdownOpen)}
-                  className={`relative p-1.5 rounded-md border transition-colors cursor-pointer ${
-                    hasCriticalAlert
-                      ? "border-rose-400 bg-rose-50 text-rose-700"
-                      : "border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700"
-                  }`}
-                  title="Coastal Operator Fleet Notifications"
-                >
-                  <Bell className="h-4 w-4" />
-                  {operatorNotifications.length > 0 && (
-                    <span
-                      className={`absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center text-white ${
-                        hasCriticalAlert ? "bg-rose-600 animate-pulse" : "bg-zinc-900"
-                      }`}
-                    >
-                      {operatorNotifications.length}
-                    </span>
-                  )}
-                </button>
-
-                {notificationsDropdownOpen && (
-                  <div className="absolute right-0 mt-1.5 w-80 rounded-xl border border-zinc-200 bg-white shadow-xl p-3 z-50 text-xs font-sans">
-                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-100">
-                      <span className="font-bold text-zinc-950 text-xs flex items-center gap-1.5">
-                        <Bell className="h-3.5 w-3.5 text-zinc-700" />
-                        Operator Fleet Alerts
-                      </span>
-                      <span className="text-[10px] text-zinc-500">
-                        {operatorNotifications.length} Broadcasts
-                      </span>
-                    </div>
-
-                    <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                      {operatorNotifications.map((notif) => (
-                        <div
-                          key={notif.id}
-                          className={`p-2.5 rounded-lg border text-xs ${
-                            notif.severity === "critical"
-                              ? "bg-rose-50 border-rose-200 text-rose-950"
-                              : "bg-zinc-50 border-zinc-200 text-zinc-900"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between font-semibold">
-                            <span className="truncate max-w-[170px]">{notif.title}</span>
-                            <span className="text-[10px] text-zinc-400 font-sans font-normal">
-                              {notif.timestamp}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-zinc-600 mt-1 leading-snug">
-                            {notif.message}
-                          </p>
-                          {notif.type === "lost_fisherman_sos" && (
-                            <Link
-                              href="/app/lost-fisherman"
-                              onClick={() => setNotificationsDropdownOpen(false)}
-                              className="inline-block mt-2 font-bold text-rose-700 hover:underline text-[11px]"
-                            >
-                              Open Search & Rescue (SAR) →
-                            </Link>
-                          )}
-                          {notif.type === "journey_start" && (
-                            <Link
-                              href="/app/vessel"
-                              onClick={() => setNotificationsDropdownOpen(false)}
-                              className="inline-block mt-2 font-semibold text-zinc-900 hover:underline text-[11px]"
-                            >
-                              Track Vessel Telemetry →
-                            </Link>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                </ul>
               </div>
             )}
-
-            {/* Quick AI Assistant Trigger */}
-            <Button
-              size="sm"
-              onClick={() => setIsAiDrawerOpen(true)}
-              // Redundant for the roles that carry the agent as a section of
-              // its own; the operator console keeps the shortcut.
-              className={`h-8 px-2.5 sm:px-3 text-xs bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5 ${
-                usesBottomNav ? "hidden" : ""
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
-              <span className="hidden sm:inline">AI Agent</span>
-            </Button>
-
-            {/* Emergency SAR shortcut */}
-            {role === "operator" && (
-              <Link
-                href="/app/lost-fisherman"
-                className="hidden md:inline-flex items-center gap-1.5 text-xs h-8 px-2.5 rounded-md border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 font-medium transition-colors"
-              >
-                <LifeBuoy className="h-3.5 w-3.5 text-rose-600" />
-                <span>SAR / Lost</span>
-              </Link>
-            )}
-
-            {/* Back to landing link */}
-            <Link
-              href="/"
-              className="hidden lg:flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 px-2 py-1"
-              title="Return to Product Landing Page"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              <span>Exit App</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Layout Body with Sidebar and Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Persistent Desktop Sidebar */}
-        <aside className="hidden lg:flex w-64 flex-col border-r border-zinc-200 bg-white shrink-0">
-          {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1 text-xs font-medium">
-            {sortedNav.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/app"
-                  ? pathname === "/app"
-                  : pathname.startsWith(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all ${
-                    isActive
-                      ? "bg-zinc-900 text-white font-semibold shadow-xs"
-                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon
-                      className={`h-4 w-4 ${isActive ? "text-white" : "text-zinc-500"}`}
-                    />
-                    <span>{item.label}</span>
-                  </div>
-
-                  {item.href === "/app/lost-fisherman" &&
-                  operatorNotifications.some((n) => n.type === "lost_fisherman_sos") ? (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold animate-pulse">
-                      SOS ACTIVE
-                    </span>
-                  ) : item.badge ? (
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-sans border font-medium ${
-                        isActive
-                          ? "bg-zinc-800 text-zinc-200 border-zinc-700"
-                          : item.badgeColor || "bg-zinc-100 text-zinc-600 border-zinc-200"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Sidebar Footer Live Buoy Status */}
-        </aside>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && !usesBottomNav && (
-          <div className="lg:hidden fixed inset-0 z-40 flex">
-            <div
-              className="fixed inset-0 bg-black/30 backdrop-blur-xs"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <div className="relative z-50 w-72 bg-white h-full flex flex-col border-r border-zinc-200 p-4 shadow-xl">
-              <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
-                <span className="font-semibold text-sm text-zinc-950">
-                  SALTY Marine Platform
-                </span>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 text-zinc-400 hover:text-zinc-900"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <nav className="flex-1 overflow-y-auto space-y-1 text-xs">
-                {sortedNav.map((item) => {
-                  const Icon = item.icon;
-                  const isActive =
-                    item.href === "/app"
-                      ? pathname === "/app"
-                      : pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg ${
-                        isActive
-                          ? "bg-zinc-900 text-white font-semibold"
-                          : "text-zinc-700 hover:bg-zinc-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </div>
-
-                      {item.href === "/app/lost-fisherman" &&
-                      operatorNotifications.some(
-                        (n) => n.type === "lost_fisherman_sos"
-                      ) ? (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-600 text-white font-bold animate-pulse">
-                          SOS
-                        </span>
-                      ) : item.badge ? (
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${item.badgeColor || "bg-zinc-100 text-zinc-600 border-zinc-200"}`}
-                        >
-                          {item.badge}
-                        </span>
-                      ) : null}
-                    </Link>
-                  );
-                })}
-              </nav>
-
-              <div className="pt-4 border-t border-zinc-200">
-                <Link
-                  href="/"
-                  className="flex items-center justify-center gap-2 text-xs font-medium text-zinc-700 p-2 rounded-md hover:bg-zinc-100 border border-zinc-200"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Exit to Landing Page</span>
-                </Link>
-              </div>
-            </div>
           </div>
         )}
+      </SiteHeader>
 
-        {/* Dynamic Page Content */}
-        <main
-          className={`flex-1 ${
-            isAgentPage
-              ? "overflow-hidden flex flex-col p-2 sm:p-4"
-              : "overflow-y-auto p-4 sm:p-6 lg:p-8"
-          } ${usesBottomNav ? "pb-20 lg:pb-4" : ""}`}
-        >
-          <div
-            className={`w-full ${
-              isAgentPage
-                ? "max-w-4xl mx-auto flex-1 flex flex-col h-full min-h-0"
-                : "mx-auto max-w-7xl"
-            }`}
-          >
-            {children}
-          </div>
-        </main>
-      </div>
+      {/* Desktop: icon + word across the top */}
+      <nav aria-label="Service" className="sw-dark hidden border-t border-[#2a2a2e] lg:block">
+        <ul className="flex w-full gap-8 px-10">
+          {sortedNav.map((item) => {
+            const Icon = item.icon;
+            const active = isActiveHref(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`sw-press -mb-px flex items-center gap-2 border-b-2 py-4 text-[15px] font-semibold tracking-tight ${
+                    active
+                      ? "border-white text-white"
+                      : "border-transparent text-[#99968e] hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
-      {/* Mobile-first bottom tab bar (fisherman role only) */}
-      {usesBottomNav && <MobileBottomNav items={sortedNav} />}
+      <main
+        className={`w-full flex-1 px-4 sm:px-6 lg:px-10 ${
+          isAgentPage ? "flex min-h-0 flex-col py-4" : "py-6 lg:py-10"
+        } pb-28 lg:pb-12`}
+      >
+        {children}
+      </main>
 
-      {/* Global AI Assistant Drawer */}
+      {/* Phone: big icons along the bottom, where a thumb reaches */}
+      <nav
+        aria-label="Primary"
+        className="sw-dark fixed inset-x-0 bottom-0 z-40 border-t border-[#2a2a2e] lg:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <ul className="flex w-full">
+          {sortedNav.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const active = isActiveHref(pathname, item.href);
+            return (
+              <li key={item.href} className="flex-1">
+                <Link
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`sw-press flex min-h-[68px] flex-col items-center justify-center gap-1.5 border-t-2 px-1 py-2 ${
+                    active
+                      ? "border-white font-bold text-white"
+                      : "border-transparent font-medium text-[#99968e]"
+                  }`}
+                >
+                  <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
+                  <span className="w-full truncate text-center text-[13px] leading-none tracking-tight">
+                    {item.label}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      {!isAgentPage && (
+        <div className="hidden lg:block">
+          <SiteFooter />
+        </div>
+      )}
+
       <AiDrawer />
     </div>
   );

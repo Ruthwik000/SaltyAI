@@ -13,7 +13,6 @@ import {
   TrendingDown,
   Minus,
   Radar,
-  Sparkles,
   AlertTriangle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -28,13 +27,12 @@ import {
 import {
   getLocationMarketProfile,
   getFishSchoolUpdate,
-  marineAlerts,
 } from "@/lib/marine-data";
 import { useMarine } from "@/lib/marine-context";
 import { useT } from "@/lib/i18n";
 import { riskLevelLabel } from "@/components/fisherman/speech-text";
 
-export function MarineMetricsGrid({ location, role: propRole }) {
+export function MarineMetricsGrid({ location, role: propRole, alerts = [], alertsLoaded = false }) {
   const { t } = useT();
   const marineContext = useMarine();
   const role = propRole || marineContext?.role;
@@ -54,21 +52,25 @@ export function MarineMetricsGrid({ location, role: propRole }) {
     [location.id, location.name]
   );
 
+  // Most severe live advisory for this coast. With none in force, say so
+  // rather than showing a warning from somewhere else.
   const operatorDisaster = React.useMemo(() => {
-    const matched = marineAlerts.find((a) =>
-      a.affectedRegions.some(
-        (r) =>
-          r.toLowerCase().includes(location.name.toLowerCase()) ||
-          location.name.toLowerCase().includes(r.toLowerCase())
-      )
-    );
-    if (matched) return matched;
-    const regional = marineAlerts.find((a) =>
-      a.affectedRegions.includes("Central Bay of Bengal")
-    );
-    if (regional) return regional;
-    return marineAlerts[0];
-  }, [location.name]);
+    if (alerts.length > 0) return alerts[0];
+    return {
+      id: "none",
+      type: alertsLoaded ? "No warning" : "Loading",
+      severity: "Advisory",
+      title: alertsLoaded
+        ? `No INCOIS high-wave or swell-surge warning in force near ${location.name}`
+        : "Checking INCOIS advisories…",
+      summary: "INCOIS High Wave Alert and Swell Surge Advisory feed.",
+      issuedAt: "—",
+      expiresAt: "—",
+      source: "Official INCOIS",
+      operationalAction: "Normal operations. Check the morning INCOIS bulletin before sailing.",
+      affectedRegions: [],
+    };
+  }, [alerts, alertsLoaded, location.name]);
 
   return (
     <>
@@ -523,7 +525,6 @@ export function MarineMetricsGrid({ location, role: propRole }) {
 
             <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-1">
               <div className="font-semibold text-zinc-900 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-zinc-700" />
                 <span>Market Advisory for Fishermen</span>
               </div>
               <p>
