@@ -177,7 +177,49 @@ export function FishermanHome() {
 
   return (
     <div className="space-y-10 lg:space-y-14">
-      {/* 01 — the answer */}
+      {/* 01 — market prices */}
+      <section className="min-w-0">
+        <SectionHead
+          index="01"
+          title={t("home.market")}
+        />
+        <p className="sw-label mb-2">{market.harbourName}</p>
+        <ul className="grid grid-cols-1 gap-px border border-[#dcd9d1] bg-[#dcd9d1] sm:grid-cols-2 xl:grid-cols-5">
+          {market.items.slice(0, 5).map((item) => {
+            const up = item.priceChange24h >= 0;
+            const Trend = up ? ArrowUpRight : ArrowDownRight;
+            return (
+              <li
+                key={item.species}
+                className="grid grid-cols-[1fr_auto] items-center gap-3 bg-white p-4"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
+                    {item.localName}
+                  </span>
+                  <span className="block truncate text-sm text-[#6d6c70]">{item.species}</span>
+                </span>
+                <span className="text-right">
+                  <span className="sw-num block text-3xl font-semibold leading-none tracking-[-0.04em] sm:text-4xl">
+                    ₹{item.pricePerKg}
+                  </span>
+                  <span className="sw-label">{t("home.perKg")}</span>
+                </span>
+                <span
+                  className={`sw-num col-span-2 flex items-center justify-end gap-1 text-sm font-semibold ${
+                    up ? "text-[#0e7a4b]" : "text-[#d0182a]"
+                  }`}
+                >
+                  <Trend className="h-4 w-4" strokeWidth={2} aria-hidden />
+                  {up ? "+" : "−"}₹{Math.abs(item.priceChange24h)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* 02 — risk today */}
       <section className="grid gap-px border border-[#dcd9d1] bg-[#dcd9d1] lg:grid-cols-12">
         <div
           className="relative flex min-h-72 min-w-0 flex-col justify-between p-5 text-white sm:min-h-80 sm:p-8 lg:col-span-7 lg:p-10"
@@ -187,7 +229,7 @@ export function FishermanHome() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
-                01 — {location.name}
+                02 — {location.name}
               </span>
               <p className="mt-2 text-base font-medium text-white/90 sm:text-xl">{t("home.canIGo")}</p>
             </div>
@@ -240,104 +282,61 @@ export function FishermanHome() {
         </Link>
       )}
 
-      <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
-        {/* 02 — fishing zones */}
-        <section className="min-w-0 lg:col-span-6">
-          <SectionHead
-            index="02"
-            title={t("home.pfz")}
-            action={
-              <Link href="/app/fishing-zones" className="sw-link whitespace-nowrap text-sm font-semibold">
-                {t("home.viewAll")}
-              </Link>
-            }
-          />
-          {loading ? (
-            <p className="py-6 text-[#6d6c70]">{t("common.loading")}</p>
-          ) : zones.length === 0 ? (
-            <p className="py-6 text-lg font-semibold">{t("home.noZones")}</p>
-          ) : (
-            <ul className="divide-y divide-[#dcd9d1] border-b border-[#dcd9d1]">
-              {zones.slice(0, 4).map((zone, index) => (
-                <li key={zone.id}>
-                  <Link
-                    href={`/app/fishing-zones?select=${encodeURIComponent(zone.id)}`}
-                    className="sw-press group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-4 hover:bg-white sm:grid-cols-[3rem_1fr_auto] sm:gap-4 sm:px-2"
-                  >
-                    <span
-                      className="flex h-10 w-10 items-center justify-center border border-[#0b0b0c] group-hover:bg-[#0b0b0c] group-hover:text-white"
-                      title={zone.bearing}
-                    >
-                      <Navigation
-                        className="h-5 w-5"
-                        strokeWidth={1.75}
-                        style={{ transform: `rotate(${(zone.bearingDeg ?? 0) - 45}deg)` }}
-                        aria-hidden
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="sw-num text-[11px] font-semibold tracking-[0.14em] text-[#6d6c70]">
-                        {String(index + 1).padStart(2, "0")} · {zone.bearing}
-                      </span>
-                      <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
-                        {zone.name}
-                      </span>
-                    </span>
-                    <span className="text-right">
-                      <span className="sw-num block text-3xl font-semibold leading-none tracking-[-0.04em] sm:text-4xl">
-                        {zone.distanceNM != null ? Math.round(zone.distanceNM) : "—"}
-                      </span>
-                      <span className="sw-label">{t("common.unit.nm")} {t("home.away")}</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* 03 — market prices */}
-        <section className="min-w-0 lg:col-span-6">
-          <SectionHead
-            index="03"
-            title={t("home.market")}
-          />
-          <p className="sw-label mb-2">{market.harbourName}</p>
+      {/* 03 — fishing zones */}
+      <section className="min-w-0">
+        <SectionHead
+          index="03"
+          title={t("home.pfz")}
+          action={
+            <Link href="/app/fishing-zones" className="sw-link whitespace-nowrap text-sm font-semibold">
+              {t("home.viewAll")}
+            </Link>
+          }
+        />
+        {loading ? (
+          <p className="py-6 text-[#6d6c70]">{t("common.loading")}</p>
+        ) : zones.length === 0 ? (
+          <p className="py-6 text-lg font-semibold">{t("home.noZones")}</p>
+        ) : (
           <ul className="divide-y divide-[#dcd9d1] border-b border-[#dcd9d1]">
-            {market.items.slice(0, 5).map((item) => {
-              const up = item.priceChange24h >= 0;
-              const Trend = up ? ArrowUpRight : ArrowDownRight;
-              return (
-                <li
-                  key={item.species}
-                  className="grid grid-cols-[1fr_auto] items-center gap-3 py-4 sm:grid-cols-[1fr_auto_6rem] sm:gap-4 sm:px-2"
+            {zones.slice(0, 4).map((zone, index) => (
+              <li key={zone.id}>
+                <Link
+                  href={`/app/fishing-zones?select=${encodeURIComponent(zone.id)}`}
+                  className="sw-press group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 py-4 hover:bg-white sm:grid-cols-[3rem_1fr_auto] sm:gap-4 sm:px-2"
                 >
+                  <span
+                    className="flex h-10 w-10 items-center justify-center border border-[#0b0b0c] group-hover:bg-[#0b0b0c] group-hover:text-white"
+                    title={zone.bearing}
+                  >
+                    <Navigation
+                      className="h-5 w-5"
+                      strokeWidth={1.75}
+                      style={{ transform: `rotate(${(zone.bearingDeg ?? 0) - 45}deg)` }}
+                      aria-hidden
+                    />
+                  </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
-                      {item.localName}
+                    <span className="sw-num text-[11px] font-semibold tracking-[0.14em] text-[#6d6c70]">
+                      {String(index + 1).padStart(2, "0")} · {zone.bearing}
                     </span>
-                    <span className="block truncate text-sm text-[#6d6c70]">{item.species}</span>
+                    <span className="block truncate text-base font-bold tracking-[-0.02em] sm:text-lg">
+                      {zone.name}
+                    </span>
                   </span>
                   <span className="text-right">
                     <span className="sw-num block text-3xl font-semibold leading-none tracking-[-0.04em] sm:text-4xl">
-                      ₹{item.pricePerKg}
+                      {zone.distanceNM != null ? Math.round(zone.distanceNM) : "—"}
                     </span>
-                    <span className="sw-label">{t("home.perKg")}</span>
+                    <span className="sw-label">{t("common.unit.nm")} {t("home.away")}</span>
                   </span>
-                  <span
-                    className={`sw-num col-span-2 flex items-center justify-end gap-1 text-sm font-semibold sm:col-span-1 ${
-                      up ? "text-[#0e7a4b]" : "text-[#d0182a]"
-                    }`}
-                  >
-                    <Trend className="h-4 w-4" strokeWidth={2} aria-hidden />
-                    {up ? "+" : "−"}₹{Math.abs(item.priceChange24h)}
-                  </span>
-                </li>
-              );
-            })}
+                </Link>
+              </li>
+            ))}
           </ul>
-        </section>
-      </div>
+        )}
+      </section>
+
 
       {/* 04 — what to do next */}
       <section>

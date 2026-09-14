@@ -15,6 +15,9 @@ import { LANGUAGES, setLanguage, useT } from "@/lib/i18n";
 export function LanguageSwitch({ className = "" }) {
   const { t, lang, language } = useT();
   const [open, setOpen] = React.useState(false);
+  // The header scrolls sideways on phones, which clips an absolutely placed
+  // menu. The menu is fixed to the viewport, anchored under the button.
+  const [anchor, setAnchor] = React.useState(null);
   const holder = React.useRef(null);
 
   /* Keep the document's own language in step with the choice, so the browser
@@ -48,7 +51,11 @@ export function LanguageSwitch({ className = "" }) {
     <div ref={holder} className={`relative ${className}`}>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          setAnchor({ top: rect.bottom + 8, right: Math.max(8, window.innerWidth - rect.right) });
+          setOpen((value) => !value);
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={t("shell.language")}
@@ -62,7 +69,8 @@ export function LanguageSwitch({ className = "" }) {
         <div
           role="listbox"
           aria-label={t("shell.chooseLanguage")}
-          className="absolute left-0 z-50 mt-2 max-h-[70vh] w-60 overflow-y-auto border border-[#0b0b0c] bg-white sm:left-auto sm:right-0"
+          style={anchor ? { top: anchor.top, right: anchor.right } : undefined}
+          className="fixed z-[60] max-h-[70vh] w-60 max-w-[calc(100vw-16px)] overflow-y-auto border border-[#0b0b0c] bg-white text-[#0b0b0c]"
         >
           <p className="sw-label border-b border-[#dcd9d1] px-4 py-3">
             {t("shell.chooseLanguage")}

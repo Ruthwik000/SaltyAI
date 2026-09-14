@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateMessageId } from "@/lib/id";
 import { askMarineAgent } from "@/lib/api";
-import { X, Send, ArrowRight, Database, Square, Radio } from "lucide-react";
+import { X, Send, ArrowRight, Database } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { useVoiceReply } from "@/lib/use-voice-reply";
+import { useSpeaker } from "@/lib/use-voice";
+import { detectLanguage } from "@/lib/voice-api";
 import { VoiceMicButton } from "@/components/voice-mic-button";
 
 export function AiDrawer() {
@@ -22,18 +23,12 @@ export function AiDrawer() {
     consumeAiRequest,
   } = useMarine();
   const [inputQuery, setInputQuery] = React.useState("");
-  const { t, language } = useT();
-  const { speak, stop: stopSpeaking, speaking } = useVoiceReply();
+  const { language } = useT();
+  const { speak, stop: stopSpeaking } = useSpeaker(language.speech);
 
-  // Hands-free conversation, ended only by the stop button.
-  const [liveVoice, setLiveVoice] = React.useState(false);
-  const endLiveVoice = React.useCallback(() => {
-    setLiveVoice(false);
-    stopSpeaking();
-  }, [stopSpeaking]);
   // Set when a question arrived by microphone, so the answer is spoken back
   // in the same language. A typed question stays silent.
-  const speakReplyRef = React.useRef(false);
+  const speakReplyRef = React.useRef(null);
   const [messages, setMessages] = React.useState([
     {
       id: "m-welcome",
@@ -51,10 +46,10 @@ export function AiDrawer() {
     `Are there any active cyclone or swell warnings?`,
   ];
 
-  const handleSend = (textToSend, viaVoice = false, mode = "normal") => {
+  const handleSend = (textToSend, spokenLanguage = null, mode = "normal") => {
     const query = textToSend || inputQuery;
     if (!query.trim()) return;
-    speakReplyRef.current = viaVoice;
+    speakReplyRef.current = spokenLanguage;
 
     const userMsg = {
       id: generateMessageId("u"),
@@ -77,7 +72,7 @@ export function AiDrawer() {
       mode,
       role,
       history,
-      language: language.native,
+      language: spokenLanguage || detectLanguage(query) || "auto",
       location: {
         name: location.name,
         lat: location.lat,
@@ -98,9 +93,10 @@ export function AiDrawer() {
             time: "Just now",
           },
         ]);
-        if (speakReplyRef.current || liveVoice) {
-          speakReplyRef.current = false;
-          speak(result.response || "");
+        if (speakReplyRef.current) {
+          const replyLanguage = detectLanguage(result.response) || speakReplyRef.current;
+          speakReplyRef.current = null;
+          speak(result.response || "", replyLanguage);
         }
       })
       .catch((error) => {
@@ -122,7 +118,7 @@ export function AiDrawer() {
     if (!isAiDrawerOpen || !pendingAiRequest) return;
     const timer = setTimeout(() => {
       consumeAiRequest();
-      handleSend(pendingAiRequest.query, false, pendingAiRequest.mode);
+      handleSend(pendingAiRequest.query, null, pendingAiRequest.mode);
     }, 0);
     return () => clearTimeout(timer);
     // handleSend is recreated every render; the request id is what matters.
@@ -268,38 +264,13 @@ export function AiDrawer() {
               placeholder={`Ask anything about ${location.name} ocean conditions...`}
               className="h-9 text-xs"
             />
-            {(speaking || liveVoice) && (
-              <button
-                type="button"
-                onClick={endLiveVoice}
-                aria-label={liveVoice ? t("voice.stopLive") : t("voice.stopReading")}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-300 bg-rose-50 text-rose-700"
-              >
-                <Square className="h-3.5 w-3.5 fill-current" />
-              </button>
-            )}
             <VoiceMicButton
-              onInterim={setInputQuery}
-              onTranscript={(text) => {
+              onTranscript={(text, spokenLanguage) => {
                 setInputQuery("");
-                handleSend(text, true);
+                handleSend(text, spokenLanguage);
               }}
               onStart={stopSpeaking}
-              autoListen={liveVoice && !speaking && !isTyping}
             />
-            <button
-              type="button"
-              onClick={() => (liveVoice ? endLiveVoice() : setLiveVoice(true))}
-              aria-pressed={liveVoice}
-              title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
-              className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
-                liveVoice
-                  ? "border-rose-300 bg-rose-50 text-rose-700"
-                  : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
-              }`}
-            >
-              <Radio className="h-4 w-4" />
-            </button>
             <Button
               type="submit"
               size="sm"
