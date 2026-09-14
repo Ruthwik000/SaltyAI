@@ -20,6 +20,14 @@ import {
   riskVerdictLabel,
 } from "@/components/fisherman/speech-text";
 import { useT } from "@/lib/i18n";
+import { KnowMore } from "@/components/ui/know-more";
+
+const VERDICT = {
+  Low: { color: "#0e7a4b", icon: Check },
+  Moderate: { color: "#c26a00", icon: AlertTriangle },
+  Elevated: { color: "#d0182a", icon: X },
+  High: { color: "#d0182a", icon: X },
+};
 
 const LEVEL_STYLES = {
   Low: {
@@ -103,11 +111,11 @@ export function RiskResultSheet({
           </div>
           <div className="flex items-center gap-2">
             {result && <SpeakButton size="sm" text={riskSpeech(t, result)} />}
-            {result && <DataBadge source={source} reason={reason} compact />}
+            {result && <DataBadge source={source} reason={reason} />}
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 active:bg-zinc-100"
+              className="flex h-8 w-8 items-center justify-center rounded-[2px] text-zinc-400 active:bg-zinc-100"
               aria-label={t("common.close")}
             >
               <X className="h-4 w-4" />
@@ -146,29 +154,28 @@ export function RiskResultSheet({
 
         {!loading && result && styles && (
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
-            {/* The demo banner that used to sit here has been reduced to the
-                amber dot in the header, which keeps the full wording in its
-                tooltip and its accessible name. The summary below still opens
-                with "Demo estimate", so the score is never presented bare. */}
-            {/* Score */}
+            {/* The answer, as a colour and a symbol first */}
             <div
-              className={`flex items-center gap-4 rounded-xl border p-4 ${styles.ring}`}
+              className="flex items-center gap-5 p-6 text-white"
+              style={{ backgroundColor: VERDICT[result.level]?.color || "#55545a" }}
             >
-              <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full bg-white/70">
-                <span className="font-sans text-2xl font-bold leading-none text-zinc-950">
-                  {result.score}
-                </span>
-                <span className="text-[9px] text-zinc-500">/100</span>
-              </div>
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center border border-white/40">
+                {React.createElement(VERDICT[result.level]?.icon || TriangleAlert, {
+                  className: "h-12 w-12",
+                  strokeWidth: 3,
+                })}
+              </span>
               <div className="min-w-0">
-                <div className="text-sm font-bold">
-                  {riskVerdictLabel(t, result.level)} · {riskLevelLabel(t, result.level)}
+                <div className="text-4xl font-bold leading-none tracking-[-0.035em]">
+                  {riskVerdictLabel(t, result.level)}
                 </div>
-                <p className="mt-0.5 text-xs leading-relaxed text-zinc-700">
-                  {result.summary}
-                </p>
+                <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">{riskLevelLabel(t, result.level)}</div>
               </div>
             </div>
+
+            <KnowMore>
+              <p>{result.summary}</p>
+            </KnowMore>
 
             {result.safeWindow && (
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2.5">
@@ -201,9 +208,9 @@ export function RiskResultSheet({
                           {factor.value}
                         </div>
                       </div>
-                      <div className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-zinc-100">
+                      <div className="h-1.5 w-20 shrink-0 overflow-hidden rounded-[2px] bg-zinc-100">
                         <div
-                          className={`h-full rounded-full ${
+                          className={`h-full rounded-[2px] ${
                             factor.score < 34
                               ? "bg-emerald-500"
                               : factor.score < 67

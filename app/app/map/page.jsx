@@ -7,6 +7,7 @@ import { OceanMap } from "@/components/map/ocean-map";
 import { fetchPfzZones } from "@/lib/fisherman-api";
 import { researchOsfLayers } from "@/lib/incois-layers";
 import { OperationsMap } from "@/components/operator/operations-map";
+import { KnowMore } from "@/components/ui/know-more";
 
 /**
  * Marine Map.
@@ -144,12 +145,9 @@ export default function MarineMapPage() {
       </div>
 
       {view === "research" && (
-        <p className="shrink-0 border-t border-zinc-200 bg-white px-4 py-1.5 text-[10px] leading-snug text-zinc-500">
-          Variables read from the INCOIS Ocean State Forecast WMS. Tap the map to read the
-          active variable at that point. Ocean-colour products (chlorophyll, Kd490) are
-          not wired yet — their service request has to be captured from the official PFZ
-          interface first.
-        </p>
+        <KnowMore>
+          <p>Variables read from the INCOIS Ocean State Forecast WMS. Tap the map to read the active variable at that point. Ocean-colour products (chlorophyll, Kd490) are not wired yet — their service request has to be captured from the official PFZ interface first.</p>
+        </KnowMore>
       )}
     </div>
   );

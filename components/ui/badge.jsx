@@ -2,30 +2,28 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+/* A label, not a pill: uppercase, tracked, hairline-bordered. */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-[2px] border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-zinc-900 text-zinc-50 shadow-xs hover:bg-zinc-900/80",
-        secondary: "border-transparent bg-zinc-100 text-zinc-900 hover:bg-zinc-200/80",
-        destructive:
-          "border-transparent bg-red-500 text-zinc-50 shadow-xs hover:bg-red-500/80",
-        outline: "border-zinc-200 text-zinc-950 bg-white",
-        minimal:
-          "border-zinc-200/80 bg-zinc-50/80 text-zinc-700 font-sans text-[11px] tracking-tight font-normal",
-        pill: "border-zinc-200/90 bg-white/90 text-zinc-800 shadow-xs backdrop-blur-sm",
+        default: "border-[#0b0b0c] bg-[#0b0b0c] text-white",
+        secondary: "border-[#dcd9d1] bg-[#efede7] text-[#3a393e]",
+        destructive: "border-[#d0182a] bg-transparent text-[#d0182a]",
+        outline: "border-[#dcd9d1] bg-transparent text-[#3a393e]",
+        minimal: "border-[#dcd9d1] bg-transparent text-[#3a393e]",
+        pill: "border-[#dcd9d1] bg-transparent text-[#3a393e]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "outline",
     },
   }
 );
 
 function Badge({ className, variant, ...props }) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+  return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
 export { Badge, badgeVariants };

@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMarine } from "@/lib/marine-context";
-import { marineAlerts } from "@/lib/marine-data";
+import { fetchOceanAlerts } from "@/lib/fisherman-api";
+import { DataBadge } from "@/components/fisherman/data-badge";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Sparkles, ArrowLeft } from "lucide-react";
+import { MapPin, ArrowLeft } from "lucide-react";
 import { ResearchAlertsCard } from "@/components/operator/research-alerts-card";
 
 const sourceOptions = [
@@ -17,11 +18,29 @@ const sourceOptions = [
 ];
 
 export default function AlertsDisastersPage() {
-  const { setIsAiDrawerOpen } = useMarine();
+  const { openAiDrawer, location } = useMarine();
   const [filterType, setFilterType] = React.useState("all");
   const [sourceFilter, setSourceFilter] = React.useState("all");
+  const [alerts, setAlerts] = React.useState([]);
+  const [alertsSource, setAlertsSource] = React.useState("live");
+  const [alertsReason, setAlertsReason] = React.useState();
+  const [alertsLoaded, setAlertsLoaded] = React.useState(false);
 
-  const filteredAlerts = marineAlerts.filter((a) => {
+  // Live INCOIS advisories for the selected coast; the bundled demo list only
+  // when the data API cannot answer, and badged as such.
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetchOceanAlerts(location.lat, location.lon, controller.signal).then((response) => {
+      if (controller.signal.aborted) return;
+      setAlerts(response.data || []);
+      setAlertsSource(response.source);
+      setAlertsReason(response.reason);
+      setAlertsLoaded(true);
+    });
+    return () => controller.abort();
+  }, [location.lat, location.lon]);
+
+  const filteredAlerts = alerts.filter((a) => {
     if (
       filterType !== "all" &&
       !a.type.toLowerCase().includes(filterType.toLowerCase())
@@ -49,7 +68,7 @@ export default function AlertsDisastersPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="sw-page-title">
             Alerts & Disaster Early Warning
           </h1>
         </div>
@@ -57,10 +76,13 @@ export default function AlertsDisastersPage() {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            onClick={() => setIsAiDrawerOpen(true)}
+            onClick={() =>
+              openAiDrawer(
+                `Which INCOIS high-wave or swell-surge warnings, thunderstorm hazards and hazard zones are in force near ${location.name}, and what should boats do now?`
+              )
+            }
             className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
           >
-            <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
             <span>Ask Emergency Agent</span>
           </Button>
         </div>
@@ -73,7 +95,6 @@ export default function AlertsDisastersPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans">
         <div className="p-3.5 rounded-lg border border-zinc-200 bg-white shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-2 w-2 rounded-full bg-blue-600" />
             <div>
               <span className="font-semibold text-zinc-950 block">
                 Official Government Bulletins
@@ -90,13 +111,12 @@ export default function AlertsDisastersPage() {
 
         <div className="p-3.5 rounded-lg border border-purple-200/80 bg-purple-50/40 shadow-xs flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-2 w-2 rounded-full bg-purple-600" />
             <div>
               <span className="font-semibold text-zinc-950 block">
                 SALTY AI Predictive Insights
               </span>
               <span className="text-[11px] text-zinc-500">
-                Radar anomaly and satellite IR clustering; 2-4 hr early detection.
+                NIM agent reading INCOIS advisories and the Open-Meteo storm outlook.
               </span>
             </div>
           </div>
@@ -136,7 +156,7 @@ export default function AlertsDisastersPage() {
           <span className="font-sans text-[10px] uppercase text-zinc-400 font-semibold mr-1">
             Type:
           </span>
-          {["all", "Cyclone", "Wind", "Wave", "Squall"].map((t) => (
+          {["all", "Wave", "Swell", "Cyclone"].map((t) => (
             <button
               key={t}
               onClick={() => setFilterType(t)}
@@ -154,6 +174,10 @@ export default function AlertsDisastersPage() {
 
       {/* Alerts Feed */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between text-xs text-zinc-500">
+          <span>{alertsLoaded ? `${alerts.length} advisories near ${location.name}` : "Loading advisories…"}</span>
+          <DataBadge source={alertsSource} reason={alertsReason} />
+        </div>
         {filteredAlerts.length > 0 ? (
           filteredAlerts.map((alert) => {
             const isOfficial = alert.source.startsWith("Official");

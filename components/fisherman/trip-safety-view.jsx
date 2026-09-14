@@ -32,6 +32,7 @@ import { formatCoord, nmToKm } from "@/lib/geo";
 import { useT } from "@/lib/i18n";
 import { SpeakButton } from "@/components/fisherman/speak-button";
 import { conditionsSpeech } from "@/components/fisherman/speech-text";
+import { KnowMore } from "@/components/ui/know-more";
 
 const BOAT_TYPES = [
   { id: "craft", labelKey: "boat.craft" },
@@ -50,9 +51,8 @@ function toLocalInput(date) {
 }
 
 const FIELD =
-  "h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10";
-const LABEL =
-  "mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500";
+  "h-14 w-full rounded-[2px] border border-[#c4c0b6] bg-white px-4 text-lg font-semibold text-[#0b0b0c] outline-none focus:border-[#0b0b0c]";
+const LABEL = "mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6d6c70] [&_svg]:h-4 [&_svg]:w-4 [&_svg]:text-[#0b0b0c]";
 
 export function TripSafetyView() {
   const { location, setLocationId } = useMarine();
@@ -217,13 +217,12 @@ export function TripSafetyView() {
       <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
         <div className="border-b border-zinc-100 px-4 py-3">
           <h2 className="text-sm font-bold text-zinc-950">{t("risk.planTrip")}</h2>
-          <p className="mt-0.5 text-[11px] text-zinc-500">{t("risk.planTripHint")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-4">
           <div>
             <label htmlFor="port" className={LABEL}>
-              <Anchor className="h-3 w-3" />
+              <Anchor className="h-6 w-6" />
               <span>{t("risk.port")}</span>
             </label>
             <select
@@ -242,7 +241,7 @@ export function TripSafetyView() {
 
           <div>
             <label htmlFor="destination" className={LABEL}>
-              <Compass className="h-3 w-3" />
+              <Compass className="h-6 w-6" />
               <span>{t("risk.destination")}</span>
             </label>
             <select
@@ -270,7 +269,7 @@ export function TripSafetyView() {
 
           <div>
             <label htmlFor="boat" className={LABEL}>
-              <Sailboat className="h-3 w-3" />
+              <Sailboat className="h-6 w-6" />
               <span>{t("risk.boatType")}</span>
             </label>
             <select
@@ -290,7 +289,7 @@ export function TripSafetyView() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="departure" className={LABEL}>
-                <Clock className="h-3 w-3" />
+                <Clock className="h-6 w-6" />
                 <span>{t("risk.departure")}</span>
               </label>
               <input
@@ -304,7 +303,7 @@ export function TripSafetyView() {
             </div>
             <div>
               <label htmlFor="return" className={LABEL}>
-                <CalendarClock className="h-3 w-3" />
+                <CalendarClock className="h-6 w-6" />
                 <span>{t("risk.return")}</span>
               </label>
               <input
@@ -326,7 +325,7 @@ export function TripSafetyView() {
           <Button
             type="submit"
             disabled={!canSubmit || assessing}
-            className="h-12 w-full gap-2 bg-zinc-950 text-sm font-semibold text-white hover:bg-zinc-800"
+            className="h-16 w-full gap-3 bg-zinc-950 text-xl font-bold text-white hover:bg-zinc-800"
           >
             {assessing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -336,9 +335,10 @@ export function TripSafetyView() {
             <span>{assessing ? t("risk.checking") : t("risk.check")}</span>
           </Button>
 
-          <p className="text-center text-[10px] leading-relaxed text-zinc-400">
-            {t("risk.disclaimer")}
-          </p>
+          <KnowMore>
+            <p>{t("risk.planTripHint")}</p>
+            <p className="mt-2">{t("risk.disclaimer")}</p>
+          </KnowMore>
         </form>
       </section>
 

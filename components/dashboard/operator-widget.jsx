@@ -53,7 +53,6 @@ export function OperatorWidget({ location, vessels }) {
         {activeJourney && (
           <div className="flex flex-col justify-between gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs sm:flex-row sm:items-center">
             <div className="flex min-w-0 items-start gap-2.5 sm:items-center">
-              <div className="mt-1 h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-sky-600 sm:mt-0" />
               <div className="min-w-0">
                 <span className="font-bold text-sky-950 block">
                   Fleet Departure Logged: {activeJourney.vesselName}
@@ -76,7 +75,6 @@ export function OperatorWidget({ location, vessels }) {
               className="flex flex-col gap-2 bg-white p-3 transition-colors hover:bg-zinc-50 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-start gap-2.5 sm:items-center sm:gap-3">
-                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500 sm:mt-0" />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5 font-semibold text-zinc-950">
                     <span>{v.name}</span>

@@ -25,7 +25,6 @@ import {
   Navigation,
   Compass,
   CheckCircle2,
-  Sparkles,
   Bookmark,
   BookmarkCheck,
   Scale,
@@ -55,7 +54,7 @@ export function PfzCatalogView() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200">
         <div>
-          <h1 className="text-lg leading-snug sm:text-2xl lg:text-3xl font-bold tracking-tight text-zinc-950">
+          <h1 className="sw-page-title">
             Potential Fishing Zones (PFZ)
           </h1>
           <p className="mt-1 text-xs text-zinc-500 font-sans">
@@ -80,7 +79,6 @@ export function PfzCatalogView() {
             onClick={() => setIsAiDrawerOpen(true)}
             className="text-xs h-8 bg-zinc-950 hover:bg-zinc-800 text-white gap-1.5"
           >
-            <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
             <span>Ask Catch Advisor</span>
           </Button>
         </div>
@@ -388,7 +386,7 @@ export function PfzCatalogView() {
                     Distance: {selectedZone.distanceNM} Nautical Miles
                   </span>
                 </div>
-                <div className="h-12 w-12 rounded-full border border-sky-200 flex items-center justify-center bg-white">
+                <div className="h-12 w-12 rounded-[2px] border border-sky-200 flex items-center justify-center bg-white">
                   <Compass className="h-6 w-6 text-sky-700" />
                 </div>
               </div>

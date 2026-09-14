@@ -35,18 +35,16 @@ export function MarineProvider({ children }) {
     return "vizag";
   });
 
-  const [phoneNumber, setPhoneNumberState] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        return localStorage.getItem("salty_phone_number") || "";
-      } catch {
-        // ignore
-      }
-    }
-    return "";
-  });
-
   const [isAiDrawerOpen, setIsAiDrawerOpen] = React.useState(false);
+  // A question a page hands to the agent drawer, sent as soon as it opens.
+  const [pendingAiRequest, setPendingAiRequest] = React.useState(null);
+
+  const openAiDrawer = React.useCallback((query, mode = "normal") => {
+    if (query) setPendingAiRequest({ id: Date.now(), query, mode });
+    setIsAiDrawerOpen(true);
+  }, []);
+
+  const consumeAiRequest = React.useCallback(() => setPendingAiRequest(null), []);
   const [savedZoneIds, setSavedZoneIds] = React.useState(["pfz-vizag-01"]);
   const [backendStatus, setBackendStatus] = React.useState("loading");
   const [backendLayers] = React.useState(null);
@@ -68,15 +66,6 @@ export function MarineProvider({ children }) {
     setRoleState(newRole);
     try {
       localStorage.setItem("salty_role", newRole);
-    } catch {
-      // ignore
-    }
-  };
-
-  const setPhoneNumber = (newPhoneNumber) => {
-    setPhoneNumberState(newPhoneNumber);
-    try {
-      localStorage.setItem("salty_phone_number", newPhoneNumber);
     } catch {
       // ignore
     }
@@ -170,12 +159,13 @@ export function MarineProvider({ children }) {
       value={{
         role,
         setRole,
-        phoneNumber,
-        setPhoneNumber,
         location,
         setLocationId,
         isAiDrawerOpen,
         setIsAiDrawerOpen,
+        openAiDrawer,
+        pendingAiRequest,
+        consumeAiRequest,
         savedZoneIds,
         toggleSaveZone,
         activeAlertCount: 4,

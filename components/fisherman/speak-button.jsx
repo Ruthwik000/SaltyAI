@@ -12,6 +12,7 @@
 import * as React from "react";
 import { Square, Volume2 } from "lucide-react";
 import { useSpeech, useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 export function SpeakButton({ text, className = "", size = "md", label }) {
   const { t } = useT();
@@ -19,8 +20,8 @@ export function SpeakButton({ text, className = "", size = "md", label }) {
 
   if (!supported) return null;
 
-  const box = size === "sm" ? "h-7 min-w-7 px-1.5" : "h-9 min-w-9 px-2";
-  const icon = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  const box = size === "sm" ? "h-10 min-w-10 px-2" : "h-12 min-w-12 px-3";
+  const icon = size === "sm" ? "h-5 w-5" : "h-6 w-6";
 
   return (
     <button
@@ -28,11 +29,14 @@ export function SpeakButton({ text, className = "", size = "md", label }) {
       onClick={() => (speaking ? stop() : speak(text))}
       aria-label={speaking ? t("common.stopReading") : t("common.readAloud")}
       title={speaking ? t("common.stopReading") : t("common.readAloud")}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border text-[11px] font-medium transition-colors ${box} ${
+      className={cn(
+        "sw-press inline-flex shrink-0 items-center justify-center gap-2 rounded-[2px] border text-sm font-semibold tracking-tight",
+        box,
         speaking
-          ? "border-sky-300 bg-sky-100 text-sky-800"
-          : "border-zinc-200 bg-white text-zinc-600 active:bg-zinc-100"
-      } ${className}`}
+          ? "border-[#0b0b0c] bg-[#0b0b0c] text-white"
+          : "border-[#0b0b0c] bg-transparent text-[#0b0b0c] hover:bg-[#0b0b0c] hover:text-white",
+        className
+      )}
     >
       {speaking ? (
         <Square className={`${icon} fill-current`} />

@@ -27,16 +27,16 @@ import {
   Radio,
   Clock,
   MapPin,
-  Sparkles,
   AlertTriangle,
   Download,
   Share2,
   CheckCircle2,
   RotateCcw,
 } from "lucide-react";
+import { KnowMore } from "@/components/ui/know-more";
 
 export default function LostFishermanPage() {
-  const { location, setIsAiDrawerOpen } = useMarine();
+  const { location, openAiDrawer } = useMarine();
   const router = useRouter();
 
   // SAR Operator inputs
@@ -119,17 +119,20 @@ export default function LostFishermanPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-zinc-200 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h1 className="flex items-start gap-2 text-base font-bold leading-snug tracking-tight text-zinc-950 sm:items-center sm:gap-2.5 sm:text-2xl lg:text-3xl">
+        <h1 className="sw-page-title flex items-start gap-3">
           <LifeBuoy className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 sm:mt-0 sm:h-7 sm:w-7" />
           <span className="text-balance">Lost Fisherman &amp; Vessel Search Area</span>
         </h1>
 
         <Button
           size="sm"
-          onClick={() => setIsAiDrawerOpen(true)}
+          onClick={() =>
+            openAiDrawer(
+              `Predict the search area for ${targetName} (target type ${targetType}) last seen at ${lkpLat}, ${lkpLon} ${elapsedHours} hours ago. Give the datum, search radius, pattern, current conditions there, and any boats from the SALTY fleet nearby.`
+            )
+          }
           className="h-9 w-full shrink-0 gap-1.5 bg-zinc-950 text-xs text-white hover:bg-zinc-800 sm:h-8 sm:w-auto"
         >
-          <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
           <span>SAR Assistant</span>
         </Button>
       </div>
@@ -184,9 +187,9 @@ export default function LostFishermanPage() {
               <CardTitle className="text-sm font-bold text-zinc-950">
                 Incident & Drift Input
               </CardTitle>
-              <p className="text-xs text-zinc-500">
-                Provide last known coordinates and elapsed timeline
-              </p>
+              <KnowMore>
+                <p>Provide last known coordinates and elapsed timeline</p>
+              </KnowMore>
             </CardHeader>
 
             <CardContent className="pt-4">
