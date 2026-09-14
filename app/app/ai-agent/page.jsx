@@ -33,12 +33,26 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { LANGUAGES, setLanguage, useT } from "@/lib/i18n";
-import { useSpeaker } from "@/lib/use-voice";
-import { detectLanguage } from "@/lib/voice-api";
+import { useVoiceReply } from "@/lib/use-voice-reply";
 import { VoiceMicButton } from "@/components/voice-mic-button";
 import { MarkdownAnswer } from "@/components/research/markdown-answer";
 import { KnowMore } from "@/components/ui/know-more";
 
+function LanguageControl({ language }) {
+  return (
+    <label className="inline-flex items-center gap-1.5 text-[10px] text-zinc-500">
+      <span className="hidden sm:inline">Reply in</span>
+      <select
+        value={language.code}
+        onChange={(event) => setLanguage(event.target.value)}
+        aria-label="Reply language"
+        className="h-7 max-w-28 rounded-md border border-zinc-200 bg-white px-1.5 text-[10px] font-medium text-zinc-700 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-900/10"
+      >
+        {LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.native}</option>)}
+      </select>
+    </label>
+  );
+}
 
 export default function AiAgentPage() {
   const { location, role } = useMarine();
@@ -52,10 +66,39 @@ export default function AiAgentPage() {
   const [researchStage, setResearchStage] = React.useState("");
   const [copiedId, setCopiedId] = React.useState(null);
   const [expandedSteps, setExpandedSteps] = React.useState({});
-  const { speak, stop: stopSpeaking, speaking } = useSpeaker(language.speech);
-  // Set to the spoken language when a question arrives by microphone, so the
-  // answer is read back. A typed question stays silent.
-  const speakReplyRef = React.useRef(null);
+  const {
+    speak,
+    stop: stopSpeaking,
+    speaking,
+    prime: primeSpeech,
+    substituteVoice,
+  } = useVoiceReply();
+
+  // Hands-free conversation. While this is on the microphone reopens after
+  // every spoken reply, so a fisherman never has to touch the screen. It ends
+  // only when the person ends it.
+  const [liveVoice, setLiveVoice] = React.useState(false);
+
+  const endLiveVoice = React.useCallback(() => {
+    setLiveVoice(false);
+    stopSpeaking();
+  }, [stopSpeaking]);
+
+  // Chrome and Safari refuse to speak until the page has had a real user
+  // gesture, and they refuse silently. Unlocking the synthesiser inside the
+  // click that starts a voice turn is what makes the first reply audible.
+  const beginLiveVoice = React.useCallback(() => {
+    primeSpeech();
+    setLiveVoice(true);
+  }, [primeSpeech]);
+
+  const handleMicStart = React.useCallback(() => {
+    primeSpeech();
+    stopSpeaking();
+  }, [primeSpeech, stopSpeaking]);
+  // Set when a question arrived by microphone, so the answer is spoken back
+  // in the same language. A typed question stays silent.
+  const speakReplyRef = React.useRef(false);
 
   // Arriving with a dataset attached means the researcher came here to analyse
   // it. Adjusted during render rather than in an effect, which would queue a
@@ -177,10 +220,10 @@ export default function AiAgentPage() {
   const currentSuggestions =
     mode === "research" ? researchSuggestions : normalSuggestions;
 
-  const handleSend = (text, spokenLanguage = null) => {
+  const handleSend = (text, viaVoice = false) => {
     const query = (text || inputQuery).trim();
     if (!query) return;
-    speakReplyRef.current = spokenLanguage;
+    speakReplyRef.current = viaVoice;
 
     const userMessage = {
       id: generateMessageId("u"),
@@ -217,8 +260,7 @@ export default function AiAgentPage() {
     void askMarineAgent(grounded, {
       mode,
       history,
-      role,
-      language: spokenLanguage || detectLanguage(query) || "auto",
+      language: language.native,
       location: {
         name: location.name,
         lat: location.lat,
@@ -256,10 +298,9 @@ export default function AiAgentPage() {
             time: "Just now",
           },
         ]);
-        if (speakReplyRef.current) {
-          const replyLanguage = detectLanguage(result.response) || speakReplyRef.current;
-          speakReplyRef.current = null;
-          speak(result.response || "", replyLanguage);
+        if (speakReplyRef.current || liveVoice) {
+          speakReplyRef.current = false;
+          speak(result.response || "");
         }
       })
       .catch((error) => {
@@ -269,7 +310,7 @@ export default function AiAgentPage() {
             id: generateMessageId("a"),
             sender: "agent",
             mode,
-            text: `The grounded marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and set NVIDIA_API_KEY, then try again."}`,
+            text: `The grounded marine agent is unavailable right now. ${error instanceof Error ? error.message : "Start the SALTY API and Ollama, then try again."}`,
             time: "Just now",
           },
         ]);
@@ -386,8 +427,7 @@ export default function AiAgentPage() {
             {/* Input Controls Bar */}
             <div className="flex items-center justify-between pt-2 mt-1 border-t border-zinc-100/90 gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {/* Normal / research: researchers only */}
-                {role === "researcher" && (
+                {/* Mode Switcher Pill */}
                 <div className="inline-flex items-center rounded-[2px] bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
                   <button
                     type="button"
@@ -414,25 +454,62 @@ export default function AiAgentPage() {
                     <span>Research Mode</span>
                   </button>
                 </div>
-                )}
-              </div>
 
-              {/* Mic beside send */}
-              <div className="flex items-center gap-2">
+                {/* Grounding Context Chip */}
+                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-zinc-500 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded-[2px]">
+                  <span>{location.name}</span>
+                </span>
                 <VoiceMicButton
-                  onTranscript={(text, spokenLanguage) => handleSend(text, spokenLanguage)}
-                  onStart={stopSpeaking}
+                  variant="pill"
+                  onInterim={(text) => {
+                    setInputQuery(text);
+                    requestAnimationFrame(adjustTextareaHeight);
+                  }}
+                  onTranscript={(text) => {
+                    setInputQuery("");
+                    handleSend(text, true);
+                  }}
+                  onStart={handleMicStart}
+                  autoListen={liveVoice && !speaking && !isTyping}
                 />
+                {/* Hands-free conversation. Once on, speak and it answers,
+                    then listens again - no tapping between turns. */}
                 <button
                   type="button"
-                  onClick={() => handleSend()}
-                  disabled={!inputQuery.trim() || isTyping}
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
-                  title="Send message"
+                  onClick={() => (liveVoice ? endLiveVoice() : beginLiveVoice())}
+                  aria-pressed={liveVoice}
+                  title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
+                  className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors ${
+                    liveVoice
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+                  }`}
                 >
-                  <ArrowUp className="h-4 w-4" />
+                  {liveVoice ? (
+                    <span className="relative inline-flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/70" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                    </span>
+                  ) : (
+                    <Radio className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {liveVoice ? t("voice.liveOn") : t("voice.startLive")}
+                  </span>
                 </button>
+                <LanguageControl language={language} />
               </div>
+
+              {/* Submit Button */}
+              <button
+                type="button"
+                onClick={() => handleSend()}
+                disabled={!inputQuery.trim() || isTyping}
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
+                title="Send message"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
@@ -691,14 +768,29 @@ export default function AiAgentPage() {
             </div>
           ))}
 
-          {speaking && (
+          {/* The device may simply have no voice installed for this language.
+              Saying so is better than reading Malayalam with an English voice,
+              which produces noise, or staying silent with no explanation. */}
+          {substituteVoice && (speaking || liveVoice) && (
+            <div className="flex justify-center pb-1">
+              <p className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-900">
+                {t("voice.noVoiceForLanguage")}
+              </p>
+            </div>
+          )}
+
+          {(speaking || liveVoice) && (
             <div className="sticky bottom-0 z-10 flex justify-center pb-1">
               <button
                 type="button"
-                onClick={stopSpeaking}
-                className="sw-press inline-flex items-center gap-2 rounded-[2px] border border-[#0b0b0c] bg-white px-3 py-1.5 text-sm font-semibold hover:bg-[#0b0b0c] hover:text-white"
+                onClick={endLiveVoice}
+                className="inline-flex items-center gap-2 rounded-full border border-rose-300 bg-white px-3.5 py-1.5 text-xs font-medium text-rose-700 shadow-sm hover:bg-rose-50"
               >
-                Stop reading
+                <span className="relative inline-flex h-2.5 w-2.5">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
+                </span>
+                {liveVoice ? t("voice.stopLive") : t("voice.stopReading")}
               </button>
             </div>
           )}
@@ -755,8 +847,7 @@ export default function AiAgentPage() {
             {/* Bottom Bar inside Input */}
             <div className="flex items-center justify-between pt-1.5 mt-1 border-t border-zinc-100 gap-2">
               <div className="flex items-center gap-1.5">
-                {/* Normal / research: researchers only */}
-                {role === "researcher" && (
+                {/* Mode Switcher Pill */}
                 <div className="inline-flex items-center rounded-[2px] bg-zinc-100 p-0.5 border border-zinc-200 text-xs">
                   <button
                     type="button"
@@ -783,25 +874,61 @@ export default function AiAgentPage() {
                     <span>Research</span>
                   </button>
                 </div>
-                )}
-              </div>
 
-              {/* Mic beside send */}
-              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-zinc-400 hidden sm:inline">
+                  {location.name}
+                </span>
                 <VoiceMicButton
-                  onTranscript={(text, spokenLanguage) => handleSend(text, spokenLanguage)}
-                  onStart={stopSpeaking}
+                  variant="pill"
+                  onInterim={(text) => {
+                    setInputQuery(text);
+                    requestAnimationFrame(adjustTextareaHeight);
+                  }}
+                  onTranscript={(text) => {
+                    setInputQuery("");
+                    handleSend(text, true);
+                  }}
+                  onStart={handleMicStart}
+                  autoListen={liveVoice && !speaking && !isTyping}
                 />
+                {/* Hands-free conversation. Once on, speak and it answers,
+                    then listens again - no tapping between turns. */}
                 <button
                   type="button"
-                  onClick={() => handleSend()}
-                  disabled={!inputQuery.trim() || isTyping}
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
-                  title="Send message"
+                  onClick={() => (liveVoice ? endLiveVoice() : beginLiveVoice())}
+                  aria-pressed={liveVoice}
+                  title={liveVoice ? t("voice.stopLive") : t("voice.startLive")}
+                  className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-medium transition-colors ${
+                    liveVoice
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400"
+                  }`}
                 >
-                  <ArrowUp className="h-3.5 w-3.5" />
+                  {liveVoice ? (
+                    <span className="relative inline-flex h-2 w-2">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-rose-400/70" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                    </span>
+                  ) : (
+                    <Radio className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {liveVoice ? t("voice.liveOn") : t("voice.startLive")}
+                  </span>
                 </button>
+                <LanguageControl language={language} />
               </div>
+
+              {/* Submit Button */}
+              <button
+                type="button"
+                onClick={() => handleSend()}
+                disabled={!inputQuery.trim() || isTyping}
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-[2px] bg-zinc-950 text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer shadow-xs"
+                title="Send message"
+              >
+                <ArrowUp className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
 
